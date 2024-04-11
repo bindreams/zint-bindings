@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>grpUPCEAN</class>
+ <widget class="QWidget" name="grpUPCEAN">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>310</width>
+    <height>78</height>
+   </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayoutUPCEAN">
+   <item>
+    <layout class="QGridLayout" name="gridLayoutUPCEAN">
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblUPCEANAddonGap">
+       <property name="text">
+        <string>Add-o&amp;n Gap:</string>
+       </property>
+       <property name="toolTip">
+        <string>Horizontal space in X-dimensions between
+main symbol and add-on (if any)
+(ignored if disabled)</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy">
+        <cstring>cmbUPCEANAddonGap</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="cmbUPCEANAddonGap">
+       <property name="toolTip">
+        <string>Horizontal space in X-dimensions between
+main symbol and add-on (if any)
+(ignored if disabled)</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>7 X (default)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>8 X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>9 X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10 X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>11 X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>12 X</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="lblUPCEANGuardDescent">
+       <property name="toolTip">
+        <string>Height in X-dimensions that the guard bars
+descend below the main bars (default 5X)
+(ignored if disabled)</string>
+       </property>
+       <property name="text">
+        <string>Guard Bar Des&amp;cent:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy">
+        <cstring>spnUPCEANGuardDescent</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="horzLayoutUPCEANGuardDescent">
+       <item>
+        <widget class="QDoubleSpinBox" name="spnUPCEANGuardDescent">
+         <property name="toolTip">
+          <string>Height in X-dimensions that the guard bars
+descend below the main bars (default 5X)
+(ignored if disabled)</string>
+         </property>
+         <property name="prefix">
+          <string/>
+         </property>
+         <property name="suffix">
+          <string> X</string>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>20.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>5.000000000000000</double>
+         </property>
+         <property name="accelerated">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>2</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnUPCEANGuardDefault">
+         <property name="toolTip">
+          <string>Reset guard bars descent height
+to default 5X</string>
+         </property>
+         <property name="text">
+          <string>De&amp;fault</string>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkUPCEANNoQuietZones">
+     <property name="text">
+      <string>No Quiet &amp;Zones</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>Do not add quiet zones to whitespace</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkUPCEANGuardWhitespace">
+     <property name="text">
+      <string>Guard Whitespace</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>Add quiet zone indicators ("&lt;", "&gt;") to Human Readable Text (HRT)
+(ignored if disabled)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacerUPCEAN">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>30</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

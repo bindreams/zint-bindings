@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>grpC39</class>
+ <widget class="QWidget" name="grpC39">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>254</width>
+    <height>131</height>
+   </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="vLayoutC39">
+   <property name="contentMargins">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="grpC39Check">
+     <property name="title">
+      <string>Check Digit</string>
+     </property>
+     <property name="toolTip">
+      <string>Check character options</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayoutC39Check">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radC39Stand">
+        <property name="text">
+         <string>No Ch&amp;eck Digit</string>
+        </property>
+        <property name="toolTip">
+         <string>Do not add check character</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="radC39Check">
+        <property name="text">
+         <string>Mod-43 Chec&amp;k Digit</string>
+        </property>
+        <property name="toolTip">
+         <string>Add mod-43 check character</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="radC39CheckHide">
+        <property name="text">
+         <string>&amp;Hidden Mod-43 Check Digit</string>
+        </property>
+        <property name="toolTip">
+         <string>Add mod-43 check character but
+do not display in Human Readable Text</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="radC39HIBC">
+        <property name="text">
+         <string>HIBC (&amp;Mod-43 Check Digit added)</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as a Health Industry Barcode (HIBC)
+Labeler Identification Code (LIC)
+For Provider Applications Standard (PAS), preface
+the data with a slash &quot;/&quot;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

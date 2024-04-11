@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>grpCodeOne</class>
+ <widget class="QWidget" name="grpCodeOne">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>310</width>
+    <height>124</height>
+   </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="vLayoutC1">
+   <item>
+    <layout class="QGridLayout" name="gLayoutC1">
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblC1Size">
+       <property name="text">
+        <string>Symbol Si&amp;ze:</string>
+       </property>
+       <property name="toolTip">
+        <string>Set size (H x W) of symbol
+Versions A to H have fixed heights and
+fixed widths
+Versions S and T have fixed heights but
+variable widths</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy">
+        <cstring>cmbC1Size</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="cmbC1Size">
+       <property name="maxVisibleItems">
+        <number>11</number>
+       </property>
+       <property name="toolTip">
+        <string>Set size (H x W) of symbol
+Versions A to H have fixed heights and
+fixed widths
+Versions S and T have fixed heights but
+variable widths</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Automatic</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16 x 18 (Version A)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>22 x 22 (Version B)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>28 x 32 (Version C)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>40 x 42 (Version D)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>52 x 54 (Version E)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>70 x 76 (Version F)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>104 x 98 (Version G)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>148 x 134 (Version H)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>8X height (Version S)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16X height (Version T)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxC1EncodingMode">
+     <property name="title">
+      <string>Encoding Mode</string>
+     </property>
+     <property name="toolTip">
+      <string>How to process data</string>
+     </property>
+     <layout class="QGridLayout" name="gLayoutC1EncodingMode">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
+      </property>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radC1Stand">
+        <property name="text">
+         <string>S&amp;tandard Mode</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as normal</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="radC1GS1">
+        <property name="text">
+         <string>GS&amp;1 Data Mode</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as GS1 General Specifications data,
+formatted with Application Identifiers (AIs)
+(ignored if disabled)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxC1StructApp">
+     <property name="title">
+      <string>Structured Append</string>
+     </property>
+     <property name="toolTip">
+      <string>Code One supports Structured Append of up to
+128 symbols (not available for Version S)
+(ignored if disabled)</string>
+     </property>
+     <layout class="QGridLayout" name="gLayoutC1StructApp">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lblC1StructAppCount">
+        <property name="text">
+         <string>C&amp;ount:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>
+        </property>
+        <property name="buddy">
+         <cstring>spnC1StructAppCount</cstring>
+        </property>
+        <property name="toolTip">
+         <string>Mark symbol as part of a Structured Append sequence
+containing a total of this number of symbols
+Value ranges from 1 (Disabled) to 128</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="spnC1StructAppCount">
+        <property name="toolTip">
+         <string>Mark symbol as part of a Structured Append sequence
+containing a total of this number of symbols
+Value ranges from 1 (Disabled) to 128</string>
+        </property>
+        <property name="specialValueText">
+         <string> 1 (Disabled)</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>128</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <spacer name="spacerC1StructApp2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint">
+         <size>
+          <width>10</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+	  </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="lblC1StructAppIndex">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Inde&amp;x:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>
+        </property>
+        <property name="buddy">
+         <cstring>spnC1StructAppIndex</cstring>
+        </property>
+        <property name="toolTip">
+         <string>Position of symbol in Structured Append sequence
+Value ranges from 1 to count
+(ignored if disabled)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QSpinBox" name="spnC1StructAppIndex">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Position of symbol in Structured Append sequence
+Value ranges from 1 to count
+(ignored if disabled)</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>128</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <spacer name="spacerC1StructApp5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint">
+         <size>
+          <width>10</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+	  </item>
+      <item row="0" column="6">
+       <widget class="QLabel" name="lblC1StructAppIDDisabled">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Structured Append ID not available for Code One</string>
+        </property>
+        <property name="text">
+         <string>ID:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>
+        </property>
+        <property name="buddy">
+         <cstring>txtC1StructAppIDDisabled</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7">
+       <widget class="QLineEdit" name="txtC1StructAppIDDisabled">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Structured Append ID not available for Code One</string>
+        </property>
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="vSpacerC1">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

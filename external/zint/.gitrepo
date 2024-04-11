@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/zint/zint
+	branch = master
+	commit = 0eaa9f3e7d6b0709d54c99cb15383f4335cd3d3e
+	parent = b125064b7c9790745cbce1f1dfe11fe132575afe
+	method = merge
+	cmdver = 0.4.6

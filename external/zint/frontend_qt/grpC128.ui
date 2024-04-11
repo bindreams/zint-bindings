@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>grpC128</class>
+ <widget class="QWidget" name="grpC128">
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayoutC128">
+   <item>
+    <widget class="QGroupBox" name="groupBoxC128EncodingMode">
+     <property name="title">
+      <string>Encoding Mode</string>
+     </property>
+     <property name="toolTip">
+      <string>How to process data</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayoutC128EncodingMode">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radC128Stand">
+        <property name="text">
+         <string>S&amp;tandard Mode</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as normal</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="radC128CSup">
+        <property name="text">
+         <string>Code Set &amp;C Suppression</string>
+        </property>
+        <property name="toolTip">
+         <string>Do not use Code Set C
+(numeric compression)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QRadioButton" name="radC128ExtraEsc">
+        <property name="text">
+         <string>&amp;Manual Code Sets (Extra Escape Mode)</string>
+        </property>
+        <property name="toolTip">
+         <string>Process special escape sequences &quot;\^A&quot;, &quot;\^B&quot; and
+&quot;\^C&quot; allowing manual Code Set selection</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="radC128EAN">
+        <property name="text">
+         <string>GS&amp;1-128</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as GS1 General Specifications data,
+formatted with Application Identifiers (AIs)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QRadioButton" name="radC128HIBC">
+        <property name="text">
+         <string>H&amp;IBC</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as a Health Industry Barcode (HIBC)
+Labeler Identification Code (LIC)
+For Provider Applications Standard (PAS), preface
+the data with a slash &quot;/&quot;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="noteC128CompositeEAN">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Note: Composite symbols require a GS1-128 linear component.</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacerC128">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>43</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

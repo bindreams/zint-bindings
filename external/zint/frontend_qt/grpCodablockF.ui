@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>grpCodablockF</class>
+ <widget class="QWidget" name="grpCodablockF">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>450</width>
+    <height>320</height>
+   </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayoutCbf">
+   <item>
+    <layout class="QGridLayout" name="gridLayoutCbf">
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblCbfWidth">
+       <property name="text">
+        <string>&amp;Number of Data Columns:</string>
+       </property>
+       <property name="toolTip">
+        <string>Set number of data characters in a row</string>
+       </property>
+       <property name="buddy">
+        <cstring>cmbCbfWidth</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="cmbCbfWidth">
+       <property name="maxVisibleItems">
+        <number>21</number>
+       </property>
+       <property name="toolTip">
+        <string>Set number of data characters in a row</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Automatic</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>9 (4 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10 (5 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>11 (6 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>12 (7 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>13 (8 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>14 (9 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>15 (10 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16 (11 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>17 (12 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>18 (13 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>19 (14 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>20 (15 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>21 (16 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>22 (17 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>23 (18 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>24 (19 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>25 (20 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>26 (21 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>27 (22 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>28 (23 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>29 (24 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>30 (25 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>31 (26 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>32 (27 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>33 (28 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>34 (29 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>35 (30 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>36 (31 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>37 (32 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>38 (33 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>39 (34 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>40 (35 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>41 (36 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>42 (37 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>43 (38 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>44 (39 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>45 (40 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>46 (41 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>47 (42 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>48 (43 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>49 (44 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>50 (45 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>51 (46 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>52 (47 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>53 (48 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>54 (49 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>55 (50 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>56 (51 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>57 (52 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>58 (53 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>59 (54 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>60 (55 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>61 (56 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>62 (57 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>63 (58 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>64 (59 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>65 (60 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>66 (61 data)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>67 (62 data)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="lblCbfHeight">
+       <property name="text">
+        <string>Number of Ro&amp;ws:</string>
+       </property>
+       <property name="toolTip">
+        <string>Set number of rows</string>
+       </property>
+       <property name="buddy">
+        <cstring>cmbCbfHeight</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="cmbCbfHeight">
+       <property name="maxVisibleItems">
+        <number>21</number>
+       </property>
+       <property name="toolTip">
+        <string>Set number of rows</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Automatic</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>9</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>11</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>12</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>13</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>14</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>15</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>17</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>18</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>19</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>20</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>21</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>22</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>23</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>24</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>25</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>26</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>27</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>28</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>29</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>30</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>31</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>32</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>33</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>34</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>35</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>36</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>37</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>38</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>39</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>40</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>41</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>42</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>43</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>44</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="lblCbfHeightPerRow">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Height per row in X-dimensions
+Only available if &quot;Automatic Height&quot; in
+the Appearance tab is not checked
+(ignored if disabled)</string>
+       </property>
+       <property name="text">
+        <string>Row &amp;Height:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy">
+        <cstring>spnCbfHeightPerRow</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <layout class="QHBoxLayout" name="horzLayoutCbfHeightPerRow">
+       <item>
+        <widget class="QDoubleSpinBox" name="spnCbfHeightPerRow">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+        <string>Height per row in X-dimensions
+Only available if &quot;Automatic Height&quot; in
+the Appearance tab is not checked
+(ignored if disabled)</string>
+         </property>
+         <property name="accelerated">
+          <bool>true</bool>
+         </property>
+         <property name="prefix">
+          <string/>
+         </property>
+         <property name="suffix">
+          <string> X</string>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0</double>
+         </property>
+         <property name="maximum">
+          <double>2000.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>0</double>
+         </property>
+         <property name="specialValueText">
+          <string>0 (Disabled)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCbfHeightPerRowDisable">
+         <property name="toolTip">
+          <string>Set height per row to 0
+(&quot;Height&quot; in the Appearance
+tab will be re-enabled)</string>
+         </property>
+         <property name="text">
+          <string>Disabl&amp;e</string>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>30</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCbfHeightPerRowDefault">
+         <property name="toolTip">
+          <string>Set height per row to default value</string>
+         </property>
+         <property name="text">
+          <string>De&amp;fault</string>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>30</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lblCbfRowSepHeight">
+       <property name="text">
+        <string>&amp;Row Separator Height:</string>
+       </property>
+       <property name="toolTip">
+        <string>Height in X-dimensions of horizontal lines
+separating rows</string>
+       </property>
+       <property name="buddy">
+        <cstring>cmbCbfRowSepHeight</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="cmbCbfRowSepHeight">
+       <property name="toolTip">
+        <string>Height in X-dimensions of horizontal lines
+separating rows</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>1 X (default)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2 X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3 X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4 X</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxCbfEncodingMode">
+     <property name="title">
+      <string>Encoding Mode</string>
+     </property>
+     <property name="toolTip">
+      <string>How to process data</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalCbfLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
+      </property>
+      <item>
+       <widget class="QRadioButton" name="radCbfStand">
+        <property name="text">
+         <string>S&amp;tandard Mode</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as normal</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radCbfHIBC">
+        <property name="text">
+         <string>H&amp;IBC</string>
+        </property>
+        <property name="toolTip">
+         <string>Process data as a Health Industry Barcode (HIBC)
+Labeler Identification Code (LIC)
+For Provider Applications Standard (PAS), preface
+the data with a slash &quot;/&quot;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkCbfNoQuietZones">
+     <property name="text">
+      <string>No Quiet &amp;Zones</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>Do not add quiet zones to whitespace</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacerCbf">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::MinimumExpanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>43</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

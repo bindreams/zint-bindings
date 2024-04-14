@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2021-2024 by Robin Stuart <rstuart114@gmail.com>        *
+ *   Copyright (C) 2021-2023 by Robin Stuart <rstuart114@gmail.com>        *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -14,8 +14,7 @@
  ***************************************************************************/
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-#include <QtTest/QSignalSpy>
-#include <QtTest/QTest>
+#include <QtTest/QtTest>
 #include "../qzint.h" /* Don't use <qzint.h> in case it's been changed */
 
 #ifndef ARRAY_SIZE

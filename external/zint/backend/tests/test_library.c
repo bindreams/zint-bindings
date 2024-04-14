@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2023 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -34,6 +34,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include "testcommon.h"
+#include "../common.h"
 
 static void test_checks(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
@@ -557,7 +558,6 @@ static void test_escape_char_process(const testCtx *const p_ctx) {
         /* 78*/ { BARCODE_CODE128, DATA_MODE | EXTRA_ESCAPE_MODE, -1, "\\^A1", "", 0, 46, "(4) 103 17 17 106", 0, "" },
         /* 79*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, -1, "\\^", "", 0, 57, "(5) 104 60 62 82 106", 0, "Partial special escape '\\^' at end allowed" },
         /* 80*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, -1, "\\^D1", "", 0, 79, "(7) 104 60 62 36 17 52 106", 0, "Unknown special escapes passed straight thu" },
-        /* 81*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\w", "", ZINT_ERROR_INVALID_DATA, 0, "Error 234: Unrecognised escape character '\\w' in input data", 0, "" },
     };
     int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -954,11 +954,6 @@ static void test_encode_file_directory(const testCtx *const p_ctx) {
 
     testStart("test_encode_file_directory");
 
-#if defined(__NetBSD__) || defined(_AIX)
-    /* Reading a directory works on NetBSD, and get `code128()` ZINT_ERROR_TOO_LONG instead */
-    (void)ret; (void)symbol; (void)dirname;
-    testSkip("Test not implemented on NetBSD or AIX");
-#else
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
 
@@ -975,7 +970,6 @@ static void test_encode_file_directory(const testCtx *const p_ctx) {
     ZBarcode_Delete(symbol);
 
     testFinish();
-#endif /* __NetBSD__ */
 }
 
 static void test_encode_file(const testCtx *const p_ctx) {

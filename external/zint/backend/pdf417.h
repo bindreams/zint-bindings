@@ -1,7 +1,7 @@
 /* pdf417.h - PDF417 tables and coefficients declarations */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2008-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2008-2022 Robin Stuart <rstuart114@gmail.com>
     Portions Copyright (C) 2004 Grandzebu
 
     Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@ INTERNAL_DATA_EXTERN const unsigned short pdf_rap_side[52];
 INTERNAL_DATA_EXTERN const unsigned short pdf_rap_centre[52];
 
 INTERNAL void pdf_byteprocess(short *chainemc, int *p_mclength, const unsigned char chaine[], int start,
-                const int length, const int lastmode);
+                const int length, const int lastmode, const int debug);
 
 /* vim: set ts=4 sw=4 et : */
 #endif /* Z_PDF417_H */

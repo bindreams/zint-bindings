@@ -161,13 +161,13 @@ static void tif_lzw_cl_hash(tif_lzw_state *sp) {
 }
 
 /* Explicit 0xff masking to make icc -check=conversions happy */
-#define PutNextCode(op_fmp, c) { \
+#define PutNextCode(op_file, c) { \
     nextdata = (nextdata << nbits) | c; \
     nextbits += nbits; \
-    fm_putc((nextdata >> (nextbits - 8)) & 0xff, op_fmp); \
+    putc((nextdata >> (nextbits - 8)) & 0xff, op_file); \
     nextbits -= 8; \
     if (nextbits >= 8) { \
-        fm_putc((nextdata >> (nextbits - 8)) & 0xff, op_fmp); \
+        putc((nextdata >> (nextbits - 8)) & 0xff, op_file); \
         nextbits -= 8; \
     } \
     outcount += nbits; \
@@ -187,7 +187,7 @@ static void tif_lzw_cl_hash(tif_lzw_state *sp) {
  * are re-sized at this point, and a CODE_CLEAR is generated
  * for the decoder.
  */
-static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsigned char *bp, int cc) {
+static int tif_lzw_encode(tif_lzw_state *sp, FILE *op_file, const unsigned char *bp, int cc) {
     register long fcode;
     register tif_lzw_hash *hp;
     register int h, c;
@@ -229,7 +229,7 @@ static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsig
     ent = (tif_lzw_hcode) -1;
 
     if (cc > 0) {
-        PutNextCode(op_fmp, CODE_CLEAR);
+        PutNextCode(op_file, CODE_CLEAR);
         ent = *bp++; cc--; incount++;
     }
     while (cc > 0) {
@@ -275,7 +275,7 @@ static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsig
         /*
          * New entry, emit code and add to table.
          */
-        PutNextCode(op_fmp, ent);
+        PutNextCode(op_file, ent);
         ent = (tif_lzw_hcode) c;
         hp->code = (tif_lzw_hcode) (free_ent++);
         hp->hash = fcode;
@@ -286,7 +286,7 @@ static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsig
             incount = 0;
             outcount = 0;
             free_ent = CODE_FIRST;
-            PutNextCode(op_fmp, CODE_CLEAR);
+            PutNextCode(op_file, CODE_CLEAR);
             nbits = BITS_MIN;
             maxcode = MAXCODE(BITS_MIN);
         } else {
@@ -314,7 +314,7 @@ static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsig
                     incount = 0;
                     outcount = 0;
                     free_ent = CODE_FIRST;
-                    PutNextCode(op_fmp, CODE_CLEAR);
+                    PutNextCode(op_file, CODE_CLEAR);
                     nbits = BITS_MIN;
                     maxcode = MAXCODE(BITS_MIN);
                 } else {
@@ -332,13 +332,13 @@ static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsig
      */
     if (ent != (tif_lzw_hcode) -1) {
 
-        PutNextCode(op_fmp, ent);
+        PutNextCode(op_file, ent);
         free_ent++;
 
         if (free_ent == CODE_MAX - 1) {
             /* table is full, emit clear code and reset */
             outcount = 0;
-            PutNextCode(op_fmp, CODE_CLEAR);
+            PutNextCode(op_file, CODE_CLEAR);
             nbits = BITS_MIN;
         } else {
             /*
@@ -351,10 +351,10 @@ static int tif_lzw_encode(tif_lzw_state *sp, struct filemem *op_fmp, const unsig
             }
         }
     }
-    PutNextCode(op_fmp, CODE_EOI);
+    PutNextCode(op_file, CODE_EOI);
     /* Explicit 0xff masking to make icc -check=conversions happy */
     if (nextbits > 0) {
-        fm_putc((nextdata << (8 - nextbits)) & 0xff, op_fmp);
+        putc((nextdata << (8 - nextbits)) & 0xff, op_file);
     }
 
     return 1;

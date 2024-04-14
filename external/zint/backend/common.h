@@ -1,7 +1,7 @@
 /* common.h - Header for all common functions in common.c */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2009-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2009-2023 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -41,36 +41,19 @@ extern "C" {
 #define ARRAY_SIZE(x) ((int) (sizeof(x) / sizeof((x)[0])))
 #endif
 
-/* Determine if C89 or C99 (excluding MSVC, which doesn't define __STDC_VERSION__) */
-#ifndef _MSC_VER
-#  if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199000L
-#    define ZINT_IS_C89
-#  elif __STDC_VERSION__ <= 199901L /* Actually includes pseudo-standards "C94/C95" as well */
-#    define ZINT_IS_C99
-#  endif
+/* Determine if C89 (excluding MSVC, which doesn't define __STDC_VERSION__) */
+#if !defined(_MSC_VER) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199000L)
+#define ZINT_IS_C89
 #endif
 
 #ifdef _MSC_VER
 #  include <malloc.h>
 #  define z_alloca(nmemb) _alloca(nmemb)
 #else
-#  if defined(ZINT_IS_C89) || defined(ZINT_IS_C99) || defined(__NuttX__) || defined(_AIX) \
-        || (defined(__sun) && defined(__SVR4) /*Solaris*/)
+#  if defined(ZINT_IS_C89) || defined(__NuttX__) /* C89 or NuttX RTOS */
 #    include <alloca.h>
 #  endif
 #  define z_alloca(nmemb) alloca(nmemb)
-#endif
-
-#ifdef _MSC_VER
-#  if _MSC_VER >= 1400 /* MSVC 2005 (C++ 8.0) */
-#    define restrict __restrict
-#  else
-#    define restrict
-#  endif
-#else
-#  ifdef ZINT_IS_C89
-#    define restrict
-#  endif
 #endif
 
 #ifdef _MSC_VER

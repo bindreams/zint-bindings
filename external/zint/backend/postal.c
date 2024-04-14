@@ -1,7 +1,7 @@
 /* postal.c - Handles POSTNET, PLANET, CEPNet, FIM. RM4SCC and Flattermarken */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2008-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2008-2023 Robin Stuart <rstuart114@gmail.com>
     Including bug fixes by Bryan Hatton
 
     Redistribution and use in source and binary forms, with or without
@@ -99,18 +99,18 @@ static int usps_set_height(struct zint_symbol *symbol, const int no_errtxt) {
      */
      /* CEPNet e Código Bidimensional Datamatrix 2D (26/05/2021) 3.3.2 Arquitetura das barras - same as POSTNET */
     int error_number = 0;
+    float h_ratio; /* Half ratio */
 
     /* No legacy for CEPNet as new */
     if ((symbol->output_options & COMPLIANT_HEIGHT) || symbol->symbology == BARCODE_CEPNET) {
-        symbol->row_height[0] = 3.2249999f; /* 0.075 * 43 */
-        symbol->row_height[1] = 2.1500001f; /* 0.05 * 43 */
+        symbol->row_height[0] = stripf(0.075f * 43); /* 3.225 */
+        symbol->row_height[1] = stripf(0.05f * 43); /* 2.15 */
     } else {
         symbol->row_height[0] = 6.0f;
         symbol->row_height[1] = 6.0f;
     }
     if (symbol->height) {
-        /* Half ratio */
-        const float h_ratio = symbol->row_height[1] / (symbol->row_height[0] + symbol->row_height[1]); /* 0.4 */
+        h_ratio = symbol->row_height[1] / (symbol->row_height[0] + symbol->row_height[1]); /* 0.4 */
         symbol->row_height[1] = stripf(symbol->height * h_ratio);
         if (symbol->row_height[1] < 0.5f) { /* Absolute minimum */
             symbol->row_height[1] = 0.5f;
@@ -135,8 +135,7 @@ static int usps_set_height(struct zint_symbol *symbol, const int no_errtxt) {
 
 /* Handles the POSTNET system used for Zip codes in the US */
 /* Also handles Brazilian CEPNet - more information CEPNet e Código Bidimensional Datamatrix 2D (26/05/2021) at
-   https://www.correios.com.br/enviar/correspondencia/arquivos/nacional/
-    guia-tecnico-cepnet-e-2d-triagem-enderecamento-27-04-2021.pdf/view
+ * https://www.correios.com.br/enviar/correspondencia/arquivos/nacional/guia-tecnico-cepnet-e-2d-triagem-enderecamento-27-04-2021.pdf/view
  */
 static int postnet_enc(struct zint_symbol *symbol, const unsigned char source[], char *d, const int length) {
     int i, sum, check_digit;
@@ -369,10 +368,8 @@ INTERNAL int fim(struct zint_symbol *symbol, unsigned char source[], int length)
     if (symbol->output_options & COMPLIANT_HEIGHT) {
         /* USPS Domestic Mail Manual (USPS DMM 300) Jan 8, 2006 (updated 2011) 708.9.3
            X 0.03125" (1/32) +- 0.008" so X max 0.03925", height 0.625" (5/8) +- 0.125" (1/8) */
-        const float min_height = 12.7388535f; /* 0.5 / 0.03925 */
-        const float default_height = 20.0f; /* 0.625 / 0.03125 */
-        const float max_height = 31.0559006f; /* 0.75 / 0.02415 */
-        error_number = set_height(symbol, min_height, default_height, max_height, 0 /*no_errtxt*/);
+        error_number = set_height(symbol, stripf(0.5f / 0.03925f), 20.0f /*0.625 / 0.03125*/,
+                        stripf(0.75f / 0.02415f), 0 /*no_errtxt*/);
     } else {
         (void) set_height(symbol, 0.0f, 50.0f, 0.0f, 1 /*no_errtxt*/);
     }
@@ -384,11 +381,10 @@ INTERNAL int fim(struct zint_symbol *symbol, unsigned char source[], int length)
 /* Used by auspost.c also */
 INTERNAL int daft_set_height(struct zint_symbol *symbol, const float min_height, const float max_height) {
     int error_number = 0;
+    float t_ratio; /* Tracker ratio */
 
     if (symbol->height) {
-        /* Tracker ratio */
-        const float t_ratio = stripf(symbol->row_height[1] / stripf(symbol->row_height[0] * 2
-                                        + symbol->row_height[1]));
+        t_ratio = stripf(symbol->row_height[1] / stripf(symbol->row_height[0] * 2 + symbol->row_height[1]));
         symbol->row_height[1] = stripf(symbol->height * t_ratio);
         if (symbol->row_height[1] < 0.5f) { /* Absolute minimum */
             symbol->row_height[1] = 0.5f;
@@ -490,12 +486,10 @@ INTERNAL int rm4scc(struct zint_symbol *symbol, unsigned char source[], int leng
            Bar pitch and min/maxes same as Mailmark, so using recommendations from
            Royal Mail Mailmark Barcode Definition Document (15 Sept 2015) Section 3.5.1
          */
-        const float min_height = 6.47952747f; /* (4.22 * 39) / 25.4 */
-        const float max_height = 10.8062992f; /* (5.84 * 47) / 25.4 */
-        symbol->row_height[0] = 3.16417313f; /* (1.9 * 42.3) / 25.4 */
-        symbol->row_height[1] = 2.16496062f; /* (1.3 * 42.3) / 25.4 */
+        symbol->row_height[0] = stripf((1.9f * 42.3f) / 25.4f); /* ~3.16 */
+        symbol->row_height[1] = stripf((1.3f * 42.3f) / 25.4f); /* ~2.16 */
         /* Note using max X for minimum and min X for maximum */
-        error_number = daft_set_height(symbol, min_height, max_height);
+        error_number = daft_set_height(symbol, stripf((4.22f * 39) / 25.4f), stripf((5.84f * 47) / 25.4f));
     } else {
         symbol->row_height[0] = 3.0f;
         symbol->row_height[1] = 2.0f;
@@ -548,12 +542,10 @@ INTERNAL int kix(struct zint_symbol *symbol, unsigned char source[], int length)
 
     if (symbol->output_options & COMPLIANT_HEIGHT) {
         /* Dimensions same as RM4SCC */
-        const float min_height = 6.47952747f; /* (4.22 * 39) / 25.4 */
-        const float max_height = 10.8062992f; /* (5.84 * 47) / 25.4 */
-        symbol->row_height[0] = 3.16417313f; /* (1.9 * 42.3) / 25.4 */
-        symbol->row_height[1] = 2.16496062f; /* (1.3 * 42.3) / 25.4 */
+        symbol->row_height[0] = stripf((1.9f * 42.3f) / 25.4f); /* ~3.16 */
+        symbol->row_height[1] = stripf((1.3f * 42.3f) / 25.4f); /* ~2.16 */
         /* Note using max X for minimum and min X for maximum */
-        error_number = daft_set_height(symbol, min_height, max_height);
+        error_number = daft_set_height(symbol, stripf((4.22f * 39) / 25.4f), stripf((5.84f * 47) / 25.4f));
     } else {
         symbol->row_height[0] = 3.0f;
         symbol->row_height[1] = 2.0f;
@@ -744,11 +736,9 @@ INTERNAL int japanpost(struct zint_symbol *symbol, unsigned char source[], int l
            X 0.6mm (0.5mm - 0.7mm)
            Tracker height 1.2mm (1.05mm - 1.35mm) / 0.6mm = 2,
            Ascender/descender = 1.2mm (Full 3.6mm (3.4mm - 3.6mm, max preferred) less T divided by 2) / 0.6mm = 2 */
-        const float min_height = 4.85714293f; /* 3.4 / 0.7 */
-        const float max_height = 7.19999981f; /* 3.6 / 0.5 */
         symbol->row_height[0] = 2.0f;
         symbol->row_height[1] = 2.0f;
-        error_number = daft_set_height(symbol, min_height, max_height);
+        error_number = daft_set_height(symbol, stripf(3.4f / 0.7f) /*~4.857*/, stripf(3.6f / 0.5f) /*7.2*/);
     } else {
         symbol->row_height[0] = 3.0f;
         symbol->row_height[1] = 2.0f;

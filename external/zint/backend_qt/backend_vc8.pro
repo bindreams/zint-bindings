@@ -4,7 +4,7 @@ win32 {
 }
 
 TARGET = QtZint2
-VERSION = 2.13.0.9
+VERSION = 2.13.0
 
 QMAKE_CFLAGS += /TP /wd4018 /wd4244 /wd4305
 QMAKE_CXXFLAGS += /TP /wd4018 /wd4244 /wd4305
@@ -33,7 +33,6 @@ HEADERS +=  ../backend/aztec.h \
             ../backend/gb18030.h \
             ../backend/gb2312.h \
             ../backend/gbk.h \
-            ../backend/filemem.h \
             ../backend/general_field.h \
             ../backend/gridmtx.h \
             ../backend/gs1.h \
@@ -71,7 +70,6 @@ SOURCES += ../backend/2of5.c \
            ../backend/eci.c \
            ../backend/emf.c \
            ../backend/gridmtx.c \
-           ../backend/filemem.c \
            ../backend/general_field.c \
            ../backend/gif.c \
            ../backend/gs1.c \

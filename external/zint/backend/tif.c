@@ -1,7 +1,7 @@
 /* tif.c - Aldus Tagged Image File Format support */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2016-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2016-2023 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -34,8 +34,11 @@
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
+#ifdef _MSC_VER
+#include <io.h>
+#include <fcntl.h>
+#endif
 #include "common.h"
-#include "filemem.h"
 #include "output.h"
 #include "tif.h"
 #include "tif_lzw.h"
@@ -69,6 +72,10 @@ static void to_cmyk(const char *colour, unsigned char *cmyk) {
     cmyk[4] = alpha;
 }
 
+static int is_big_endian(void) {
+    return (*((const uint16_t *)"\x11\x22") == 0x1122);
+}
+
 /* TIFF Revision 6.0 https://www.adobe.io/content/dam/udp/en/open/standards/tiff/TIFF6.pdf */
 INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pixelbuf) {
     unsigned char fg[4], bg[4];
@@ -85,13 +92,12 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
     unsigned char palette[32][5];
     int color_map_size = 0;
     int extra_samples = 0;
-    size_t free_memory;
+    uint32_t free_memory;
     int row, column, strip;
     int strip_row;
     unsigned int bytes_put;
     long total_bytes_put;
-    struct filemem fm;
-    struct filemem *const fmp = &fm;
+    FILE *tif_file;
     const unsigned char *pb;
     int compression = TIF_NO_COMPRESSION;
     tif_lzw_state lzw_state;
@@ -109,7 +115,6 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
     int offsets = 0;
     int ifd_size;
     uint32_t temp32;
-    uint16_t temp16;
 
     (void) out_colour_get_rgb(symbol->fgcolour, &fg[0], &fg[1], &fg[2], &fg[3]);
     (void) out_colour_get_rgb(symbol->bgcolour, &bg[0], &bg[1], &bg[2], &bg[3]);
@@ -286,7 +291,7 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
     free_memory = sizeof(tiff_header_t);
 
     for (i = 0; i < strip_count; i++) {
-        strip_offset[i] = (uint32_t) free_memory;
+        strip_offset[i] = free_memory;
         if (i != (strip_count - 1)) {
             strip_bytes[i] = bytes_per_strip;
         } else {
@@ -310,21 +315,33 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
     }
 
     /* Open output file in binary mode */
-    if (!fm_open(fmp, symbol, "wb")) {
-        sprintf(symbol->errtxt, "672: Could not open output file (%d: %.30s)", fmp->err, strerror(fmp->err));
-        return ZINT_ERROR_FILE_ACCESS;
-    }
-    if (!output_to_stdout) {
+    if (output_to_stdout) {
+#ifdef _MSC_VER
+        if (-1 == _setmode(_fileno(stdout), _O_BINARY)) {
+            sprintf(symbol->errtxt, "671: Could not set stdout to binary (%d: %.30s)", errno, strerror(errno));
+            return ZINT_ERROR_FILE_ACCESS;
+        }
+#endif
+        tif_file = stdout;
+    } else {
+        if (!(tif_file = out_fopen(symbol->outfile, "wb+"))) { /* '+' as use fseek/ftell() */
+            sprintf(symbol->errtxt, "672: Could not open output file (%d: %.30s)", errno, strerror(errno));
+            return ZINT_ERROR_FILE_ACCESS;
+        }
         compression = TIF_LZW;
         tif_lzw_init(&lzw_state);
     }
 
     /* Header */
-    out_le_u16(header.byte_order, 0x4949); /* "II" little-endian */
-    out_le_u16(header.identity, 42);
-    out_le_u32(header.offset, free_memory);
+    if (is_big_endian()) {
+        header.byte_order = 0x4D4D; /* "MM" big-endian */
+    } else {
+        header.byte_order = 0x4949; /* "II" little-endian */
+    }
+    header.identity = 42;
+    header.offset = free_memory;
 
-    fm_write(&header, sizeof(tiff_header_t), 1, fmp);
+    fwrite(&header, sizeof(tiff_header_t), 1, tif_file);
     total_bytes_put = sizeof(tiff_header_t);
 
     /* Pixel data */
@@ -370,14 +387,14 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
         if (strip_row == rows_per_strip || (strip == strip_count - 1 && strip_row == rows_last_strip)) {
             /* End of strip */
             if (compression == TIF_LZW) {
-                file_pos = fm_tell(fmp);
-                if (!tif_lzw_encode(&lzw_state, fmp, strip_buf, bytes_put)) { /* Only fails if can't malloc */
+                file_pos = ftell(tif_file);
+                if (!tif_lzw_encode(&lzw_state, tif_file, strip_buf, bytes_put)) { /* Only fails if can't malloc */
                     tif_lzw_cleanup(&lzw_state);
-                    (void) fm_close(fmp, symbol);
+                    (void) fclose(tif_file); /* Only use LZW if not STDOUT, so ok to close */
                     strcpy(symbol->errtxt, "673: Failed to malloc LZW hash table");
                     return ZINT_ERROR_MEMORY;
                 }
-                bytes_put = fm_tell(fmp) - file_pos;
+                bytes_put = ftell(tif_file) - file_pos;
                 if (bytes_put != strip_bytes[strip]) {
                     const int diff = bytes_put - strip_bytes[strip];
                     strip_bytes[strip] = bytes_put;
@@ -386,7 +403,7 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
                     }
                 }
             } else {
-                fm_write(strip_buf, 1, bytes_put, fmp);
+                fwrite(strip_buf, 1, bytes_put, tif_file);
             }
             strip++;
             total_bytes_put += bytes_put;
@@ -398,153 +415,142 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
     }
 
     if (total_bytes_put & 1) {
-        fm_putc(0, fmp); /* IFD must be on word boundary */
+        putc(0, tif_file); /* IFD must be on word boundary */
         total_bytes_put++;
     }
 
     if (compression == TIF_LZW) {
         tif_lzw_cleanup(&lzw_state);
 
-        file_pos = fm_tell(fmp);
-        fm_seek(fmp, 4, SEEK_SET);
+        file_pos = ftell(tif_file);
+        fseek(tif_file, 4, SEEK_SET);
         free_memory = file_pos;
-        temp32 = (uint32_t) free_memory;
-        /* Shouldn't happen as `free_memory` checked above to be <= 0xffff0000 & should only decrease */
-        if (free_memory != temp32 || (long) free_memory != file_pos) {
-            strcpy(symbol->errtxt, "982: Output file size too big");
-            (void) fm_close(fmp, symbol);
-            return ZINT_ERROR_MEMORY;
-        }
-        out_le_u32(temp32, temp32);
-        fm_write(&temp32, 4, 1, fmp);
-        fm_seek(fmp, file_pos, SEEK_SET);
+        fwrite(&free_memory, 4, 1, tif_file);
+        fseek(tif_file, file_pos, SEEK_SET);
     }
 
     /* Image File Directory */
-    out_le_u16(tags[entries].tag, 0x0100); /* ImageWidth */
-    out_le_u16(tags[entries].type, 3); /* SHORT */
-    out_le_u32(tags[entries].count, 1);
-    out_le_u32(tags[entries++].offset, symbol->bitmap_width);
+    tags[entries].tag = 0x0100; /* ImageWidth */
+    tags[entries].type = 3; /* SHORT */
+    tags[entries].count = 1;
+    tags[entries++].offset = symbol->bitmap_width;
 
-    out_le_u16(tags[entries].tag, 0x0101); /* ImageLength - number of rows */
-    out_le_u16(tags[entries].type, 3); /* SHORT */
-    out_le_u32(tags[entries].count, 1);
-    out_le_u32(tags[entries++].offset, symbol->bitmap_height);
+    tags[entries].tag = 0x0101; /* ImageLength - number of rows */
+    tags[entries].type = 3; /* SHORT */
+    tags[entries].count = 1;
+    tags[entries++].offset = symbol->bitmap_height;
 
     if (samples_per_pixel != 1 || bits_per_sample != 1) {
-        out_le_u16(tags[entries].tag, 0x0102); /* BitsPerSample */
-        out_le_u16(tags[entries].type, 3); /* SHORT */
-        out_le_u32(tags[entries].count, samples_per_pixel);
+        tags[entries].tag = 0x0102; /* BitsPerSample */
+        tags[entries].type = 3; /* SHORT */
+        tags[entries].count = samples_per_pixel;
         if (samples_per_pixel == 1) {
-            out_le_u32(tags[entries++].offset, bits_per_sample);
+            tags[entries++].offset = bits_per_sample;
         } else if (samples_per_pixel == 2) { /* 2 SHORTS fit into LONG offset so packed into offset */
-            out_le_u32(tags[entries++].offset, (bits_per_sample << 16) | bits_per_sample);
+            tags[entries++].offset = (bits_per_sample << 16) | bits_per_sample;
         } else {
             update_offsets[offsets++] = entries;
-            tags[entries++].offset = (uint32_t) free_memory;
+            tags[entries++].offset = free_memory;
             free_memory += samples_per_pixel * 2;
         }
     }
 
-    out_le_u16(tags[entries].tag, 0x0103); /* Compression */
-    out_le_u16(tags[entries].type, 3); /* SHORT */
-    out_le_u32(tags[entries].count, 1);
-    out_le_u32(tags[entries++].offset, compression);
+    tags[entries].tag = 0x0103; /* Compression */
+    tags[entries].type = 3; /* SHORT */
+    tags[entries].count = 1;
+    tags[entries++].offset = compression;
 
-    out_le_u16(tags[entries].tag, 0x0106); /* PhotometricInterpretation */
-    out_le_u16(tags[entries].type, 3); /* SHORT */
-    out_le_u32(tags[entries].count, 1);
-    out_le_u32(tags[entries++].offset, pmi);
+    tags[entries].tag = 0x0106; /* PhotometricInterpretation */
+    tags[entries].type = 3; /* SHORT */
+    tags[entries].count = 1;
+    tags[entries++].offset = pmi;
 
-    out_le_u16(tags[entries].tag, 0x0111); /* StripOffsets */
-    out_le_u16(tags[entries].type, 4); /* LONG */
-    out_le_u32(tags[entries].count, strip_count);
+    tags[entries].tag = 0x0111; /* StripOffsets */
+    tags[entries].type = 4; /* LONG */
+    tags[entries].count = strip_count;
     if (strip_count == 1) {
-        out_le_u32(tags[entries++].offset, strip_offset[0]);
+        tags[entries++].offset = strip_offset[0];
     } else {
         update_offsets[offsets++] = entries;
-        tags[entries++].offset = (uint32_t) free_memory;
+        tags[entries++].offset = free_memory;
         free_memory += strip_count * 4;
     }
 
     if (samples_per_pixel > 1) {
-        out_le_u16(tags[entries].tag, 0x0115); /* SamplesPerPixel */
-        out_le_u16(tags[entries].type, 3); /* SHORT */
-        out_le_u32(tags[entries].count, 1);
-        out_le_u32(tags[entries++].offset, samples_per_pixel);
+        tags[entries].tag = 0x0115; /* SamplesPerPixel */
+        tags[entries].type = 3; /* SHORT */
+        tags[entries].count = 1;
+        tags[entries++].offset = samples_per_pixel;
     }
 
-    out_le_u16(tags[entries].tag, 0x0116); /* RowsPerStrip */
-    out_le_u16(tags[entries].type, 4); /* LONG */
-    out_le_u32(tags[entries].count, 1);
-    out_le_u32(tags[entries++].offset, rows_per_strip);
+    tags[entries].tag = 0x0116; /* RowsPerStrip */
+    tags[entries].type = 4; /* LONG */
+    tags[entries].count = 1;
+    tags[entries++].offset = rows_per_strip;
 
-    out_le_u16(tags[entries].tag, 0x0117); /* StripByteCounts */
-    out_le_u16(tags[entries].type, 4); /* LONG */
-    out_le_u32(tags[entries].count, strip_count);
+    tags[entries].tag = 0x0117; /* StripByteCounts */
+    tags[entries].type = 4; /* LONG */
+    tags[entries].count = strip_count;
     if (strip_count == 1) {
-        out_le_u32(tags[entries++].offset, strip_bytes[0]);
+        tags[entries++].offset = strip_bytes[0];
     } else {
         update_offsets[offsets++] = entries;
-        tags[entries++].offset = (uint32_t) free_memory;
+        tags[entries++].offset = free_memory;
         free_memory += strip_count * 4;
     }
 
-    out_le_u16(tags[entries].tag, 0x011a); /* XResolution */
-    out_le_u16(tags[entries].type, 5); /* RATIONAL */
-    out_le_u32(tags[entries].count, 1);
+    tags[entries].tag = 0x011a; /* XResolution */
+    tags[entries].type = 5; /* RATIONAL */
+    tags[entries].count = 1;
     update_offsets[offsets++] = entries;
-    tags[entries++].offset = (uint32_t) free_memory;
+    tags[entries++].offset = free_memory;
     free_memory += 8;
 
-    out_le_u16(tags[entries].tag, 0x011b); /* YResolution */
-    out_le_u16(tags[entries].type, 5); /* RATIONAL */
-    out_le_u32(tags[entries].count, 1);
+    tags[entries].tag = 0x011b; /* YResolution */
+    tags[entries].type = 5; /* RATIONAL */
+    tags[entries].count = 1;
     update_offsets[offsets++] = entries;
-    tags[entries++].offset = (uint32_t) free_memory;
+    tags[entries++].offset = free_memory;
     free_memory += 8;
 
-    out_le_u16(tags[entries].tag, 0x0128); /* ResolutionUnit */
-    out_le_u16(tags[entries].type, 3); /* SHORT */
-    out_le_u32(tags[entries].count, 1);
+    tags[entries].tag = 0x0128; /* ResolutionUnit */
+    tags[entries].type = 3; /* SHORT */
+    tags[entries].count = 1;
     if (symbol->dpmm) {
-        out_le_u32(tags[entries++].offset, 3); /* Centimetres */
+        tags[entries++].offset = 3; /* Centimetres */
     } else {
-        out_le_u32(tags[entries++].offset, 2); /* Inches */
+        tags[entries++].offset = 2; /* Inches */
     }
 
     if (color_map_size) {
-        out_le_u16(tags[entries].tag, 0x0140); /* ColorMap */
-        out_le_u16(tags[entries].type, 3); /* SHORT */
-        out_le_u32(tags[entries].count, color_map_size * 3);
+        tags[entries].tag = 0x0140; /* ColorMap */
+        tags[entries].type = 3; /* SHORT */
+        tags[entries].count = color_map_size * 3;
         update_offsets[offsets++] = entries;
-        tags[entries++].offset = (uint32_t) free_memory;
+        tags[entries++].offset = free_memory;
         /* free_memory += color_map_size * 3 * 2; Unnecessary as long as last use */
     }
 
     if (extra_samples) {
-        out_le_u16(tags[entries].tag, 0x0152); /* ExtraSamples */
-        out_le_u16(tags[entries].type, 3); /* SHORT */
-        out_le_u32(tags[entries].count, 1);
-        out_le_u32(tags[entries++].offset, extra_samples);
+        tags[entries].tag = 0x0152; /* ExtraSamples */
+        tags[entries].type = 3; /* SHORT */
+        tags[entries].count = 1;
+        tags[entries++].offset = extra_samples;
     }
 
     ifd_size = sizeof(entries) + sizeof(tiff_tag_t) * entries + sizeof(offset);
     for (i = 0; i < offsets; i++) {
-        out_le_u32(tags[update_offsets[i]].offset, tags[update_offsets[i]].offset + ifd_size);
+        tags[update_offsets[i]].offset += ifd_size;
     }
 
-    out_le_u16(temp16, entries);
-    fm_write(&temp16, sizeof(entries), 1, fmp);
-    fm_write(&tags, sizeof(tiff_tag_t), entries, fmp);
-    out_le_u32(offset, offset);
-    fm_write(&offset, sizeof(offset), 1, fmp);
+    fwrite(&entries, sizeof(entries), 1, tif_file);
+    fwrite(&tags, sizeof(tiff_tag_t), entries, tif_file);
+    fwrite(&offset, sizeof(offset), 1, tif_file);
     total_bytes_put += ifd_size;
 
     if (samples_per_pixel > 2) {
-        out_le_u16(bits_per_sample, bits_per_sample);
         for (i = 0; i < samples_per_pixel; i++) {
-            fm_write(&bits_per_sample, sizeof(bits_per_sample), 1, fmp);
+            fwrite(&bits_per_sample, sizeof(bits_per_sample), 1, tif_file);
         }
         total_bytes_put += sizeof(bits_per_sample) * samples_per_pixel;
     }
@@ -552,61 +558,66 @@ INTERNAL int tif_pixel_plot(struct zint_symbol *symbol, const unsigned char *pix
     if (strip_count != 1) {
         /* Strip offsets */
         for (i = 0; i < strip_count; i++) {
-            out_le_u32(temp32, strip_offset[i]);
-            fm_write(&temp32, 4, 1, fmp);
+            fwrite(&strip_offset[i], 4, 1, tif_file);
         }
 
         /* Strip byte lengths */
         for (i = 0; i < strip_count; i++) {
-            out_le_u32(temp32, strip_bytes[i]);
-            fm_write(&temp32, 4, 1, fmp);
+            fwrite(&strip_bytes[i], 4, 1, tif_file);
         }
         total_bytes_put += strip_count * 8;
     }
 
     /* XResolution */
-    out_le_u32(temp32, symbol->dpmm ? symbol->dpmm : 72);
-    fm_write(&temp32, 4, 1, fmp);
-    out_le_u32(temp32, symbol->dpmm ? 10 /*cm*/ : 1);
-    fm_write(&temp32, 4, 1, fmp);
+    temp32 = symbol->dpmm ? symbol->dpmm : 72;
+    fwrite(&temp32, 4, 1, tif_file);
+    temp32 = symbol->dpmm ? 10 /*cm*/ : 1;
+    fwrite(&temp32, 4, 1, tif_file);
     total_bytes_put += 8;
 
     /* YResolution */
-    out_le_u32(temp32, symbol->dpmm ? symbol->dpmm : 72);
-    fm_write(&temp32, 4, 1, fmp);
-    out_le_u32(temp32, symbol->dpmm ? 10 /*cm*/ : 1);
-    fm_write(&temp32, 4, 1, fmp);
+    temp32 = symbol->dpmm ? symbol->dpmm : 72;
+    fwrite(&temp32, 4, 1, tif_file);
+    temp32 = symbol->dpmm ? 10 /*cm*/ : 1;
+    fwrite(&temp32, 4, 1, tif_file);
     total_bytes_put += 8;
 
     if (color_map_size) {
         for (i = 0; i < color_map_size; i++) {
-            fm_write(&color_map[i].red, 2, 1, fmp);
+            fwrite(&color_map[i].red, 2, 1, tif_file);
         }
         for (i = 0; i < color_map_size; i++) {
-            fm_write(&color_map[i].green, 2, 1, fmp);
+            fwrite(&color_map[i].green, 2, 1, tif_file);
         }
         for (i = 0; i < color_map_size; i++) {
-            fm_write(&color_map[i].blue, 2, 1, fmp);
+            fwrite(&color_map[i].blue, 2, 1, tif_file);
         }
         total_bytes_put += 6 * color_map_size;
     }
 
-    if (fm_error(fmp)) {
-        sprintf(symbol->errtxt, "679: Incomplete write to output (%d: %.30s)", fmp->err, strerror(fmp->err));
-        (void) fm_close(fmp, symbol);
+    if (ferror(tif_file)) {
+        sprintf(symbol->errtxt, "679: Incomplete write to output (%d: %.30s)", errno, strerror(errno));
+        if (!output_to_stdout) {
+            (void) fclose(tif_file);
+        }
         return ZINT_ERROR_FILE_WRITE;
     }
 
-    if (!output_to_stdout) {
-        if (fm_tell(fmp) != total_bytes_put) {
-            (void) fm_close(fmp, symbol);
+    if (output_to_stdout) {
+        if (fflush(tif_file) != 0) {
+            sprintf(symbol->errtxt, "980: Incomplete flush to output (%d: %.30s)", errno, strerror(errno));
+            return ZINT_ERROR_FILE_WRITE;
+        }
+    } else {
+        if (ftell(tif_file) != total_bytes_put) {
+            (void) fclose(tif_file);
             strcpy(symbol->errtxt, "674: Failed to write all output");
             return ZINT_ERROR_FILE_WRITE;
         }
-    }
-    if (!fm_close(fmp, symbol)) {
-        sprintf(symbol->errtxt, "981: Failure on closing output file (%d: %.30s)", fmp->err, strerror(fmp->err));
-        return ZINT_ERROR_FILE_WRITE;
+        if (fclose(tif_file) != 0) {
+            sprintf(symbol->errtxt, "981: Failure on closing output file (%d: %.30s)", errno, strerror(errno));
+            return ZINT_ERROR_FILE_WRITE;
+        }
     }
 
     return 0;

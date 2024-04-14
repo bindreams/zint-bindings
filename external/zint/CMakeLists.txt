@@ -1,5 +1,5 @@
 # Copyright (C) 2008 by BogDan Vatra < bogdan@licentia.eu >
-# Copyright (C) 2009-2024 Robin Stuart <rstuart114@gmail.com>
+# Copyright (C) 2009-2023 Robin Stuart <rstuart114@gmail.com>
 # vim: set ts=4 sw=4 et :
 
 cmake_minimum_required(VERSION 3.5)
@@ -10,7 +10,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(ZINT_VERSION_MAJOR 2)
 set(ZINT_VERSION_MINOR 13)
 set(ZINT_VERSION_RELEASE 0)
-set(ZINT_VERSION_BUILD 9) # Set to 0 before release, set to 9 after release
+set(ZINT_VERSION_BUILD 0) # Set to 0 before release, set to 9 after release
 set(ZINT_VERSION "${ZINT_VERSION_MAJOR}.${ZINT_VERSION_MINOR}.${ZINT_VERSION_RELEASE}.${ZINT_VERSION_BUILD}")
 
 add_definitions(-DZINT_VERSION=\"${ZINT_VERSION}\")
@@ -139,8 +139,8 @@ if(APPLE)
     endif()
 endif()
 
-check_function_exists(getopt_long_only HAVE_GETOPT_LONG_ONLY)
-if(NOT HAVE_GETOPT_LONG_ONLY)
+check_function_exists(getopt HAVE_GETOPT)
+if(NOT HAVE_GETOPT)
     add_subdirectory(getopt)
 endif()
 

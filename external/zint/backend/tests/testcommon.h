@@ -57,7 +57,7 @@ extern "C" {
 #define testutil_pclose(stream) _pclose(stream)
 #else
 #include <unistd.h>
-#  if defined(ZINT_IS_C89) || defined(ZINT_IS_C99)
+#  if defined(ZINT_IS_C89)
     extern FILE *popen(const char *command, const char *type);
     extern int pclose(FILE *stream);
 #  endif
@@ -174,8 +174,6 @@ int testUtilRmDir(const char *dirname);
 int testUtilRename(const char *oldpath, const char *newpath);
 int testUtilCreateROFile(const char *filename);
 int testUtilRmROFile(const char *filename);
-int testUtilReadFile(const char *filename, unsigned char *buffer, int buffer_size, int *p_size);
-int testUtilWriteFile(const char *filename, const unsigned char *buffer, const int buffer_size, const char *mode);
 
 int testUtilCmpPngs(const char *file1, const char *file2);
 int testUtilCmpTxts(const char *txt1, const char *txt2);

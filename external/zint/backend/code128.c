@@ -1,7 +1,7 @@
 /* code128.c - Handles Code 128 and derivatives */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2008-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2008-2023 Robin Stuart <rstuart114@gmail.com>
     Bugfixes thanks to Christian Sakowski and BogDan Vatra
 
     Redistribution and use in source and binary forms, with or without
@@ -131,22 +131,21 @@ static void c128_grwp(int list[2][C128_MAX], int *p_indexliste) {
  * Implements rules from ISO 15417 Annex E
  */
 INTERNAL void c128_dxsmooth(int list[2][C128_MAX], int *p_indexliste, const char *manual_set) {
-    int i, j, nextshift = 0 /*Suppresses gcc -Wmaybe-uninitialized false positive*/, nextshift_i = 0;
+    int i, last, next;
     const int indexliste = *p_indexliste;
 
     for (i = 0; i < indexliste; i++) {
         int current = list[1][i]; /* Either C128_ABORC, C128_AORB, C128_SHIFTA or C128_SHIFTB */
         int length = list[0][i];
-        if (i == nextshift_i) {
-            nextshift = 0;
-            /* Set next shift to aid deciding between latching to A or B - taken from Okapi, props Daniel Gredler */
-            for (j = i + 1; j < indexliste; j++) {
-                if (list[1][j] == C128_SHIFTA || list[1][j] == C128_SHIFTB) {
-                    nextshift = list[1][j];
-                    nextshift_i = j;
-                    break;
-                }
-            }
+        if (i != 0) {
+            last = list[1][i - 1];
+        } else {
+            last = 0;
+        }
+        if (i != indexliste - 1) {
+            next = list[1][i + 1];
+        } else {
+            next = 0;
         }
 
         if (i == 0) { /* first block */
@@ -169,7 +168,7 @@ INTERNAL void c128_dxsmooth(int list[2][C128_MAX], int *p_indexliste, const char
             if (current == C128_AORB) {
                 if (manual_set && (manual_set[i] == 'A' || manual_set[i] == 'B')) {
                     list[1][i] = manual_set[i];
-                } else if (nextshift == C128_SHIFTA) {
+                } else if (next == C128_SHIFTA) {
                     /* Rule 1c */
                     list[1][i] = C128_LATCHA;
                 } else {
@@ -184,7 +183,6 @@ INTERNAL void c128_dxsmooth(int list[2][C128_MAX], int *p_indexliste, const char
                 list[1][i] = C128_LATCHB;
             }
         } else {
-            int last = list[1][i - 1];
             if (current == C128_ABORC) {
                 if (manual_set && manual_set[i]) {
                     list[1][i] = manual_set[i];
@@ -204,7 +202,7 @@ INTERNAL void c128_dxsmooth(int list[2][C128_MAX], int *p_indexliste, const char
                     list[1][i] = C128_LATCHA;
                 } else if (last == C128_LATCHB || last == C128_SHIFTA) { /* Maintain state */
                     list[1][i] = C128_LATCHB;
-                } else if (nextshift == C128_SHIFTA) {
+                } else if (next == C128_SHIFTA) {
                     list[1][i] = C128_LATCHA;
                 } else {
                     list[1][i] = C128_LATCHB;
@@ -991,8 +989,8 @@ INTERNAL int gs1_128_cc(struct zint_symbol *symbol, unsigned char source[], int 
         /* GS1 General Specifications 21.0.1 5.12.3.2 table 2, including footnote (**):
            same as ITF-14: "in case of further space constraints" height 5.8mm / 1.016mm (X max) ~ 5.7;
            default 31.75mm / 0.495mm ~ 64.14 */
-        const float min_height = 5.70866156f; /* 5.8 / 1.016 */
-        const float default_height = 64.1414108f; /* 31.75 / 0.495 */
+        const float min_height = stripf(5.8f / 1.016f);
+        const float default_height = stripf(31.75f / 0.495f);
         if (symbol->symbology == BARCODE_GS1_128_CC) {
             /* Pass back via temporary linear structure */
             symbol->height = symbol->height ? min_height : default_height;
@@ -1155,11 +1153,9 @@ INTERNAL int dpd(struct zint_symbol *symbol, unsigned char source[], int length)
         /* DPD Parcel Label Specification Version 2.4.1 (19.01.2021) Section 4.6.1.2
            25mm / 0.4mm (X max) = 62.5 min, 25mm / 0.375 (X) ~ 66.66 default */
         if (relabel) { /* If relabel then half-size */
-            const float default_height = 33.3333321f; /* 12.5 / 0.375 */
-            error_number = set_height(symbol, 31.25f, default_height, 0.0f, 0 /*no_errtxt*/);
+            error_number = set_height(symbol, 31.25f, stripf(12.5f / 0.375f), 0.0f, 0 /*no_errtxt*/);
         } else {
-            const float default_height = 66.6666641f; /* 25.0 / 0.375 */
-            error_number = set_height(symbol, 62.5f, default_height, 0.0f, 0 /*no_errtxt*/);
+            error_number = set_height(symbol, 62.5f, stripf(25.0f / 0.375f), 0.0f, 0 /*no_errtxt*/);
         }
     } else {
         (void) set_height(symbol, 0.0f, relabel ? 25.0f : 50.0f, 0.0f, 1 /*no_errtxt*/);
@@ -1303,7 +1299,7 @@ INTERNAL int upu_s10(struct zint_symbol *symbol, unsigned char source[], int len
 
     if (symbol->output_options & COMPLIANT_HEIGHT) {
         /* Universal Postal Union S10 Section 8, using max X 0.51mm & minimum height 12.5mm or 15% of width */
-        const float min_height_min = 24.5098038f; /* 12.5 / 0.51 */
+        const float min_height_min = stripf(12.5f / 0.51f);
         float min_height = stripf(symbol->width * 0.15f);
         if (min_height < min_height_min) {
             min_height = min_height_min;

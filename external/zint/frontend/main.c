@@ -1,7 +1,7 @@
 /* main.c - Command line handling routines for Zint */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2008-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2008-2023 Robin Stuart <rstuart114@gmail.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,48 +25,35 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(_MSC_VER) && !defined(__NetBSD__) && !defined(_AIX)
-#  include <getopt.h>
-#  include <zint.h>
+#ifndef _MSC_VER
+#include <getopt.h>
+#include <zint.h>
 #else
-#  include "../getopt/getopt.h"
-#  ifdef _MSC_VER
-#    include "zint.h"
-#    if _MSC_VER != 1200 /* VC6 */
-#      pragma warning(disable: 4996) /* function or variable may be unsafe */
-#    endif
-#  else
-#    include <zint.h>
-#  endif
+#include "../getopt/getopt.h"
+#include "zint.h"
+#if _MSC_VER != 1200 /* VC6 */
+#pragma warning(disable: 4996) /* function or variable may be unsafe */
 #endif
-
-/* Following copied from "backend/library.c" */
+#endif /* _MSC_VER */
 
 /* It's assumed that int is at least 32 bits, the following will compile-time fail if not
  * https://stackoverflow.com/a/1980056 */
 typedef char static_assert_int_at_least_32bits[sizeof(int) * CHAR_BIT < 32 ? -1 : 1];
 
-/* Following copied from "backend/common.h" */
-
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((int) (sizeof(x) / sizeof((x)[0])))
 #endif
 
-/* Determine if C89 or C99 (excluding MSVC, which doesn't define __STDC_VERSION__) */
-#ifndef _MSC_VER
-#  if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199000L
-#    define ZINT_IS_C89
-#  elif __STDC_VERSION__ <= 199901L /* Actually includes pseudo-standards "C94/C95" as well */
-#    define ZINT_IS_C99
-#  endif
+/* Determine if C89 (excluding MSVC, which doesn't define __STDC_VERSION__) */
+#if !defined(_MSC_VER) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199000L)
+#define ZINT_IS_C89
 #endif
 
 #ifdef _MSC_VER
 #  include <malloc.h>
 #  define z_alloca(nmemb) _alloca(nmemb)
 #else
-#  if defined(ZINT_IS_C89) || defined(ZINT_IS_C99) || defined(__NuttX__) || defined(_AIX) \
-        || (defined(__sun) && defined(__SVR4) /*Solaris*/)
+#  if defined(ZINT_IS_C89) || defined(__NuttX__) /* C89 or NuttX RTOS */
 #    include <alloca.h>
 #  endif
 #  define z_alloca(nmemb) alloca(nmemb)
@@ -379,8 +366,8 @@ static void to_lower(char source[]) {
 
 /* Return symbology id if `barcode_name` a barcode name */
 static int get_barcode_name(const char *barcode_name) {
-    /* Must be sorted for binary search to work */
-    static const struct { int symbology; const char *n; } names[] = {
+    struct name { const int symbology; const char *n; };
+    static const struct name names[] = { /* Must be sorted for binary search to work */
         { BARCODE_C25LOGIC, "2of5datalogic" }, /* Synonym */
         { BARCODE_C25IATA, "2of5iata" }, /* Synonym */
         { BARCODE_C25IND, "2of5ind" }, /* Synonym */
@@ -534,7 +521,6 @@ static int get_barcode_name(const char *barcode_name) {
         { BARCODE_C25IND, "industrialcode2of5" }, /* Synonym */
         { BARCODE_C25INTER, "interleaved2of5" }, /* Synonym */
         { BARCODE_C25INTER, "interleavedcode2of5" }, /* Synonym */
-        { BARCODE_ISBNX, "isbn" }, /* Synonym */
         { BARCODE_ISBNX, "isbnx" },
         { BARCODE_ITF14, "itf14" },
         { BARCODE_JAPANPOST, "japanpost" },
@@ -637,7 +623,7 @@ static int get_barcode_name(const char *barcode_name) {
 
 /* Whether `filetype` supported by Zint. Sets `png_refused` if `no_png` and PNG requested */
 static int supported_filetype(const char *filetype, const int no_png, int *png_refused) {
-    static const char filetypes[][4] = {
+    static const char *filetypes[] = {
         "bmp", "emf", "eps", "gif", "pcx", "png", "svg", "tif", "txt",
     };
     char lc_filetype[4] = {0};
@@ -703,7 +689,7 @@ static void set_extension(char *file, const char *filetype) {
 
 /* Whether `filetype` is raster type */
 static int is_raster(const char *filetype, const int no_png) {
-    static const char raster_filetypes[][4] = {
+    static const char *raster_filetypes[] = {
         "bmp", "gif", "pcx", "png", "tif",
     };
     int i;
@@ -728,7 +714,7 @@ static int is_raster(const char *filetype, const int no_png) {
 }
 
 /* Helper for `validate_scalexdimdp()` to search for units, returning -2 on error, -1 if not found, else index */
-static int validate_units(char *buf, const char units[][5], int units_size) {
+static int validate_units(char *buf, const char *units[], int units_size) {
     int i;
     char *unit;
 
@@ -750,8 +736,8 @@ static int validate_units(char *buf, const char units[][5], int units_size) {
 
 /* Parse and validate argument "xdim[,resolution]" to "--scalexdimdp" */
 static int validate_scalexdimdp(const char *optarg, float *p_x_dim_mm, float *p_dpmm) {
-    static const char x_units[][5] = { "mm", "in" };
-    static const char r_units[][5] = { "dpmm", "dpi" };
+    static const char *x_units[] = { "mm", "in" };
+    static const char *r_units[] = { "dpmm", "dpi" };
     char x_buf[7 + 1 + 4 + 1] = {0}; /* Allow for 7 digits + dot + 4-char unit + NUL */
     char r_buf[7 + 1 + 4 + 1] = {0}; /* As above */
     int units_i; /* For `validate_units()` */
@@ -1407,7 +1393,7 @@ static int do_exit(int error_number) {
     return error_number; /* Not reached */
 }
 
-typedef struct { const char *arg; int opt; } arg_opt;
+typedef struct { char *arg; int opt; } arg_opt;
 
 int main(int argc, char **argv) {
     struct zint_symbol *my_symbol;
@@ -1820,11 +1806,13 @@ int main(int argc, char **argv) {
                     return do_exit(ZINT_ERROR_INVALID_OPTION);
                 }
                 switch (val) {
-                    case 0:
-                    case 90:
-                    case 180:
-                    case 270:
-                        rotate_angle = val;
+                    case 90: rotate_angle = 90;
+                        break;
+                    case 180: rotate_angle = 180;
+                        break;
+                    case 270: rotate_angle = 270;
+                        break;
+                    case 0: rotate_angle = 0;
                         break;
                     default:
                         fprintf(stderr,

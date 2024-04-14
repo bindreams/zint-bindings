@@ -5,8 +5,8 @@
 ;
 [subrepo]
 	remote = https://github.com/zint/zint
-	branch = master
-	commit = 0eaa9f3e7d6b0709d54c99cb15383f4335cd3d3e
-	parent = b125064b7c9790745cbce1f1dfe11fe132575afe
+	branch = 2.13.0
+	commit = a9b526be08bfe9891bdec87dbb9bf11b3b56e5d9
+	parent = c8e3a73eb762931856373f28209aac7f05fe0777
 	method = merge
 	cmdver = 0.4.6

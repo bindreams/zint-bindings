@@ -1,7 +1,7 @@
 /*  library.c - external functions of libzint */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2009-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2009-2023 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -68,14 +68,13 @@ static void set_symbol_defaults(struct zint_symbol *symbol) {
     symbol->show_hrt = 1; /* Show human readable text */
     symbol->input_mode = DATA_MODE;
     symbol->eci = 0; /* Default 0 uses ECI 3 */
-    symbol->dot_size = 0.8f; /* 0.4 / 0.5 */
+    symbol->dot_size = 4.0f / 5.0f;
     symbol->text_gap = 1.0f;
     symbol->guard_descent = 5.0f;
     symbol->warn_level = WARN_DEFAULT;
     symbol->bitmap = NULL;
     symbol->alphamap = NULL;
     symbol->vector = NULL;
-    symbol->memfile = NULL;
 }
 
 /* Create and initialize a symbol structure */
@@ -116,11 +115,6 @@ void ZBarcode_Clear(struct zint_symbol *symbol) {
     }
     symbol->bitmap_width = 0;
     symbol->bitmap_height = 0;
-    if (symbol->memfile != NULL) {
-        free(symbol->memfile);
-        symbol->memfile = NULL;
-    }
-    symbol->memfile_size = 0;
 
     /* If there is a rendered version, ensure its memory is released */
     vector_free(symbol);
@@ -130,13 +124,12 @@ void ZBarcode_Clear(struct zint_symbol *symbol) {
 void ZBarcode_Reset(struct zint_symbol *symbol) {
     if (!symbol) return;
 
-    if (symbol->bitmap != NULL)
+    if (symbol->bitmap != NULL) {
         free(symbol->bitmap);
-    if (symbol->alphamap != NULL)
+    }
+    if (symbol->alphamap != NULL) {
         free(symbol->alphamap);
-    if (symbol->memfile != NULL)
-        free(symbol->memfile);
-
+    }
     vector_free(symbol);
 
     memset(symbol, 0, sizeof(*symbol));
@@ -151,9 +144,8 @@ void ZBarcode_Delete(struct zint_symbol *symbol) {
         free(symbol->bitmap);
     if (symbol->alphamap != NULL)
         free(symbol->alphamap);
-    if (symbol->memfile != NULL)
-        free(symbol->memfile);
 
+    /* If there is a rendered version, ensure its memory is released */
     vector_free(symbol);
 
     free(symbol);
@@ -565,15 +557,16 @@ static int has_hrt(const int symbology) {
     return 1;
 }
 
-/* Suppress clang warning: a function declaration without a prototype is deprecated in all versions of C
-   (not included in gcc's "-wpedantic") */
-#if defined(__clang__)
+/* Suppress warning ISO C forbids initialization between function pointer and ‘void *’ */
+#if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-prototypes"
+#pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
 /* Used for dispatching barcodes and for whether symbol id valid */
-static int (*const barcode_funcs[BARCODE_LAST + 1])() = {
+typedef int (*barcode_segs_func_t)(struct zint_symbol *, struct zint_seg[], const int);
+typedef int (*barcode_func_t)(struct zint_symbol *, unsigned char[], int);
+static const void *barcode_funcs[BARCODE_LAST + 1] = {
           NULL,      code11, c25standard,    c25inter,     c25iata, /*0-4*/
           NULL,    c25logic,      c25ind,      code39,    excode39, /*5-9*/
           NULL,        NULL,        NULL,        eanx,        eanx, /*10-14*/
@@ -606,12 +599,6 @@ static int (*const barcode_funcs[BARCODE_LAST + 1])() = {
           rmqr,       bc412,
 };
 
-#if defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-typedef int (*barcode_segs_func_t)(struct zint_symbol *, struct zint_seg[], const int);
-typedef int (*barcode_func_t)(struct zint_symbol *, unsigned char[], int);
 static int reduced_charset(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count);
 
 /* Main dispatch, checking for barcodes which handle ECIs/character sets themselves, otherwise calling
@@ -690,6 +677,10 @@ static int reduced_charset(struct zint_symbol *symbol, struct zint_seg segs[], c
     return error_number;
 }
 
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
 /* Remove Unicode BOM at start of data */
 static void strip_bom(unsigned char *source, int *input_length) {
     int i;
@@ -745,9 +736,6 @@ static int esc_base(struct zint_symbol *symbol, unsigned char *input_string, int
 /* Helper to parse escape sequences. If `escaped_string` NULL, calculates length only */
 static int escape_char_process(struct zint_symbol *symbol, unsigned char *input_string, int *p_length,
             unsigned char *escaped_string) {
-                               /* NUL   EOT   BEL   BS    HT    LF    VT    FF    CR    ESC   GS    RS   \ */
-    static const char escs[] = {  '0',  'E',  'a',  'b',  't',  'n',  'v',  'f',  'r',  'e',  'G',  'R', '\\', '\0' };
-    static const char vals[] = { 0x00, 0x04, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x1B, 0x1D, 0x1E, 0x5C };
     const int length = *p_length;
     int in_posn = 0, out_posn = 0;
     int ch;
@@ -766,19 +754,7 @@ static int escape_char_process(struct zint_symbol *symbol, unsigned char *input_
             /* NOTE: if add escape character, must also update regex in "frontend_qt/datawindow.php" */
             switch (ch) {
                 case '0':
-                case 'E':
-                case 'a':
-                case 'b':
-                case 't':
-                case 'n':
-                case 'v':
-                case 'f':
-                case 'r':
-                case 'e':
-                case 'G':
-                case 'R':
-                case '\\':
-                    if (escaped_string) escaped_string[out_posn] = vals[posn(escs, ch)];
+                    if (escaped_string) escaped_string[out_posn] = 0x00; /* Null */
                     in_posn += 2;
                     break;
                 case '^': /* CODE128 specific */
@@ -803,6 +779,50 @@ static int escape_char_process(struct zint_symbol *symbol, unsigned char *input_
                         }
                     }
                     break;
+                case 'E':
+                    if (escaped_string) escaped_string[out_posn] = 0x04; /* End of Transmission */
+                    in_posn += 2;
+                    break;
+                case 'a':
+                    if (escaped_string) escaped_string[out_posn] = 0x07; /* Bell */
+                    in_posn += 2;
+                    break;
+                case 'b':
+                    if (escaped_string) escaped_string[out_posn] = 0x08; /* Backspace */
+                    in_posn += 2;
+                    break;
+                case 't':
+                    if (escaped_string) escaped_string[out_posn] = 0x09; /* Horizontal tab */
+                    in_posn += 2;
+                    break;
+                case 'n':
+                    if (escaped_string) escaped_string[out_posn] = 0x0a; /* Line feed */
+                    in_posn += 2;
+                    break;
+                case 'v':
+                    if (escaped_string) escaped_string[out_posn] = 0x0b; /* Vertical tab */
+                    in_posn += 2;
+                    break;
+                case 'f':
+                    if (escaped_string) escaped_string[out_posn] = 0x0c; /* Form feed */
+                    in_posn += 2;
+                    break;
+                case 'r':
+                    if (escaped_string) escaped_string[out_posn] = 0x0d; /* Carriage return */
+                    in_posn += 2;
+                    break;
+                case 'e':
+                    if (escaped_string) escaped_string[out_posn] = 0x1b; /* Escape */
+                    in_posn += 2;
+                    break;
+                case 'G':
+                    if (escaped_string) escaped_string[out_posn] = 0x1d; /* Group Separator */
+                    in_posn += 2;
+                    break;
+                case 'R':
+                    if (escaped_string) escaped_string[out_posn] = 0x1e; /* Record Separator */
+                    in_posn += 2;
+                    break;
                 case 'd':
                 case 'o':
                 case 'x':
@@ -811,6 +831,10 @@ static int escape_char_process(struct zint_symbol *symbol, unsigned char *input_
                     }
                     if (escaped_string) escaped_string[out_posn] = val;
                     in_posn += 4 + (ch != 'x');
+                    break;
+                case '\\':
+                    if (escaped_string) escaped_string[out_posn] = '\\';
+                    in_posn += 2;
                     break;
                 case 'u':
                 case 'U':
@@ -1258,14 +1282,16 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
             && (symbol->input_mode & 0x07) == UNICODE_MODE) {
         /* Try another ECI mode */
         const int first_eci_set = get_best_eci_segs(symbol, local_segs, seg_count);
-        error_number = extended_or_reduced_charset(symbol, local_segs, seg_count);
-        /* Inclusion of ECI more noteworthy than other warnings, so overwrite (if any) */
-        if (error_number < ZINT_ERROR) {
-            error_number = ZINT_WARN_USES_ECI;
-            if (!(symbol->debug & ZINT_DEBUG_TEST)) {
-                sprintf(symbol->errtxt, "222: Encoded data includes ECI %d", first_eci_set);
+        if (first_eci_set != 0) {
+            error_number = extended_or_reduced_charset(symbol, local_segs, seg_count);
+            /* Inclusion of ECI more noteworthy than other warnings, so overwrite (if any) */
+            if (error_number < ZINT_ERROR) {
+                error_number = ZINT_WARN_USES_ECI;
+                if (!(symbol->debug & ZINT_DEBUG_TEST)) {
+                    sprintf(symbol->errtxt, "222: Encoded data includes ECI %d", first_eci_set);
+                }
+                if (symbol->debug & ZINT_DEBUG_PRINT) printf("Added ECI %d\n", first_eci_set);
             }
-            if (symbol->debug & ZINT_DEBUG_PRINT) printf("Added ECI %d\n", first_eci_set);
         }
     }
 
@@ -1307,7 +1333,8 @@ static int check_output_args(struct zint_symbol *symbol, int rotate_angle) {
     return 0;
 }
 
-static const struct { const char extension[4]; int is_raster; int filetype; } filetypes[] = {
+struct zint_filetypes { const char extension[4]; int is_raster; int filetype; };
+static const struct zint_filetypes filetypes[] = {
     { "BMP", 1, OUT_BMP_FILE }, { "EMF", 0, OUT_EMF_FILE }, { "EPS", 0, OUT_EPS_FILE },
     { "GIF", 1, OUT_GIF_FILE }, { "PCX", 1, OUT_PCX_FILE }, { "PNG", 1, OUT_PNG_FILE },
     { "SVG", 0, OUT_SVG_FILE }, { "TIF", 1, OUT_TIF_FILE }, { "TXT", 0, 0 }
@@ -1406,16 +1433,19 @@ int ZBarcode_Encode_and_Print(struct zint_symbol *symbol, const unsigned char *s
 int ZBarcode_Encode_Segs_and_Print(struct zint_symbol *symbol, const struct zint_seg segs[], const int seg_count,
             int rotate_angle) {
     int error_number;
-    int warn_number;
+    int first_err;
 
-    warn_number = ZBarcode_Encode_Segs(symbol, segs, seg_count);
-    if (warn_number >= ZINT_ERROR) {
-        return warn_number;
+    error_number = ZBarcode_Encode_Segs(symbol, segs, seg_count);
+    if (error_number >= ZINT_ERROR) {
+        return error_number;
     }
 
+    first_err = error_number;
     error_number = ZBarcode_Print(symbol, rotate_angle);
-
-    return error_number ? error_number : warn_number;
+    if (error_number == 0) {
+        error_number = first_err;
+    }
+    return error_number;
 }
 
 /* Encode and output a symbol to memory as raster (`symbol->bitmap`) */
@@ -1436,16 +1466,20 @@ int ZBarcode_Encode_and_Buffer(struct zint_symbol *symbol, const unsigned char *
 int ZBarcode_Encode_Segs_and_Buffer(struct zint_symbol *symbol, const struct zint_seg segs[],
             const int seg_count, int rotate_angle) {
     int error_number;
-    int warn_number;
+    int first_err;
 
-    warn_number = ZBarcode_Encode_Segs(symbol, segs, seg_count);
-    if (warn_number >= ZINT_ERROR) {
-        return warn_number;
+    error_number = ZBarcode_Encode_Segs(symbol, segs, seg_count);
+    if (error_number >= ZINT_ERROR) {
+        return error_number;
     }
 
+    first_err = error_number;
     error_number = ZBarcode_Buffer(symbol, rotate_angle);
+    if (error_number == 0) {
+        error_number = first_err;
+    }
 
-    return error_number ? error_number : warn_number;
+    return error_number;
 }
 
 /* Encode and output a symbol to memory as vector (`symbol->vector`) */
@@ -1466,16 +1500,20 @@ int ZBarcode_Encode_and_Buffer_Vector(struct zint_symbol *symbol, const unsigned
 int ZBarcode_Encode_Segs_and_Buffer_Vector(struct zint_symbol *symbol, const struct zint_seg segs[],
             const int seg_count, int rotate_angle) {
     int error_number;
-    int warn_number;
+    int first_err;
 
-    warn_number = ZBarcode_Encode_Segs(symbol, segs, seg_count);
-    if (warn_number >= ZINT_ERROR) {
-        return warn_number;
+    error_number = ZBarcode_Encode_Segs(symbol, segs, seg_count);
+    if (error_number >= ZINT_ERROR) {
+        return error_number;
     }
 
+    first_err = error_number;
     error_number = ZBarcode_Buffer_Vector(symbol, rotate_angle);
+    if (error_number == 0) {
+        error_number = first_err;
+    }
 
-    return error_number ? error_number : warn_number;
+    return error_number;
 }
 
 /* Encode a barcode using input data from file `filename` */
@@ -1518,7 +1556,7 @@ int ZBarcode_Encode_File(struct zint_symbol *symbol, const char *filename) {
 
         fileLen = ftell(file);
 
-        /* On many Linux distros `ftell()` returns LONG_MAX not -1 on error */
+        /* On many Linux distros ftell() returns LONG_MAX not -1 on error */
         if (fileLen <= 0 || fileLen == LONG_MAX) {
             (void) fclose(file);
             return error_tag(symbol, ZINT_ERROR_INVALID_DATA, "235: Input file empty or unseekable");
@@ -1574,46 +1612,58 @@ int ZBarcode_Encode_File(struct zint_symbol *symbol, const char *filename) {
 /* Encode a symbol using input data from file `filename` and output to file `symbol->outfile` */
 int ZBarcode_Encode_File_and_Print(struct zint_symbol *symbol, const char *filename, int rotate_angle) {
     int error_number;
-    int warn_number;
+    int first_err;
 
-    warn_number = ZBarcode_Encode_File(symbol, filename);
-    if (warn_number >= ZINT_ERROR) {
-        return warn_number;
+    error_number = ZBarcode_Encode_File(symbol, filename);
+    if (error_number >= ZINT_ERROR) {
+        return error_number;
     }
 
+    first_err = error_number;
     error_number = ZBarcode_Print(symbol, rotate_angle);
+    if (error_number == 0) {
+        error_number = first_err;
+    }
 
-    return error_number ? error_number : warn_number;
+    return error_number;
 }
 
 /* Encode a symbol using input data from file `filename` and output to memory as raster (`symbol->bitmap`) */
 int ZBarcode_Encode_File_and_Buffer(struct zint_symbol *symbol, char const *filename, int rotate_angle) {
     int error_number;
-    int warn_number;
+    int first_err;
 
-    warn_number = ZBarcode_Encode_File(symbol, filename);
-    if (warn_number >= ZINT_ERROR) {
-        return warn_number;
+    error_number = ZBarcode_Encode_File(symbol, filename);
+    if (error_number >= ZINT_ERROR) {
+        return error_number;
     }
 
+    first_err = error_number;
     error_number = ZBarcode_Buffer(symbol, rotate_angle);
+    if (error_number == 0) {
+        error_number = first_err;
+    }
 
-    return error_number ? error_number : warn_number;
+    return error_number;
 }
 
 /* Encode a symbol using input data from file `filename` and output to memory as vector (`symbol->vector`) */
 int ZBarcode_Encode_File_and_Buffer_Vector(struct zint_symbol *symbol, const char *filename, int rotate_angle) {
     int error_number;
-    int warn_number;
+    int first_err;
 
-    warn_number = ZBarcode_Encode_File(symbol, filename);
-    if (warn_number >= ZINT_ERROR) {
-        return warn_number;
+    error_number = ZBarcode_Encode_File(symbol, filename);
+    if (error_number >= ZINT_ERROR) {
+        return error_number;
     }
 
+    first_err = error_number;
     error_number = ZBarcode_Buffer_Vector(symbol, rotate_angle);
+    if (error_number == 0) {
+        error_number = first_err;
+    }
 
-    return error_number ? error_number : warn_number;
+    return error_number;
 }
 
 /* Checks whether a symbology is supported */

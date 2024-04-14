@@ -1,7 +1,7 @@
 /*  eci.c - Extended Channel Interpretations */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2009-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2009-2023 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -764,7 +764,7 @@ INTERNAL int utf8_to_eci(const int eci, const unsigned char source[], unsigned c
     return 0;
 }
 
-/* Find the lowest single-byte ECI mode which will encode a given set of Unicode text, assuming valid UTF-8 */
+/* Find the lowest single-byte ECI mode which will encode a given set of Unicode text */
 INTERNAL int get_best_eci(const unsigned char source[], int length) {
     int eci = 3;
     /* Note: attempting single-byte conversions only, so get_eci_length() unnecessary */
@@ -782,12 +782,14 @@ INTERNAL int get_best_eci(const unsigned char source[], int length) {
         eci++;
     } while (eci < 25);
 
-    assert(is_valid_utf8(source, length));
+    if (!is_valid_utf8(source, length)) {
+        return 0;
+    }
 
     return 26; /* If all of these fail, use UTF-8! */
 }
 
-/* Call `get_best_eci()` for each segment, assuming valid UTF-8. Returns 0 on failure, first ECI set on success */
+/* Call `get_best_eci()` for each segment. Returns 0 on failure, first ECI set on success */
 INTERNAL int get_best_eci_segs(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count) {
     const int default_eci = symbol->symbology == BARCODE_GRIDMATRIX ? 29 : symbol->symbology == BARCODE_UPNQR ? 4 : 3;
     int first_eci_set = 0;
@@ -795,7 +797,10 @@ INTERNAL int get_best_eci_segs(struct zint_symbol *symbol, struct zint_seg segs[
 
     for (i = 0; i < seg_count; i++) {
         if (segs[i].eci == 0) {
-            const int eci = get_best_eci(segs[i].source, segs[i].length);
+            int eci = get_best_eci(segs[i].source, segs[i].length);
+            if (eci == 0) {
+                return 0;
+            }
             if (eci == default_eci) {
                 if (i != 0 && segs[i - 1].eci != 0 && segs[i - 1].eci != default_eci) {
                     segs[i].eci = eci;

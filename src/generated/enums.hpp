@@ -379,4 +379,3 @@ inline void init_enum_bindings(pybind11::module_& m) {
 		.value("STRUCTAPP", CapabilityFlags::STRUCTAPP, "Supports Structured Append?")
 		.value("COMPLIANT_HEIGHT", CapabilityFlags::COMPLIANT_HEIGHT, "Has compliant height?");
 }
-

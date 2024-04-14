@@ -250,8 +250,8 @@ def main():
     )
 
     text = clang_format(text)
-
-    print(text)
+    with open("src/generated/enums.hpp", "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
 
 
 if __name__ == "__main__":

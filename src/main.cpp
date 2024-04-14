@@ -288,11 +288,12 @@ struct Symbol {
 		return reinterpret_cast<Vector*>(m_handle->vector);
 	}
 
-	py::object get_memfile() {
-		if (m_handle->memfile == nullptr) return py::none{};
+	// In a future release...
+	// py::object get_memfile() {
+	// 	if (m_handle->memfile == nullptr) return py::none{};
 
-		return to_memoryview<1>(m_handle->memfile, {m_handle->memfile_size}, true);
-	}
+	// 	return to_memoryview<1>(m_handle->memfile, {m_handle->memfile_size}, true);
+	// }
 
 private:
 	void handle_error(int code) {
@@ -451,7 +452,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_property_readonly("errtxt", &Symbol::get_errtxt, py::doc{"Error message if an error or warning occurs (output only)"})
 		.def_property_readonly("bitmap", &Symbol::get_bitmap, py::doc{"Stored bitmap image (raster output only)"})
 		.def_property_readonly("alphamap", &Symbol::get_alphamap, py::doc{"Array of alpha values used (raster output only)"})
-		.def_property_readonly("vector", &Symbol::get_vector, py::doc{"Vector header (vector output only)"})
-		.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"});
+		.def_property_readonly("vector", &Symbol::get_vector, py::doc{"Vector header (vector output only)"});
+		//.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"});  // In a future release
 	// clang-format on
 }

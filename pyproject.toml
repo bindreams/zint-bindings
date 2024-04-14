@@ -4,8 +4,13 @@ requires = [
     "wheel",
     "ninja",
     "cmake>=3.12",
-	# Actual build dependencies
-	"clang-format >= 18",
-	"varformat"
+	"pip >= 24"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = "missing-function-docstring, too-many-arguments, too-many-locals"
+max-line-length = 120
+
+[tool.black]
+line-length = 120

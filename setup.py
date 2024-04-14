@@ -1,40 +1,37 @@
 import os
-import re
 import shutil
 import subprocess as sp
-import sys
 from pathlib import Path
 
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
 
-# A CMakeExtension needs a sourcedir instead of a file list.
-# The name must be the _single_ output extension from the CMake build.
-# If you need multiple extensions, see scikit-build.
 class CMakeExtension(Extension):
     def __init__(self, name: str, sourcedir: str = "") -> None:
         super().__init__(name, sources=[])
         self.sourcedir = os.fspath(Path(sourcedir).resolve())
-        # self.extra_objects = ["zlib1.dll", "libpng16.dll"]
 
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
-        print(self.get_ext_fullpath(ext.name))
+        extension_path = Path.cwd() / self.get_ext_fullpath(ext.name)
+        extension_dir = extension_path.parent.resolve()
 
         env = os.environ.copy()
-        # env["ZINT_BINDINGS_TARGET_DIRECTORY"] = str(
-        #     Path(self.get_ext_fullpath(ext.name)).parent
-        # )
+        env["ZINT_BINDINGS_TARGET_DIR"] = str(extension_dir)
 
-        shutil.rmtree("build")
+        # Set ZINT_BINDINGS_OVERRIDE_PIP_SITE_PACKAGES to the temp build dependencies directory.
+        # CMake installs it's own dependencies at configure time.
+        build_site_packages = (Path(env["PYTHONPATH"]) / "../overlay").resolve()
+        env["ZINT_BINDINGS_OVERRIDE_PIP_SITE_PACKAGES"] = str(build_site_packages)
+
+        if Path("build").exists():
+            shutil.rmtree("build")
         sp.run(["cmake", "--preset", "windows"], check=True, env=env)
         sp.run(["cmake", "--build", "build"], check=True)
 
 
-# The information here can also be placed in setup.cfg - better separation of
-# logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="zint",
     version="0.1.0",

@@ -1,12 +1,31 @@
+[project]
+name = "zint"
+version = "0.1.0"
+description="A minimal example package (with pybind11)"
+
 [build-system]
 requires = [
-    "setuptools>=42",
-    "wheel",
-    "ninja",
-    "cmake>=3.12",
-	"pip >= 24"
+    "scikit-build-core>=0.8.2",
+    "pybind11",
+    # Build dependencies from CMake. Please keep this in sync with relevant requirements files.
+    "pip >= 24",
+    # scripts/generate-enums.requirements.txt
+    "clang-format >= 18",
+    "varformat",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+cmake.targets = ["zint_bindings"]
+install.components = ["zint_bindings"]
+
+cmake.version = ">=3.26"
+ninja.version = ">=1.11"
+ninja.make-fallback = false
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "win32"
+cmake.args = ["-DVCPKG_TARGET_TRIPLET=x64-windows-static"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = "missing-function-docstring, too-many-arguments, too-many-locals"

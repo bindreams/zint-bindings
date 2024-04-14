@@ -21,11 +21,6 @@ class CMakeBuild(build_ext):
         env = os.environ.copy()
         env["ZINT_BINDINGS_TARGET_DIR"] = str(extension_dir)
 
-        # Set ZINT_BINDINGS_OVERRIDE_PIP_SITE_PACKAGES to the temp build dependencies directory.
-        # CMake installs it's own dependencies at configure time.
-        build_site_packages = (Path(env["PYTHONPATH"]) / "../overlay").resolve()
-        env["ZINT_BINDINGS_OVERRIDE_PIP_SITE_PACKAGES"] = str(build_site_packages)
-
         if Path("build").exists():
             shutil.rmtree("build")
         sp.run(["cmake", "--preset", "windows"], check=True, env=env)

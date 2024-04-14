@@ -1,4 +1,4 @@
-"""Generate src/enums.hpp file. Run this from the root directory."""
+"""Generate src/zint/generated/enums.hpp file. Run this from the root directory."""
 
 import json
 import re
@@ -250,7 +250,7 @@ def main():
     )
 
     text = clang_format(text)
-    with open("src/generated/enums.hpp", "w", encoding="utf-8", newline="\n") as f:
+    with open("src/zint/generated/enums.hpp", "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
 

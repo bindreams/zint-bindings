@@ -1,33 +1,3 @@
-Version 2.13.0.9 (dev) not released yet
-=======================================
-
-**Incompatible changes**
-------------------------
-- New `memfile` & `memfile_size` fields in `symbol` for use with new output
-  option `BARCODE_MEMORY_FILE`
-
-Changes
--------
-- BMP: lessen heap memory usage by only `malloc()`ing a row
-- GIF: lessen heap memory usage by paging; use standard colour char map
-- Add `BARCODE_MEMORY_FILE` to `symbol->output_options` to allow outputting to
-  in-memory buffer `symbol->memfile` instead of to file `symbol->outfile`,
-  ticket #301
-- CODE128: improve encodation on A/B shifting, props Daniel Gredler (Okapi)
-
-Bugs
-----
-- raster/BMP/GIF/PCX/TIF: fix dealing with very large data (use `size_t`)
-- raster: add `raster_malloc()` to fail > 1GB (avoids very large output files;
-  also lessens to some degree chances of being victim of OOM killer on Linux)
-- GUI: printing scale dialog: set maxima on X-dim and resolution to keep scale
-  <= 200
-- BMP/EMF/PCX/TIF: fix endianness on big-endian machines (note TIF now always
-  written as little-endian - simplifies testing)
-- ITF14/DPLEIT/DPIDENT: ignore `option_2` (check digit options)
-- GUI: scalewindow: fix cropping of initial resolution and bound X-dim <= 10
-
-
 Version 2.13.0 (2023-12-18)
 ===========================
 

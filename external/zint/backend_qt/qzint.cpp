@@ -1,7 +1,7 @@
 /***************************************************************************
  *   Copyright (C) 2008 by BogDan Vatra                                    *
  *   bogdan@licentia.eu                                                    *
- *   Copyright (C) 2010-2024 Robin Stuart                                  *
+ *   Copyright (C) 2010-2023 Robin Stuart                                  *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -23,30 +23,27 @@
 #endif
 
 //#include <QDebug>
+#include "qzint.h"
+#include <math.h>
+#include <stdio.h>
 #include <QFontDatabase>
 #include <QFontMetrics>
 /* The following include is necessary to compile with Qt 5.15 on Windows; Qt 5.7 did not require it */
 #include <QPainterPath>
 #include <QRegularExpression>
-
-#include <math.h>
-#include <stdio.h>
-#include "qzint.h"
 #include "../backend/fonts/normal_ttf.h" /* Arimo */
 #include "../backend/fonts/upcean_ttf.h" /* OCR-B subset (digits, "<", ">") */
 
 // Shorthand
-#define QSL     QStringLiteral
-#define QSEmpty QLatin1String("")
+#define QSL QStringLiteral
 
 namespace Zint {
     static const int maxSegs = 256;
     static const int maxCLISegs = 10; /* CLI restricted to 10 segments (including main data) */
 
     /* Matches RGB(A) hex string or CMYK decimal "C,M,Y,K" percentage string */
-    static const QString colorREstr(
+    static const QRegularExpression colorRE(
                                 QSL("^([0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?)|(((100|[0-9]{0,2}),){3}(100|[0-9]{0,2}))$"));
-    Q_GLOBAL_STATIC_WITH_ARGS(QRegularExpression, colorRE, (colorREstr))
 
     static const QString normalFontFamily = QSL("Arimo"); /* Sans-serif metrically compatible with Arial */
     static const QString upceanFontFamily = QSL("OCRB"); /* Monospace OCR-B */
@@ -467,7 +464,7 @@ namespace Zint {
             memset(m_structapp.id, 0, sizeof(m_structapp.id));
             if (!id.isEmpty()) {
                 QByteArray idArr = id.toLatin1();
-#if defined(__GNUC__) && __GNUC__ >= 8 && !defined(__clang__)
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
@@ -491,7 +488,7 @@ namespace Zint {
     }
 
     bool QZint::setFgStr(const QString& fgStr) {
-        if (fgStr.indexOf(*colorRE) == 0) {
+        if (fgStr.indexOf(colorRE) == 0) {
             m_fgStr = fgStr;
             return true;
         }
@@ -513,7 +510,7 @@ namespace Zint {
     }
 
     bool QZint::setBgStr(const QString& bgStr) {
-        if (bgStr.indexOf(*colorRE) == 0) {
+        if (bgStr.indexOf(colorRE) == 0) {
             m_bgStr = bgStr;
             return true;
         }
@@ -1198,7 +1195,7 @@ namespace Zint {
         if (ZBarcode_BarcodeName(symbology, buf) == 0) {
             return QString(buf);
         }
-        return QSEmpty;
+        return QSL("");
     }
 
     /* Whether Zint library "libzint" built with PNG support or not */

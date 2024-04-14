@@ -19,6 +19,12 @@ target_link_libraries(${TARGET_NAME} PRIVATE zint-static)
 target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23)
 target_compile_definitions(${TARGET_NAME} PRIVATE BINDINGS_VERSION=${PROJECT_VERSION})
 
+include(cmake/warnings.cmake)
+target_compile_warnings(${TARGET_NAME} PRIVATE
+	GNU all extra pedantic error
+	MSVC 4 X
+)
+
 install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION . COMPONENT ${TARGET_NAME})
 
 # generate-enums.py script =============================================================================================

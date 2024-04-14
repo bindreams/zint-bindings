@@ -10,8 +10,8 @@
 
 namespace py = pybind11;
 
-#define QUOTED_(X) #X
-#define QUOTED(X) QUOTED_(X)
+#define QUOTED_(...) #__VA_ARGS__
+#define QUOTED(...) QUOTED_(__VA_ARGS__)
 
 /**
  * @brief Returns true if `T` is an array bounded in all dimensions, such as x[10][20][30].
@@ -67,7 +67,7 @@ inline py::memoryview to_memoryview(T* data, std::array<int, N> shape, bool read
 	static_assert(sizeof(T) == 1, "memoryview only allows raw memory");
 	std::array<int, N> strides;
 
-	std::size_t stride = sizeof(T);
+	int stride = sizeof(T);
 	for (int i = N - 1; i >= 0; i--) {
 		strides[i] = stride;
 		stride *= shape[i];
@@ -114,7 +114,7 @@ inline std::span<unsigned char const> view_bytes(py::bytes const& bytes) {
 		std::memcpy(result.get(), info.ptr, info.size);
 	} else {
 		// Objects are adjacent in memory; copy them one-by-one.
-		for (std::size_t i = 0; i < info.size; ++i) {
+		for (std::size_t i = 0; i < static_cast<std::size_t>(info.size); ++i) {
 			result[i] = static_cast<unsigned char*>(info.ptr)[i * info.strides[0]];
 		}
 	}

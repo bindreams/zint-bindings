@@ -1,0 +1,14 @@
+{
+	"version": 6,
+	"configurePresets": [
+		{
+			"name": "user-default",
+			"inherits": "windows",
+			"binaryDir": "build",
+			"cacheVariables": {
+				"CMAKE_EXPORT_COMPILE_COMMANDS": true,
+				"CMAKE_COLOR_DIAGNOSTICS": true
+			}
+		}
+	]
+}

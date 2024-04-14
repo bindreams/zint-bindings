@@ -1,0 +1,19 @@
+{
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "windows",
+			"binaryDir": "build",
+			"generator": "Ninja",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release",
+				"CMAKE_C_COMPILER": "cl.exe",
+				"CMAKE_CXX_COMPILER": "cl.exe"
+			},
+			"architecture": {
+				"value": "x64",
+				"strategy": "external"
+			}
+		}
+	]
+}

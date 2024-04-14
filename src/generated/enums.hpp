@@ -121,8 +121,7 @@ enum class OutputOptions : int {
 	BARCODE_NO_QUIET_ZONES = 4096,
 	COMPLIANT_HEIGHT = 8192,
 	EANUPC_GUARD_WHITESPACE = 16384,
-	EMBED_VECTOR_FONT = 32768,
-	BARCODE_MEMORY_FILE = 65536
+	EMBED_VECTOR_FONT = 32768
 };
 enum class InputMode : int {
 	DATA = 0,
@@ -314,11 +313,6 @@ inline void init_enum_bindings(pybind11::module_& m) {
 			"EMBED_VECTOR_FONT",
 			OutputOptions::EMBED_VECTOR_FONT,
 			"Embed font in vector output - currently only for SVG output"
-		)
-		.value(
-			"BARCODE_MEMORY_FILE",
-			OutputOptions::BARCODE_MEMORY_FILE,
-			"Write output to in-memory buffer `memfile` instead of to `outfile`"
 		);
 	py::enum_<InputMode>(m, "InputMode", py::arithmetic{}, "Values for `Symbol.input_mode`")
 		.value("DATA", InputMode::DATA, "Binary")

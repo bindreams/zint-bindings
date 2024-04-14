@@ -71,10 +71,11 @@ public:
 	py::memoryview get_source() { return to_memoryview<1>(source, {length}, false); }
 	void set_source(py::buffer const& val) {
 		auto [data, size] = copy_buffer(val);
+		if (size > std::numeric_limits<decltype(zint_seg::length)>::max()) throw py::value_error("buffer is too large");
 
 		if (source != nullptr) delete[] source;
 		source = data.release();
-		length = size;
+		length = static_cast<decltype(zint_seg::length)>(size);
 	}
 
 	friend void swap(Seg& lhs, Seg& rhs) {
@@ -112,12 +113,18 @@ struct Symbol {
 
 	void encode(py::bytes const& bytes) {
 		auto data = view_bytes(bytes);
-		handle_error(ZBarcode_Encode(m_handle, data.data(), data.size()));
+		if (data.size() > std::numeric_limits<int>::max()) throw py::value_error("buffer is too large");
+
+		handle_error(ZBarcode_Encode(m_handle, data.data(), static_cast<int>(data.size())));
 	}
 
 	void encode_segs(std::vector<Seg> const& segs) {
 		static_assert(SafelyReinterpretable<Seg, zint_seg>);
-		handle_error(ZBarcode_Encode_Segs(m_handle, static_cast<zint_seg const*>(segs.data()), segs.size()));
+		if (segs.size() > std::numeric_limits<int>::max()) throw py::value_error("too many segments");
+
+		handle_error(
+			ZBarcode_Encode_Segs(m_handle, static_cast<zint_seg const*>(segs.data()), static_cast<int>(segs.size()))
+		);
 	}
 
 	void encode_segs(py::iterable const& segs) {
@@ -298,7 +305,7 @@ struct Symbol {
 private:
 	void handle_error(int code) {
 		if (code == 0) return;
-		if (code < ZINT_ERROR) return issue_warning(code);
+		if (code < ZINT_ERROR) return issue_warning();
 
 		switch (code) {
 			case ZINT_ERROR_TOO_LONG:
@@ -318,7 +325,7 @@ private:
 		}
 	}
 
-	void issue_warning(int code) {
+	void issue_warning() {
 		py::object logging = py::module_::import("logging");
 		py::object getLogger = logging.attr("getLogger");
 		py::object logger = getLogger(QUOTED(PACKAGE_NAME));

@@ -333,6 +333,7 @@ private:
 
 PYBIND11_MODULE(PACKAGE_NAME, m) {
 	m.doc() = "A barcode encoding library supporting over 50 symbologies.";
+	m.attr("__version__") = QUOTED(BINDINGS_VERSION);
 	m.attr("__zint_version__") = [] {
 		// The implementation of ZBarcode_Version is kinda weird and this result will only make sense for release
 		// versions of zint.

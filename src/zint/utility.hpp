@@ -10,7 +10,8 @@
 
 namespace py = pybind11;
 
-#define QUOTED(X) #X
+#define QUOTED_(X) #X
+#define QUOTED(X) QUOTED_(X)
 
 /**
  * @brief Returns true if `T` is an array bounded in all dimensions, such as x[10][20][30].

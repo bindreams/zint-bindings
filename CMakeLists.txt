@@ -17,7 +17,7 @@ target_sources(${TARGET_NAME} PRIVATE FILE_SET HEADERS BASE_DIRS src FILES ${${T
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME zint)
 target_link_libraries(${TARGET_NAME} PRIVATE zint-static)
 target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23)
-target_compile_definitions(${TARGET_NAME} PRIVATE VERSION_INFO=${PROJECT_VERSION})
+target_compile_definitions(${TARGET_NAME} PRIVATE BINDINGS_VERSION=${PROJECT_VERSION})
 
 install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION . COMPONENT ${TARGET_NAME})
 

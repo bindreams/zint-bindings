@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
 
-add_subdirectory(external/pybind11)
+find_package(pybind11 CONFIG REQUIRED)
 
 option(ZINT_USE_QT "Override" OFF)
 option(ZINT_SHARED "Override" OFF)

@@ -12,6 +12,10 @@ requires = [
     # src/zint/scripts/generate-enums.requirements.txt
     "clang-format >= 18",
     "varformat",
+    # src/zint/scripts/generate-stub.requirements.txt
+    "pybind11-stubgen",
+    "numpy",
+    "typing-extensions",
 ]
 build-backend = "scikit_build_core.build"
 

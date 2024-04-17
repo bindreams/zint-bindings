@@ -9,13 +9,14 @@ requires = [
     "pybind11 >= 2.12, < 3",
     # Build dependencies from CMake. Please keep this in sync with relevant requirements files.
     "pip >= 24",
-    # scripts/generate-enums.requirements.txt
+    # src/zint/scripts/generate-enums.requirements.txt
     "clang-format >= 18",
     "varformat",
 ]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
+cmake.source-dir = "src/zint"
 cmake.targets = ["zint_bindings"]
 install.components = ["zint_bindings"]
 

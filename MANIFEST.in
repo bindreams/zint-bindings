@@ -1,4 +1,2 @@
-recursive-include src *
-recursive-include scripts *
-recursive-include external *
-include CMakeLists.txt CMakePresets.json .clang-format
+recursive-include src/zint *
+include .clang-format

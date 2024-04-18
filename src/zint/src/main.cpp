@@ -6,6 +6,7 @@
 #include <format>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 
@@ -152,13 +153,26 @@ struct Symbol {
 	}
 
 	static float default_xdim(Symbology symbology) { return ZBarcode_Default_Xdim(static_cast<int>(symbology)); }
-	static float scale_from_xdim_dp(Symbology symbology, float x_dim_mm, float dpmm, const char* filetype = nullptr) {
-		return ZBarcode_Scale_From_XdimDp(static_cast<int>(symbology), x_dim_mm, dpmm, filetype);
+	static float scale_from_xdim_dp(
+		Symbology symbology,
+		float x_dim_mm,
+		float dpmm,
+		std::optional<const char*> filetype = std::nullopt
+	) {
+		// Note: `filetype` parameters are defined like this so that the type annotation stub generates with the correct
+		// type annotation: `filetype: str | None`
+		return ZBarcode_Scale_From_XdimDp(static_cast<int>(symbology), x_dim_mm, dpmm, filetype.value_or(nullptr));
 	}
 
-	static float
-	xdim_dp_from_scale(Symbology symbology, float scale, float x_dim_mm_or_dpmm, const char* filetype = nullptr) {
-		return ZBarcode_Scale_From_XdimDp(static_cast<int>(symbology), scale, x_dim_mm_or_dpmm, filetype);
+	static float xdim_dp_from_scale(
+		Symbology symbology,
+		float scale,
+		float x_dim_mm_or_dpmm,
+		std::optional<const char*> filetype = std::nullopt
+	) {
+		return ZBarcode_Scale_From_XdimDp(
+			static_cast<int>(symbology), scale, x_dim_mm_or_dpmm, filetype.value_or(nullptr)
+		);
 	}
 
 	// Member variables ================================================================================================

@@ -54,11 +54,16 @@ execute_process(
 add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
 		--output-dir zint-stubs
+		--numpy-array-use-type-var
 		--exit-code
 		zint
 	COMMAND "${CMAKE_COMMAND}" -E rename
 		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/zint.pyi"
 		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/__init__.pyi"
+	# Copy stubs into the source directory so they are visible in source control and PRs
+	COMMAND "${CMAKE_COMMAND}" -E copy_directory
+		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
+		"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
 	COMMENT "Generating stub file"
 	VERBATIM
 )

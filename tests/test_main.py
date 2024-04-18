@@ -30,6 +30,7 @@ def test_segments():
     s = Symbol()
     s.symbology = Symbology.DATAMATRIX
 
+    # Test that any iterable will be accepted
     seg1 = Seg()
     seg1.source = b"abc"
     seg1.eci = 899

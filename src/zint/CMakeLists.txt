@@ -47,19 +47,12 @@ add_dependencies(${TARGET_NAME} _generate_enums_hpp)
 
 
 execute_process(
-	COMMAND pip --disable-pip-version-check
-		install -r "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
+	COMMAND pip --disable-pip-version-check install
+		-r "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
 	COMMAND_ERROR_IS_FATAL ANY
 )
 add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
-		--output-dir zint-stubs
-		--numpy-array-use-type-var
-		--exit-code
-		zint
-	COMMAND "${CMAKE_COMMAND}" -E rename
-		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/zint.pyi"
-		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/__init__.pyi"
 	# Copy stubs into the source directory so they are visible in source control and PRs
 	COMMAND "${CMAKE_COMMAND}" -E copy_directory
 		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"

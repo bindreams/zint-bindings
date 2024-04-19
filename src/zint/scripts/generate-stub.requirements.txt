@@ -1,3 +1,4 @@
 pybind11-stubgen
 numpy
-typing-extensions
+typing-extensions >= 4.6
+black >= 24

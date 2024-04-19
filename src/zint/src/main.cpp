@@ -90,8 +90,8 @@ public:
 
 struct StructApp : public zint_structapp {
 	StructApp() : zint_structapp{.index = 0, .count = 0, .id = {}} {}
-	StructApp(int index, int count) : zint_structapp{.index = index, .count = count, .id = {}} {}
-	StructApp(int index, int count, py::bytes const& id) : zint_structapp{.index = index, .count = count, .id = {}} {
+	StructApp(int index, int count, py::bytes const& id = {})
+		: zint_structapp{.index = index, .count = count, .id = {}} {
 		set_id(id);
 	}
 
@@ -112,11 +112,19 @@ struct Symbol {
 	void clear() { ZBarcode_Clear(m_handle); }
 	void reset() { ZBarcode_Reset(m_handle); }
 
-	void encode(py::bytes const& bytes) {
-		auto data = view_bytes(bytes);
-		if (data.size() > std::numeric_limits<int>::max()) throw py::value_error("buffer is too large");
+	void encode(py::bytes const& data) {
+		auto data_ = view_bytes(data);
+		if (data_.size() > std::numeric_limits<int>::max()) throw py::value_error("buffer is too large");
 
-		handle_error(ZBarcode_Encode(m_handle, data.data(), static_cast<int>(data.size())));
+		handle_error(ZBarcode_Encode(m_handle, data_.data(), static_cast<int>(data_.size())));
+	}
+
+	void encode(std::string_view text) {
+		if (text.size() > std::numeric_limits<int>::max()) throw py::value_error("text is too long");
+
+		handle_error(ZBarcode_Encode(
+			m_handle, reinterpret_cast<unsigned char const*>(text.data()), static_cast<int>(text.size())
+		));
 	}
 
 	void encode_segs(std::vector<Seg> const& segs) {
@@ -140,9 +148,9 @@ struct Symbol {
 
 	void encode_file(const char* filename) { handle_error(ZBarcode_Encode_File(m_handle, filename)); }
 
-	void print(int angle) { handle_error(ZBarcode_Print(m_handle, angle)); }
-	void buffer(int angle) { handle_error(ZBarcode_Buffer(m_handle, angle)); }
-	void buffer_vector(int angle) { handle_error(ZBarcode_Buffer_Vector(m_handle, angle)); }
+	void print(int rotate_deg = 0) { handle_error(ZBarcode_Print(m_handle, rotate_deg)); }
+	void buffer(int rotate_deg = 0) { handle_error(ZBarcode_Buffer(m_handle, rotate_deg)); }
+	void buffer_vector(int rotate_deg = 0) { handle_error(ZBarcode_Buffer_Vector(m_handle, rotate_deg)); }
 
 	// Static methods ==================================================================================================
 	static CapabilityFlags capabilities(Symbology symbology) {
@@ -413,8 +421,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 
 	py::class_<StructApp>(m, "StructApp")
 		.def(py::init<>())
-		.def(py::init<int, int>())
-		.def(py::init<int, int, py::bytes const&>())
+		.def(py::init<int, int, py::bytes const&>(), py::arg{"index"}, py::arg{"count"}, py::arg{"id"} = py::bytes{})
 		.def_readwrite("index", &StructApp::index, py::doc{"Position in Structured Append sequence, 1-based. Must be <= `count`"})
 		.def_readwrite("count", &StructApp::count, py::doc{"Number of symbols in Structured Append sequence. Set >= 2 to add SA Info"})
 		.def_property("id", &StructApp::get_id, &StructApp::set_id, py::doc{"Optional ID to distinguish sequence, ASCII, max 32 long"});
@@ -429,13 +436,14 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def(py::init<>())
 		.def("clear", &Symbol::clear, py::doc{"Free any output buffers that may have been created and initialize output fields"})
 		.def("reset", &Symbol::reset, py::doc{"Free any output buffers that may have been created and reset all fields to defaults"})
-		.def("encode", &Symbol::encode, py::doc{"Encode a barcode"})
-		.def("encode_segs", py::overload_cast<std::vector<Seg> const&>(&Symbol::encode_segs), py::doc{"Encode a barcode with multiple ECI segments"})
-		.def("encode_segs", py::overload_cast<py::iterable const&>(&Symbol::encode_segs), py::doc{"Encode a barcode with multiple ECI segments"})
+		.def("encode", py::overload_cast<py::bytes const&>(&Symbol::encode), py::arg{"data"}, py::doc{"Encode a barcode"})
+		.def("encode", py::overload_cast<std::string_view>(&Symbol::encode), py::arg{"text"}, py::doc{"Encode a barcode"})
+		.def("encode_segs", py::overload_cast<std::vector<Seg> const&>(&Symbol::encode_segs), py::arg{"segs"}, py::doc{"Encode a barcode with multiple ECI segments"})
+		.def("encode_segs", py::overload_cast<py::iterable const&>(&Symbol::encode_segs), py::arg{"segs"}, py::doc{"Encode a barcode with multiple ECI segments"})
 		.def("encode_file", &Symbol::encode_file, py::arg{"filename"}, py::pos_only{}, py::doc{"Encode a barcode using input data from file `filename`"})
-		.def("print", &Symbol::print, py::doc{"Output a previously encoded symbol to file `Symbol.outfile`"})
-		.def("buffer", &Symbol::buffer, py::doc{"Output a previously encoded symbol to memory as raster (`Symbol.bitmap`)"})
-		.def("buffer_vector", &Symbol::buffer_vector, py::doc{"Output a previously encoded symbol to memory as vector (`Symbol.vector`)"})
+		.def("print", &Symbol::print, py::arg{"rotate_deg"} = 0, py::doc{"Output a previously encoded symbol to file `Symbol.outfile`"})
+		.def("buffer", &Symbol::buffer, py::arg{"rotate_deg"} = 0, py::doc{"Output a previously encoded symbol to memory as raster (`Symbol.bitmap`)"})
+		.def("buffer_vector", &Symbol::buffer_vector, py::arg{"rotate_deg"} = 0, py::doc{"Output a previously encoded symbol to memory as vector (`Symbol.vector`)"})
 		.def_static("capabilities", &Symbol::capabilities, py::arg{"symbology"}, py::pos_only{}, py::doc{"Return the capability flags for symbology `symbology`"})
 		.def_static("default_xdim", &Symbol::default_xdim, py::arg{"symbology"}, py::pos_only{}, py::doc{"Return default X-dimension in mm for symbology `symbology`. Returns 0 on error (invalid `symbology`)"})
 		.def_static("scale_from_xdim_dp", &Symbol::scale_from_xdim_dp, py::arg{"symbology"}, py::pos_only{}, py::arg{"x_dim_mm"}, py::kw_only{}, py::arg{"dpmm"}, py::arg{"filetype"} = py::none{}, py::doc{"Return the scale to use for `symbology` for non-zero X-dimension `x_dim_mm` at `dpmm` dots per mm for `filetype`. If `dpmm` zero defaults to 12. If `filetype` is None, defaults to \"GIF\". Returns 0 on error"})

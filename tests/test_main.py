@@ -44,3 +44,21 @@ def test_segments():
         yield seg2
 
     s.encode_segs(gen())
+
+
+def test_vector():
+    s = Symbol()
+    s.symbology = Symbology.MAXICODE
+    s.primary = "152382802000000"
+    s.encode(rb"1Z00004951\GUPSN\G06X610\G159\G1234567\G1/1\G\GY\G1 MAIN ST\GNY\GNY\R\E")
+    s.buffer_vector()
+
+    size = 0
+    for _ in s.vector.hexagons:
+        size += 1
+    assert size == len(s.vector.hexagons)
+
+    size = 0
+    for _ in s.vector.circles:
+        size += 1
+    assert size == len(s.vector.circles)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy
 import typing
 import typing_extensions
-__all__ = ['CapabilityFlags', 'DataMatrixOptions', 'InputMode', 'OutputOptions', 'QrFamilyOptions', 'Seg', 'StructApp', 'Symbol', 'Symbology', 'UltracodeOptions', 'Vector', 'VectorCircle', 'VectorHexagon', 'VectorRect', 'VectorString', 'WarningLevel']
+__all__ = ['CapabilityFlags', 'DataMatrixOptions', 'InputMode', 'OutputOptions', 'QrFamilyOptions', 'Seg', 'StructApp', 'Symbol', 'Symbology', 'UltracodeOptions', 'Vector', 'VectorCircle', 'VectorCircles', 'VectorHexagon', 'VectorHexagons', 'VectorRect', 'VectorRects', 'VectorString', 'VectorStrings', 'WarningLevel']
 class CapabilityFlags:
     """
     Capability flags (ZBarcode_Cap() `cap_flag`)
@@ -441,7 +441,7 @@ class Symbol:
         Free any output buffers that may have been created and reset all fields to defaults
         """
     @property
-    def alphamap(self) -> typing.Any:
+    def alphamap(self) -> memoryview | None:
         """
         Array of alpha values used (raster output only)
         """
@@ -462,7 +462,7 @@ class Symbol:
     def bgcolour(self, arg1: str) -> None:
         ...
     @property
-    def bitmap(self) -> typing.Any:
+    def bitmap(self) -> memoryview | None:
         """
         Stored bitmap image (raster output only)
         """
@@ -1061,9 +1061,9 @@ class UltracodeOptions:
         ...
 class Vector:
     @property
-    def circles(self) -> VectorCircle:
+    def circles(self) -> VectorCircles:
         """
-        First circle
+        Iterable over circles
         """
     @property
     def height(self) -> float:
@@ -1071,19 +1071,19 @@ class Vector:
         Height of barcode image (including text, whitespace)
         """
     @property
-    def hexagons(self) -> VectorHexagon:
+    def hexagons(self) -> VectorHexagons:
         """
-        First hexagon
-        """
-    @property
-    def rectangles(self) -> VectorRect:
-        """
-        First rectangle
+        Iterable over hexagons
         """
     @property
-    def strings(self) -> VectorString:
+    def rectangles(self) -> VectorRects:
         """
-        First string
+        Iterable over rectangles
+        """
+    @property
+    def strings(self) -> VectorStrings:
+        """
+        Iterable over strings
         """
     @property
     def width(self) -> float:
@@ -1126,6 +1126,11 @@ class VectorCircle:
         """
         Centre
         """
+class VectorCircles:
+    def __iter__(self) -> typing.Iterator[VectorCircle]:
+        ...
+    def __len__(self) -> int:
+        ...
 class VectorHexagon:
     @property
     def diameter(self) -> float:
@@ -1152,6 +1157,11 @@ class VectorHexagon:
         """
         Centre
         """
+class VectorHexagons:
+    def __iter__(self) -> typing.Iterator[VectorHexagon]:
+        ...
+    def __len__(self) -> int:
+        ...
 class VectorRect:
     @property
     def color(self) -> int:
@@ -1184,6 +1194,11 @@ class VectorRect:
         """
         Top
         """
+class VectorRects:
+    def __iter__(self) -> typing.Iterator[VectorRect]:
+        ...
+    def __len__(self) -> int:
+        ...
 class VectorString:
     @property
     def fsize(self) -> float:
@@ -1228,6 +1243,11 @@ class VectorString:
         """
         Relative to baseline
         """
+class VectorStrings:
+    def __iter__(self) -> typing.Iterator[VectorString]:
+        ...
+    def __len__(self) -> int:
+        ...
 class WarningLevel:
     """
     Warning level (`symbol->warn_level`)

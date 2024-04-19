@@ -38,11 +38,53 @@ struct VectorString : public zint_vector_string, SafeNextMixin<VectorString> {
 
 struct VectorCircle : public zint_vector_circle, SafeNextMixin<VectorCircle> {};
 
+/// Wrapper around the linked-list structure of Vector* zint classes.
+/// Instances of this are returned from Symbol instead of the first polygon with a pointer to the next.
+template<typename T>
+struct VectorList {
+	T* m_head = nullptr;
+
+	// For convenience, the class wants to provide __len__. Since this is a linked list, the size is calculated
+	// on demand.
+	static constexpr std::size_t UnknownSize = static_cast<std::size_t>(-1);
+	std::size_t m_size = UnknownSize;
+
+	struct iterator {
+		T* m_item = nullptr;
+
+		T& operator*() const { return *m_item; }
+		iterator& operator++() {
+			m_item = m_item->get_next();
+			return *this;
+		}
+
+		friend bool operator==(iterator lhs, iterator rhs) { return lhs.m_item == rhs.m_item; }
+		friend bool operator!=(iterator lhs, iterator rhs) { return !(lhs == rhs); }
+	};
+
+	auto begin() const { return iterator{m_head}; }
+	auto end() const { return iterator{nullptr}; }
+
+	std::size_t size() {
+		if (m_size == UnknownSize) {
+			m_size = 0;
+			for (auto it = begin(); it != end(); ++it) ++m_size;
+		}
+
+		return m_size;
+	}
+};
+
+using VectorRects = VectorList<VectorRect>;
+using VectorHexagons = VectorList<VectorHexagon>;
+using VectorStrings = VectorList<VectorString>;
+using VectorCircles = VectorList<VectorCircle>;
+
 struct Vector : public zint_vector {
-	auto get_rectangles() { return access_as<VectorRect>(rectangles); }
-	auto get_hexagons() { return access_as<VectorHexagon>(hexagons); }
-	auto get_strings() { return access_as<VectorString>(strings); }
-	auto get_circles() { return access_as<VectorCircle>(circles); }
+	auto get_rectangles() { return VectorRects{access_as<VectorRect>(rectangles)}; }
+	auto get_hexagons() { return VectorHexagons{access_as<VectorHexagon>(hexagons)}; }
+	auto get_strings() { return VectorStrings{access_as<VectorString>(strings)}; }
+	auto get_circles() { return VectorCircles{access_as<VectorCircle>(circles)}; }
 
 private:
 	template<typename T, typename U>
@@ -300,14 +342,14 @@ struct Symbol {
 
 	std::string_view get_errtxt() { return m_handle->errtxt; }
 
-	py::object get_bitmap() {
-		if (m_handle->bitmap == nullptr) return py::none{};
+	std::optional<py::memoryview> get_bitmap() {
+		if (m_handle->bitmap == nullptr) return std::nullopt;
 
 		return to_memoryview<3>(m_handle->bitmap, {m_handle->bitmap_height, m_handle->bitmap_width, 3}, true);
 	}
 
-	py::object get_alphamap() {
-		if (m_handle->alphamap == nullptr) return py::none{};
+	std::optional<py::memoryview> get_alphamap() {
+		if (m_handle->alphamap == nullptr) return std::nullopt;
 
 		return to_memoryview<2>(m_handle->alphamap, {m_handle->bitmap_height, m_handle->bitmap_width}, true);
 	}
@@ -358,6 +400,19 @@ private:
 	}
 
 	zint_symbol* m_handle;
+};
+
+template<typename T>
+void declare_vector_list(pybind11::module_& m, const char* python_identifier) {
+	using list_t = VectorList<T>;
+
+	py::class_<list_t>(m, python_identifier)
+		.def("__len__", &list_t::size)
+		.def(
+			"__iter__",
+			[](list_t const& obj) { return py::make_iterator(obj.begin(), obj.end()); },
+			py::keep_alive<0, 1>()
+		);
 };
 
 PYBIND11_MODULE(PACKAGE_NAME, m) {
@@ -411,13 +466,18 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("colour", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy))"})
 		.def_readonly("color", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy)). Alias of `colour`"});
 
+	declare_vector_list<VectorRect>(m, "VectorRects");
+	declare_vector_list<VectorHexagon>(m, "VectorHexagons");
+	declare_vector_list<VectorString>(m, "VectorStrings");
+	declare_vector_list<VectorCircle>(m, "VectorCircles");
+
 	py::class_<Vector>(m, "Vector")
 		.def_readonly("width", &Vector::width, py::doc{"Width of barcode image (including text, whitespace)"})
 		.def_readonly("height", &Vector::height, py::doc{"Height of barcode image (including text, whitespace)"})
-		.def_property_readonly("rectangles", &Vector::get_rectangles, py::doc{"First rectangle"})
-		.def_property_readonly("hexagons", &Vector::get_hexagons, py::doc{"First hexagon"})
-		.def_property_readonly("strings", &Vector::get_strings, py::doc{"First string"})
-		.def_property_readonly("circles", &Vector::get_circles, py::doc{"First circle"});
+		.def_property_readonly("rectangles", &Vector::get_rectangles, py::doc{"Iterable over rectangles"})
+		.def_property_readonly("hexagons", &Vector::get_hexagons, py::doc{"Iterable over hexagons"})
+		.def_property_readonly("strings", &Vector::get_strings, py::doc{"Iterable over strings"})
+		.def_property_readonly("circles", &Vector::get_circles, py::doc{"Iterable over circles"});
 
 	py::class_<StructApp>(m, "StructApp")
 		.def(py::init<>())

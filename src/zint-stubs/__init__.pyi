@@ -347,10 +347,7 @@ class StructApp:
     def __init__(self) -> None:
         ...
     @typing.overload
-    def __init__(self, arg0: int, arg1: int) -> None:
-        ...
-    @typing.overload
-    def __init__(self, arg0: int, arg1: int, arg2: bytes) -> None:
+    def __init__(self, index: int, count: int, id: bytes = b'') -> None:
         ...
     @property
     def count(self) -> int:
@@ -399,11 +396,11 @@ class Symbol:
         """
     def __init__(self) -> None:
         ...
-    def buffer(self, arg0: int) -> None:
+    def buffer(self, rotate_deg: int = 0) -> None:
         """
         Output a previously encoded symbol to memory as raster (`Symbol.bitmap`)
         """
-    def buffer_vector(self, arg0: int) -> None:
+    def buffer_vector(self, rotate_deg: int = 0) -> None:
         """
         Output a previously encoded symbol to memory as vector (`Symbol.vector`)
         """
@@ -411,7 +408,13 @@ class Symbol:
         """
         Free any output buffers that may have been created and initialize output fields
         """
-    def encode(self, arg0: bytes) -> None:
+    @typing.overload
+    def encode(self, data: bytes) -> None:
+        """
+        Encode a barcode
+        """
+    @typing.overload
+    def encode(self, text: str) -> None:
         """
         Encode a barcode
         """
@@ -420,16 +423,16 @@ class Symbol:
         Encode a barcode using input data from file `filename`
         """
     @typing.overload
-    def encode_segs(self, arg0: list[Seg]) -> None:
+    def encode_segs(self, segs: list[Seg]) -> None:
         """
         Encode a barcode with multiple ECI segments
         """
     @typing.overload
-    def encode_segs(self, arg0: typing.Iterable) -> None:
+    def encode_segs(self, segs: typing.Iterable) -> None:
         """
         Encode a barcode with multiple ECI segments
         """
-    def print(self, arg0: int) -> None:
+    def print(self, rotate_deg: int = 0) -> None:
         """
         Output a previously encoded symbol to file `Symbol.outfile`
         """

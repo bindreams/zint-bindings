@@ -8,6 +8,7 @@ set(ZINT_SHARED OFF CACHE BOOL "")
 set(ZINT_STATIC ON CACHE BOOL "")
 set(ZINT_FRONTEND OFF CACHE BOOL "")
 add_subdirectory(external/zint)
+set_target_properties(zint-static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(TARGET_NAME "zint_bindings")
 pybind11_add_module(${TARGET_NAME} MODULE src/main.cpp)

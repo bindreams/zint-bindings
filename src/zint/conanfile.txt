@@ -1,0 +1,14 @@
+[requires]
+zlib/1.3.1
+libpng/1.6.43
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
+
+[options]
+*:shared=False
+*:fPIC=True

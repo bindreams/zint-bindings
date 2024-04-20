@@ -415,7 +415,7 @@ void declare_vector_list(pybind11::module_& m, const char* python_identifier) {
 			[](list_t const& obj) { return py::make_iterator(obj.begin(), obj.end()); },
 			py::keep_alive<0, 1>()
 		);
-};
+}
 
 PYBIND11_MODULE(PACKAGE_NAME, m) {
 	m.doc() = "A barcode encoding library supporting over 50 symbologies.";

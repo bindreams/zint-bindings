@@ -1,5 +1,17 @@
 cmake_minimum_required(VERSION 3.26)
+
+include(scripts/cmake/bundled-vcpkg.cmake)
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
+
+if(WIN32)
+	if (NOT MSVC)
+		message(FATAL_ERROR "Zint can only be compiled on Windows using the MSVC compiler.")
+	endif()
+
+	if(CMAKE_GENERATOR MATCHES "Visual Studio .*")
+		message(FATAL_ERROR "Visual Studio generator is not supported.\nPlease install Ninja: https://ninja-build.org/ and use CMAKE_GENERATOR=Ninja.")
+	endif()
+endif()
 
 find_package(pybind11 CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)

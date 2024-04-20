@@ -12,30 +12,23 @@ jobs:
 
   #   steps:
   #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.12"
 
   #     - uses: ilammy/msvc-dev-cmd@v1
   #       with:
   #         arch: x64
 
-  #     - name: Setup vcpkg package manager
-  #       run: |
-  #         mkdir .cache
-  #         git clone https://github.com/microsoft/vcpkg --branch 2024.03.25 .cache/vcpkg
-  #         .cache/vcpkg/bootstrap-vcpkg.bat
-
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.12"
   #     - name: Install cibuildwheel
   #       run: pip install cibuildwheel==2.17.0
 
   #     - name: Build wheels
   #       run: python -m cibuildwheel --output-dir wheelhouse
   #       env:
-  #         CIBW_SKIP: pp* *-win32
-  #         CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/.cache/vcpkg/scripts/buildsystems/vcpkg.cmake
-  #         VCPKG_TARGET_TRIPLET: x64-windows-static
+  #         CIBW_SKIP: *-win32
   #         CMAKE_GENERATOR: Ninja
+  #         CIBW_BUILD_VERBOSITY: 1
 
   #     - uses: actions/upload-artifact@v4
   #       with:
@@ -55,22 +48,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Setup vcpkg package manager
-        run: |
-          mkdir .cache
-          git clone https://github.com/microsoft/vcpkg --branch 2024.03.25 .cache/vcpkg
-          .cache/vcpkg/bootstrap-vcpkg.sh
-
       - name: Install cibuildwheel
         run: pip install cibuildwheel==2.17.0
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp*
-          CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/.cache/vcpkg/scripts/buildsystems/vcpkg.cmake
           VCPKG_LIBRARY_LINKAGE: static
           CMAKE_GENERATOR: Ninja
+          CIBW_BUILD_VERBOSITY: 1
 
       - uses: actions/upload-artifact@v4
         with:

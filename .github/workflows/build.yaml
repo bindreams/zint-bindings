@@ -1,0 +1,43 @@
+name: Build
+
+on: [workflow_dispatch]
+
+jobs:
+  build-windows:
+    name: Build wheels on Windows
+    runs-on: windows-latest
+    # strategy:
+    #   matrix:
+    #     os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Setup vcpkg package manager
+        run: |
+          mkdir .cache
+          git clone https://github.com/microsoft/vcpkg --branch 2024.03.25 .cache/vcpkg
+          .cache/vcpkg/bootstrap-vcpkg.bat
+
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel==2.17.0
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_SKIP: pp* *-win32
+          CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/.cache/vcpkg/scripts/buildsystems/vcpkg.cmake
+          VCPKG_TARGET_TRIPLET: x64-windows-static
+          CMAKE_GENERATOR: Ninja
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl

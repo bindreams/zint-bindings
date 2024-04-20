@@ -1,7 +1,12 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.28)
 
 include(scripts/cmake/bundled-vcpkg.cmake)
-project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
+if(NOT SKBUILD)
+	# On manual builds do not set version.
+	set(PROJECT_VERSION "0.0.0")
+endif()
+
+project(zint VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if(WIN32)
 	if (NOT MSVC)
@@ -11,6 +16,11 @@ if(WIN32)
 	if(CMAKE_GENERATOR MATCHES "Visual Studio .*")
 		message(FATAL_ERROR "Visual Studio generator is not supported.\nPlease install Ninja: https://ninja-build.org/ and use CMAKE_GENERATOR=Ninja.")
 	endif()
+endif()
+
+if(NOT SKBUILD)
+	include(scripts/cmake/find-packages-from-python.cmake)
+	message(STATUS ${Python3_VERSION_MINOR})
 endif()
 
 find_package(pybind11 CONFIG REQUIRED)
@@ -73,11 +83,23 @@ execute_process(
 )
 add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
-	# Copy stubs into the source directory so they are visible in source control and PRs
-	COMMAND "${CMAKE_COMMAND}" -E copy_directory
-		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
+	MAIN_DEPENDENCY ${TARGET_NAME}
+	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/zint-stubs"
 	COMMENT "Generating stub file"
 	VERBATIM
 )
+
+if(Python3_VERSION_MINOR STREQUAL 12)
+	# Copy stubs into the source directory so they are visible in source control and PRs
+	add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+		COMMAND "${CMAKE_COMMAND}" -E copy_directory
+			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
+			"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
+		MAIN_DEPENDENCY ${TARGET_NAME}
+		BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
+		COMMENT "Updating reference stub file"
+		VERBATIM
+	)
+endif()
+
 install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/zint-stubs" DESTINATION . COMPONENT ${TARGET_NAME})

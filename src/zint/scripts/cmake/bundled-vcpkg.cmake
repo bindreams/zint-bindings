@@ -13,6 +13,7 @@ if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
 		find_program(GIT_EXECUTABLE git REQUIRED)
 		execute_process(
 			COMMAND "${GIT_EXECUTABLE}"
+				-c advice.detachedHead=false
 				clone https://github.com/microsoft/vcpkg
 				--branch 2024.03.25
 				"${BUNDLED_VCPKG_PATH}"
@@ -27,7 +28,7 @@ if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
 		set(BOOTSTRAP_SCRIPT "${BUNDLED_VCPKG_PATH}/bootstrap-vcpkg.sh")
 	endif()
 
-	execute_process(COMMAND "${BOOTSTRAP_SCRIPT}" COMMAND_ERROR_IS_FATAL ANY)
+	execute_process(COMMAND "${BOOTSTRAP_SCRIPT}" -disableMetrics COMMAND_ERROR_IS_FATAL ANY)
 endif()
 
 set(VCPKG_LIBRARY_LINKAGE "static" CACHE STRING "Vcpkg library linkage type")

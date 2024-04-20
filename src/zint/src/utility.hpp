@@ -8,6 +8,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include <fmt/core.h>
+
 namespace py = pybind11;
 
 #define QUOTED_(...) #__VA_ARGS__
@@ -102,9 +104,9 @@ inline std::span<unsigned char const> view_bytes(py::bytes const& bytes) {
 [[nodiscard]] std::pair<std::unique_ptr<unsigned char[]>, std::size_t> copy_buffer(py::buffer const& data) {
 	py::buffer_info info = data.request();
 
-	if (info.ndim != 1) throw py::value_error(std::format("expected 1-dimensional data, got {} dimensions", info.ndim));
+	if (info.ndim != 1) throw py::value_error(fmt::format("expected 1-dimensional data, got {} dimensions", info.ndim));
 	if (info.itemsize != 1)
-		throw py::value_error(std::format("expected a buffer of bytes, got an item size of {}", info.itemsize));
+		throw py::value_error(fmt::format("expected a buffer of bytes, got an item size of {}", info.itemsize));
 
 	auto result = std::make_unique<unsigned char[]>(info.size);
 	if (info.size == 0) return {std::move(result), 0};

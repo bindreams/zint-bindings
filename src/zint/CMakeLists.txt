@@ -2,22 +2,29 @@ cmake_minimum_required(VERSION 3.26)
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
 
 find_package(pybind11 CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 set(ZINT_USE_QT OFF CACHE BOOL "")
 set(ZINT_SHARED OFF CACHE BOOL "")
 set(ZINT_STATIC ON CACHE BOOL "")
 set(ZINT_FRONTEND OFF CACHE BOOL "")
 add_subdirectory(external/zint)
-set_target_properties(zint-static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(zint-static PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+	MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
 
 set(TARGET_NAME "zint_bindings")
 pybind11_add_module(${TARGET_NAME} MODULE src/main.cpp)
 file(GLOB_RECURSE ${TARGET_NAME}_HEADERS CONFIGURE_DEPENDS "src/*.hpp")
 target_sources(${TARGET_NAME} PRIVATE FILE_SET HEADERS BASE_DIRS src FILES ${${TARGET_NAME}_HEADERS})
+set_target_properties(${TARGET_NAME} PROPERTIES
+	OUTPUT_NAME zint
+	MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
 
-set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME zint)
-target_link_libraries(${TARGET_NAME} PRIVATE zint-static)
-target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23)
+target_link_libraries(${TARGET_NAME} PRIVATE zint-static fmt::fmt)
+target_compile_features(${TARGET_NAME} PRIVATE cxx_std_20)
 target_compile_definitions(${TARGET_NAME} PRIVATE BINDINGS_VERSION=${PROJECT_VERSION})
 
 include(scripts/cmake/warnings.cmake)

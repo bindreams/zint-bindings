@@ -3,7 +3,6 @@
 #include <pybind11/stl.h>
 
 #include <cstring>
-#include <format>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -12,6 +11,8 @@
 
 #include "generated/enums.hpp"
 #include "utility.hpp"
+
+#include <fmt/core.h>
 
 // Include zint last, so that its defines do not mess with enums
 #include <zint.h>
@@ -140,7 +141,7 @@ struct StructApp : public zint_structapp {
 	py::bytes get_id() { return std::string_view(id, strnlen(id, std::extent_v<decltype(id)>)); }
 	void set_id(py::bytes const& val) {
 		std::string_view x{val};
-		if (x.size() > 32) throw py::value_error(std::format("id size cannot be larger than 32, got {}", x.size()));
+		if (x.size() > 32) throw py::value_error(fmt::format("id size cannot be larger than 32, got {}", x.size()));
 
 		std::memcpy(id, x.data(), x.size());
 		if (x.size() < 32) id[x.size()] = '\0';
@@ -250,7 +251,7 @@ struct Symbol {
 	void set_fgcolour(std::string_view val) {
 		static constexpr int size = std::extent_v<decltype(m_handle->fgcolour)>;
 		if (val.size() > size - 1)
-			throw py::value_error(std::format("fgcolor string cannot be longer than {} characters", size - 1));
+			throw py::value_error(fmt::format("fgcolor string cannot be longer than {} characters", size - 1));
 
 		memcpy(m_handle->fgcolour, val.data(), val.size());
 		m_handle->fgcolour[val.size()] = '\0';
@@ -260,7 +261,7 @@ struct Symbol {
 	void set_bgcolour(std::string_view val) {
 		static constexpr int size = std::extent_v<decltype(m_handle->bgcolour)>;
 		if (val.size() > size - 1)
-			throw py::value_error(std::format("bgcolor string cannot be longer than {} characters", size - 1));
+			throw py::value_error(fmt::format("bgcolor string cannot be longer than {} characters", size - 1));
 
 		memcpy(m_handle->bgcolour, val.data(), val.size());
 		m_handle->bgcolour[val.size()] = '\0';
@@ -270,7 +271,7 @@ struct Symbol {
 	void set_outfile(std::string_view val) {
 		static constexpr int size = std::extent_v<decltype(m_handle->outfile)>;
 		if (val.size() > size - 1)
-			throw py::value_error(std::format("outfile cannot be longer than {} characters", size - 1));
+			throw py::value_error(fmt::format("outfile cannot be longer than {} characters", size - 1));
 
 		memcpy(m_handle->outfile, val.data(), val.size());
 		m_handle->outfile[val.size()] = '\0';
@@ -280,7 +281,7 @@ struct Symbol {
 	void set_primary(std::string_view val) {
 		static constexpr int size = std::extent_v<decltype(m_handle->primary)>;
 		if (val.size() > size - 1)
-			throw py::value_error(std::format("primary cannot be longer than {} characters", size - 1));
+			throw py::value_error(fmt::format("primary cannot be longer than {} characters", size - 1));
 
 		memcpy(m_handle->primary, val.data(), val.size());
 		m_handle->primary[val.size()] = '\0';
@@ -422,7 +423,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		// The implementation of ZBarcode_Version is kinda weird and this result will only make sense for release
 		// versions of zint.
 		int folded_version = ZBarcode_Version();
-		return std::format(
+		return fmt::format(
 			"{}.{}.{}", (folded_version / 10000) % 100, (folded_version / 100) % 100, folded_version % 100
 		);
 	}();

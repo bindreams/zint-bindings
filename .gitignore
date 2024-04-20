@@ -28,3 +28,4 @@ MANIFEST
 
 CMakeUserPresets.json
 vcpkg_installed
+wheelhouse

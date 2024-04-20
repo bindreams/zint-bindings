@@ -33,7 +33,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_SKIP: pp* *-win32
-          CMAKE_TOOLCHAIN_FILE: .cache/vcpkg/scripts/buildsystems/vcpkg.cmake
+          CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/.cache/vcpkg/scripts/buildsystems/vcpkg.cmake
           VCPKG_TARGET_TRIPLET: x64-windows-static
 
       - uses: actions/upload-artifact@v4

@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.28)
 
 include(scripts/cmake/bundled-vcpkg.cmake)
-if(NOT SKBUILD)
-	# On manual builds do not set version.
+if(SKBUILD)
+	set(PROJECT_VERSION "${SKBUILD_PROJECT_VERSION}")
+else()
+	# On manual builds set a placeholder version.
 	set(PROJECT_VERSION "0.0.0")
 endif()
 
 project(zint VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+message(STATUS "Zint bindings: version ${PROJECT_VERSION}")
 
 if(WIN32)
 	if (NOT MSVC)

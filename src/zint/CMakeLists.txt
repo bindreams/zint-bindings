@@ -20,7 +20,6 @@ endif()
 
 if(NOT SKBUILD)
 	include(scripts/cmake/find-packages-from-python.cmake)
-	message(STATUS ${Python3_VERSION_MINOR})
 endif()
 
 find_package(pybind11 CONFIG REQUIRED)

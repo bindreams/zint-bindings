@@ -15,6 +15,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+wheelhouse/
 downloads/
 eggs/
 .eggs/
@@ -29,7 +30,3 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-CMakeUserPresets.json
-vcpkg_installed
-wheelhouse

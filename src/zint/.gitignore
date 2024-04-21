@@ -1,2 +1,5 @@
 # "bundled" vcpkg which is downloaded by git
 .vcpkg
+vcpkg_installed
+
+CMakeUserPresets.json

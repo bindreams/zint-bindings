@@ -54,11 +54,10 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          VCPKG_LIBRARY_LINKAGE: static
           CMAKE_GENERATOR: Ninja
           CIBW_BUILD_VERBOSITY: 1
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-linux
+          name: wheels-linux
           path: ./wheelhouse/*.whl

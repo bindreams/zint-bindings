@@ -35,7 +35,7 @@ ninja.version = ">=1.11"
 ninja.make-fallback = false
 
 [tool.cibuildwheel]
-skip = "*linux_i686* *linux_ppc64le* *linux_s390x*"
+skip = "*linux_i686* *linux_ppc64le* *linux_s390x* *-win32"
 
 # Hardcode manylinux2014 as the target because tool.cibuildwheel.linux uses yum to install packages.
 manylinux-x86_64-image       = "manylinux2014"
@@ -45,6 +45,9 @@ manylinux-pypy_aarch64-image = "manylinux2014"
 
 musllinux-x86_64-image  = "musllinux_1_2"
 musllinux-aarch64-image = "musllinux_1_2"
+
+test-requires = "pytest>=7 pytest-sugar"
+test-command = "pytest {project}"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y curl zip unzip tar"  # For bootstrapping vcpkg

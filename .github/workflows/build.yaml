@@ -3,85 +3,41 @@ name: Build package wheels
 on: [workflow_dispatch]
 
 jobs:
-  # build-windows:
-  #   name: Windows
-  #   runs-on: windows-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - uses: ilammy/msvc-dev-cmd@v1
-  #       with:
-  #         arch: x64
-
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.12"
-  #     - name: Install cibuildwheel
-  #       run: pip install cibuildwheel==2.17.0
-
-  #     - name: Build wheels
-  #       run: python -m cibuildwheel --output-dir wheelhouse
-  #       env:
-  #         CIBW_SKIP: *-win32
-  #         CMAKE_GENERATOR: Ninja
-  #         CIBW_BUILD_VERBOSITY: 1
-
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: wheels-windows
-  #         path: ./wheelhouse/*.whl
-
-  # build-linux:
-  #   name: Linux
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.12"
-
-  #     - name: Install cibuildwheel
-  #       run: pip install cibuildwheel==2.17.0
-
-  #     - name: Build wheels
-  #       run: python -m cibuildwheel --output-dir wheelhouse
-  #       env:
-  #         CMAKE_GENERATOR: Ninja
-  #         CIBW_BUILD_VERBOSITY: 1
-
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: wheels-linux
-  #         path: ./wheelhouse/*.whl
-
-  build-macos:
+  build-wheels:
     name: macOS
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-13]  # 13 is x86, 14 is arm64 (https://cibuildwheel.pypa.io/en/stable/setup/#github-actions)
+        # macos-13 is x86, 14 is arm64 (https://cibuildwheel.pypa.io/en/stable/setup/#github-actions)
+        os: [windows-latest, ubuntu-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install cibuildwheel
         run: pip install cibuildwheel==2.17.0
 
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: startsWith(matrix.os, "windows")
+        with:
+          arch: x64
+
+      - name: Enable Xcode SDK
+        if: startsWith(matrix.os, "macos")
+        # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
+        # See https://stackoverflow.com/a/65277351 about SDKROOT variable
+        run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+
       - name: Build wheels
-        run: |
-          export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-          python -m cibuildwheel --output-dir wheelhouse
+        # See https://stackoverflow.com/a/65277351 about SDKROOT if: startsWith(matrix.os, 'ubuntu')
+        run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CMAKE_GENERATOR: Ninja
           CIBW_BUILD_VERBOSITY: 1
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos
+          name: wheels
           path: ./wheelhouse/*.whl

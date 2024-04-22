@@ -17,7 +17,7 @@ if(WIN32)
 	endif()
 
 	if(CMAKE_GENERATOR MATCHES "Visual Studio .*")
-		message(FATAL_ERROR "Visual Studio generator is not supported.\nPlease install Ninja: https://ninja-build.org/ and use CMAKE_GENERATOR=Ninja.")
+		message(FATAL_ERROR "Visual Studio generator is not supported.\nPlease install Ninja: https://ninja-build.org/ and set CMAKE_GENERATOR environment variable to \"Ninja\".")
 	endif()
 endif()
 

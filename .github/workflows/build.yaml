@@ -34,7 +34,6 @@ jobs:
         # See https://stackoverflow.com/a/65277351 about SDKROOT if: startsWith(matrix.os, 'ubuntu')
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CMAKE_GENERATOR: Ninja
           CIBW_BUILD_VERBOSITY: 1
 
       - uses: actions/upload-artifact@v4

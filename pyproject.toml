@@ -8,6 +8,13 @@ dependencies = [
     "typing-extensions >= 4.6.0",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest >= 7",
+    "pytest-sugar",
+    "mypy"  # For commandline utility "stubtest"
+]
+
 [build-system]
 requires = [
     "scikit-build-core >= 0.8.2",
@@ -43,11 +50,10 @@ manylinux-x86_64-image       = "manylinux2014"
 manylinux-aarch64-image      = "manylinux2014"
 manylinux-pypy_x86_64-image  = "manylinux2014"
 manylinux-pypy_aarch64-image = "manylinux2014"
+musllinux-x86_64-image       = "musllinux_1_2"
+musllinux-aarch64-image      = "musllinux_1_2"
 
-musllinux-x86_64-image  = "musllinux_1_2"
-musllinux-aarch64-image = "musllinux_1_2"
-
-test-requires = "pytest>=7 pytest-sugar"
+test-extras = "test"  # Install [test] optional requirements
 test-command = "pytest {project}"
 
 [tool.cibuildwheel.linux]

@@ -32,4 +32,18 @@ if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
 	execute_process(COMMAND "${BOOTSTRAP_SCRIPT}" -disableMetrics COMMAND_ERROR_IS_FATAL ANY)
 endif()
 
-set(VCPKG_LIBRARY_LINKAGE "static" CACHE STRING "Vcpkg library linkage type")
+if(WIN32)
+	# Windows is the only platform with dynamic linkage by default. Force static.
+	if (DEFINED ENV{VCPKG_TARGET_TRIPLET})
+		set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_TARGET_TRIPLET}")  # To print a message later
+		unset(ENV{VCPKG_TARGET_TRIPLET})
+	endif()
+
+	if (DEFINED VCPKG_TARGET_TRIPLET)
+		message(WARNING "Vcpkg target triplet has been redefined from \"${VCPKG_TARGET_TRIPLET}\" to \"x64-windows-static\"")
+	endif()
+
+	unset(VCPKG_TARGET_TRIPLET)
+	unset(VCPKG_TARGET_TRIPLET CACHE)
+	set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
+endif()

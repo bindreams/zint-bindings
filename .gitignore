@@ -35,6 +35,8 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# PNG files generated during tests
+*.png
 
 # src/zint/.gitignore
 # Because of issue 726 in scikit-build-core, this project can't have nested gitignore files.

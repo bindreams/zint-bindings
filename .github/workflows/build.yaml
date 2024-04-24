@@ -20,12 +20,12 @@ jobs:
         run: pip install cibuildwheel==2.17.0
 
       - uses: ilammy/msvc-dev-cmd@v1
-        if: startsWith(matrix.os, "windows")
+        if: startsWith(matrix.os, 'windows')
         with:
           arch: x64
 
       - name: Enable Xcode SDK
-        if: startsWith(matrix.os, "macos")
+        if: startsWith(matrix.os, 'macos')
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         # See https://stackoverflow.com/a/65277351 about SDKROOT variable
         run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"

@@ -41,6 +41,20 @@ cmake.version = ">=3.28"
 ninja.version = ">=1.11"
 ninja.make-fallback = false
 
+sdist.exclude = [
+    # Included in repo for visibility, but generated at compile time
+    "src/zint-stubs",
+    "src/zint/src/generated",
+    # Development and CI
+    "tests",
+    ".github",
+    ".editorconfig",
+    "src/zint/CMakePresets.json",
+    # Git files
+    ".gitattributes",
+    ".gitignore"
+]
+
 [tool.cibuildwheel]
 skip = "*linux_i686* *linux_ppc64le* *linux_s390x* *-win32"
 environment = {CMAKE_GENERATOR="Ninja"}  # Force Ninja even on Windows

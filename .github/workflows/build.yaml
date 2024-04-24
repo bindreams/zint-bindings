@@ -3,8 +3,32 @@ name: Build package wheels
 on: [workflow_dispatch]
 
 jobs:
-  build-wheels:
-    name: macOS
+  sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install 'build' package
+        run: pip install Build
+
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - name: Test sdist
+        run: |
+          pip install dist/*.tar.gz[test]
+          pytest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sdist
+          path: dist/*.tar.gz
+
+  wheels:
+    name: Binary wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -47,5 +71,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{matrix.os}}
+          name: package-wheels-${{matrix.os}}
           path: ./wheelhouse/*.whl

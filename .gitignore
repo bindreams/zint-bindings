@@ -2,6 +2,9 @@
 .idea
 .vscode
 
+# Venv
+.venv
+
 # Caches
 .mypy_cache
 .pytest_cache

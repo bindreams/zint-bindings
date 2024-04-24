@@ -80,12 +80,7 @@ environment = {VCPKG_FORCE_SYSTEM_BINARIES="1"}
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = [
-    "--import-mode=importlib",
-    "--doctest-modules",
-    "--doctest-glob=README.md",
-    "--ignore-glob=src/zint/external",
-]
+addopts = ["--doctest-glob=README.md"]
 doctest_optionflags = "ELLIPSIS"
 
 [tool.pylint.'MESSAGES CONTROL']

@@ -4,6 +4,7 @@ This script uses mypy's "stubtest" script to test the file. Some errors that myp
 filters them out.
 """
 
+import platform
 import re
 import subprocess as sp
 
@@ -23,6 +24,9 @@ for i, pattern in enumerate(allowed_errors):
     allowed_errors[i] = re.compile(pattern)
 
 
+@pytest.mark.skipif(
+    platform.python_implementation() != "CPython", reason="stubtest does not work on non-CPython implementations"
+)
 def test_stub():
     sp.run(["stubtest", "--help"], check=True, stdout=sp.DEVNULL)  # Check that the executable works
     errors = sp.run(["stubtest", "zint"], check=False, text=True, stderr=sp.STDOUT, stdout=sp.PIPE).stdout

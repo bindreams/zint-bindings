@@ -1,4 +1,4 @@
-name: Build package wheels
+name: Build package
 
 on: [workflow_dispatch]
 

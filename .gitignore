@@ -2,6 +2,10 @@
 .idea
 .vscode
 
+# Caches
+.mypy_cache
+.pytest_cache
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -30,3 +34,14 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+
+# src/zint/.gitignore
+# Because of issue 726 in scikit-build-core, this project can't have nested gitignore files.
+# See https://github.com/scikit-build/scikit-build-core/issues/726
+
+# "bundled" vcpkg which is downloaded by git
+src/zint/.vcpkg
+src/zint/vcpkg_installed
+
+src/zint/CMakeUserPresets.json

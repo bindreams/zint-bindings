@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <array>
 #include <cstring>
 #include <limits>
 #include <memory>
@@ -420,7 +421,7 @@ void declare_vector_list(pybind11::module_& m, const char* python_identifier) {
 PYBIND11_MODULE(PACKAGE_NAME, m) {
 	m.doc() = "A barcode encoding library supporting over 50 symbologies.";
 	m.attr("__version__") = QUOTED(BINDINGS_VERSION);
-	m.attr("__zint_version__") = [] {
+	m.attr("__upstream_version__") = [] {
 		// The implementation of ZBarcode_Version is kinda weird and this result will only make sense for release
 		// versions of zint.
 		int folded_version = ZBarcode_Version();
@@ -439,14 +440,16 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("width", &VectorRect::width)
 		.def_readonly("height", &VectorRect::height)
 		.def_readonly("colour", &VectorRect::colour, py::doc{"-1 for foreground, 1-8 for Cyan, Blue, Magenta, Red, Yellow, Green, Black, White"})
-		.def_readonly("color", &VectorRect::colour, py::doc{"-1 for foreground, 1-8 for Cyan, Blue, Magenta, Red, Yellow, Green, Black, White. Alias of `colour`"});
+		.def_readonly("color", &VectorRect::colour, py::doc{"-1 for foreground, 1-8 for Cyan, Blue, Magenta, Red, Yellow, Green, Black, White. Alias of `colour`"})
+		.doc() = "Rectangle vector elements returned from `zint.Vector.rectangles`";
 
 	py::class_<VectorHexagon>(m, "VectorHexagon")
 		.def_property_readonly("next", &VectorHexagon::get_next, py::doc{"Next hexagon"})
 		.def_readonly("x", &VectorHexagon::x, py::doc{"Centre"})
 		.def_readonly("y", &VectorHexagon::y, py::doc{"Centre"})
 		.def_readonly("diameter", &VectorHexagon::diameter, py::doc{"Short (minimal) diameter (i.e. diameter of inscribed circle)"})
-		.def_readonly("rotation", &VectorHexagon::rotation, py::doc{"0, 90, 180, 270 degrees, where 0 has apex at top, i.e. short diameter is horizontal"});
+		.def_readonly("rotation", &VectorHexagon::rotation, py::doc{"0, 90, 180, 270 degrees, where 0 has apex at top, i.e. short diameter is horizontal"})
+		.doc() = "Hexagon vector elements returned from `zint.Vector.hexagons`";
 
 	py::class_<VectorString>(m, "VectorString")
 		.def_property_readonly("next", &VectorString::get_next, py::doc{"Next string"})
@@ -457,7 +460,8 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("length", &VectorString::length, py::doc{"Number of characters (bytes)"})
 		.def_readonly("rotation", &VectorString::rotation, py::doc{"0, 90, 180, 270 degrees"})
 		.def_readonly("halign", &VectorString::halign, py::doc{"Horizontal alignment: 0 for centre, 1 for left, 2 for right (end)"})
-		.def_property_readonly("text", &VectorString::get_text);
+		.def_property_readonly("text", &VectorString::get_text)
+		.doc() = "String vector elements returned from `zint.Vector.strings`";
 
 	py::class_<VectorCircle>(m, "VectorCircle")
 		.def_property_readonly("next", &VectorCircle::get_next, py::doc{"Next circle"})
@@ -466,7 +470,8 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("diameter", &VectorCircle::diameter, py::doc{"Circle diameter. Does not include width (if any)"})
 		.def_readonly("width", &VectorCircle::width, py::doc{"Width of circle perimeter (circumference). 0 for fill (disc)"})
 		.def_readonly("colour", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy))"})
-		.def_readonly("color", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy)). Alias of `colour`"});
+		.def_readonly("color", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy)). Alias of `colour`"})
+		.doc() = "Circle vector elements returned from `zint.Vector.circles`";
 
 	declare_vector_list<VectorRect>(m, "VectorRects");
 	declare_vector_list<VectorHexagon>(m, "VectorHexagons");
@@ -476,23 +481,26 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 	py::class_<Vector>(m, "Vector")
 		.def_readonly("width", &Vector::width, py::doc{"Width of barcode image (including text, whitespace)"})
 		.def_readonly("height", &Vector::height, py::doc{"Height of barcode image (including text, whitespace)"})
-		.def_property_readonly("rectangles", &Vector::get_rectangles, py::doc{"Iterable over rectangles"})
-		.def_property_readonly("hexagons", &Vector::get_hexagons, py::doc{"Iterable over hexagons"})
-		.def_property_readonly("strings", &Vector::get_strings, py::doc{"Iterable over strings"})
-		.def_property_readonly("circles", &Vector::get_circles, py::doc{"Iterable over circles"});
+		.def_property_readonly("rectangles", &Vector::get_rectangles, py::doc{"An iterable over rectangles (`zint.VectorRectangle`)"})
+		.def_property_readonly("hexagons", &Vector::get_hexagons, py::doc{"An iterable over hexagons (`zint.VectorHexagon`)"})
+		.def_property_readonly("strings", &Vector::get_strings, py::doc{"An iterable over strings (`zint.VectorString`)"})
+		.def_property_readonly("circles", &Vector::get_circles, py::doc{"An iterable over circles (`zint.VectorCircle`)"})
+		.doc() = "Vector image information, returned from `zint.Symbol.vector` after calling `zint.Symbol.buffer_vector`";
 
 	py::class_<StructApp>(m, "StructApp")
 		.def(py::init<>())
 		.def(py::init<int, int, py::bytes const&>(), py::arg{"index"}, py::arg{"count"}, py::arg{"id"} = py::bytes{})
 		.def_readwrite("index", &StructApp::index, py::doc{"Position in Structured Append sequence, 1-based. Must be <= `count`"})
 		.def_readwrite("count", &StructApp::count, py::doc{"Number of symbols in Structured Append sequence. Set >= 2 to add SA Info"})
-		.def_property("id", &StructApp::get_id, &StructApp::set_id, py::doc{"Optional ID to distinguish sequence, ASCII, max 32 long"});
+		.def_property("id", &StructApp::get_id, &StructApp::set_id, py::doc{"Optional ID to distinguish sequence, ASCII, max 32 long"})
+		.doc() = "Structural append information (see `zint.Symbol.structapp`).\n\nIgnored unless `zint.StructApp.count` is non-zero";
 
 	py::class_<Seg>(m, "Seg")
 		.def(py::init<>())
 		.def(py::init<py::buffer const&, int>())
 		.def_property("source", &Seg::get_source, &Seg::set_source, py::doc{"Data to encode"})
-		.def_readwrite("eci", &Seg::eci, py::doc{"Extended Channel Interpretation"});
+		.def_readwrite("eci", &Seg::eci, py::doc{"Extended Channel Interpretation"})
+		.doc() = "Segment for use with `zint.Symbol.encode_segs`.";
 
 	py::class_<Symbol>(m, "Symbol")
 		.def(py::init<>())
@@ -544,7 +552,31 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_property_readonly("errtxt", &Symbol::get_errtxt, py::doc{"Error message if an error or warning occurs (output only)"})
 		.def_property_readonly("bitmap", &Symbol::get_bitmap, py::doc{"Stored bitmap image (raster output only)"})
 		.def_property_readonly("alphamap", &Symbol::get_alphamap, py::doc{"Array of alpha values used (raster output only)"})
-		.def_property_readonly("vector", &Symbol::get_vector, py::doc{"Vector header (vector output only)"});
+		.def_property_readonly("vector", &Symbol::get_vector, py::doc{"Vector header (vector output only)"})
+		.doc() = "Main symbol structure.";
 		//.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"});  // In a future release
+
+	m.attr("__all__") = std::array{
+		// The order will be reflected in the API documentation.
+		// Main
+		"Symbol",
+		"Symbology",
+		// Supporting classes
+		"Seg",
+		"StructApp",
+		"Vector",
+		"VectorCircle",
+		"VectorHexagon",
+		"VectorRect",
+		"VectorString",
+		// Enums
+		"CapabilityFlags",
+		"DataMatrixOptions",
+		"InputMode",
+		"OutputOptions",
+		"QrFamilyOptions",
+		"UltracodeOptions",
+		"WarningLevel",
+	};
 	// clang-format on
 }

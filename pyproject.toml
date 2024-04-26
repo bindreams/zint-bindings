@@ -15,6 +15,13 @@ test = [
     "mypy; platform_python_implementation == 'CPython'"  # For commandline utility "stubtest"
 ]
 
+docs = [
+    "sphinx",
+    "myst-parser",
+    "furo",
+    "sphinx-copybutton"
+]
+
 [build-system]
 requires = [
     "scikit-build-core >= 0.8.2",

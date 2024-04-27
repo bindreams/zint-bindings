@@ -34,7 +34,7 @@ Install the package with:
 ```sh
 pip install zint
 ```
-Detailed instructions and usage examples are available in the [official documentation]().
+Detailed instructions and usage examples are available in the [official documentation](https://bindreams.github.io/zint-bindings/getting-started.html).
 
 ## License
 <img align="right" width="150px" height="150px" src="https://www.apache.org/foundation/press/kit/img/the-apache-way-badge/Indigo-THE_APACHE_WAY_BADGE-rgb.svg">

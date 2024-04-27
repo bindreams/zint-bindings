@@ -1184,12 +1184,6 @@ class VectorCircle:
         """
 
     @property
-    def next(self) -> VectorCircle:
-        """
-        Next circle
-        """
-
-    @property
     def width(self) -> float:
         """
         Width of circle perimeter (circumference). 0 for fill (disc)
@@ -1220,12 +1214,6 @@ class VectorHexagon:
     def diameter(self) -> float:
         """
         Short (minimal) diameter (i.e. diameter of inscribed circle)
-        """
-
-    @property
-    def next(self) -> VectorHexagon:
-        """
-        Next hexagon
         """
 
     @property
@@ -1270,12 +1258,6 @@ class VectorRect:
     @property
     def height(self) -> float: ...
     @property
-    def next(self) -> VectorRect:
-        """
-        Next rectangle
-        """
-
-    @property
     def width(self) -> float: ...
     @property
     def x(self) -> float:
@@ -1314,12 +1296,6 @@ class VectorString:
     def length(self) -> int:
         """
         Number of characters (bytes)
-        """
-
-    @property
-    def next(self) -> VectorString:
-        """
-        Next string
         """
 
     @property

@@ -434,7 +434,6 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 
 	// clang-format off
 	py::class_<VectorRect>(m, "VectorRect")
-		.def_property_readonly("next", &VectorRect::get_next, py::doc{"Next rectangle"})
 		.def_readonly("x", &VectorRect::x, py::doc{"Left"})
 		.def_readonly("y", &VectorRect::y, py::doc{"Top"})
 		.def_readonly("width", &VectorRect::width)
@@ -444,7 +443,6 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.doc() = "Rectangle vector elements returned from `zint.Vector.rectangles`";
 
 	py::class_<VectorHexagon>(m, "VectorHexagon")
-		.def_property_readonly("next", &VectorHexagon::get_next, py::doc{"Next hexagon"})
 		.def_readonly("x", &VectorHexagon::x, py::doc{"Centre"})
 		.def_readonly("y", &VectorHexagon::y, py::doc{"Centre"})
 		.def_readonly("diameter", &VectorHexagon::diameter, py::doc{"Short (minimal) diameter (i.e. diameter of inscribed circle)"})
@@ -452,7 +450,6 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.doc() = "Hexagon vector elements returned from `zint.Vector.hexagons`";
 
 	py::class_<VectorString>(m, "VectorString")
-		.def_property_readonly("next", &VectorString::get_next, py::doc{"Next string"})
 		.def_readonly("x", &VectorString::x, py::doc{"Relative to halign (i.e. centre, left, right)"})
 		.def_readonly("y", &VectorString::y, py::doc{"Relative to baseline"})
 		.def_readonly("fsize", &VectorString::fsize, py::doc{"Font size"})
@@ -464,7 +461,6 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.doc() = "String vector elements returned from `zint.Vector.strings`";
 
 	py::class_<VectorCircle>(m, "VectorCircle")
-		.def_property_readonly("next", &VectorCircle::get_next, py::doc{"Next circle"})
 		.def_readonly("x", &VectorCircle::x, py::doc{"Centre"})
 		.def_readonly("y", &VectorCircle::y, py::doc{"Centre"})
 		.def_readonly("diameter", &VectorCircle::diameter, py::doc{"Circle diameter. Does not include width (if any)"})

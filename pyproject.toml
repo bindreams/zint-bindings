@@ -19,7 +19,8 @@ docs = [
     "sphinx",
     "myst-parser",
     "furo",
-    "sphinx-copybutton"
+    "sphinx-design",
+    "sphinx-copybutton",
 ]
 
 [build-system]

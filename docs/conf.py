@@ -13,7 +13,14 @@ author = "Anna Zhukova"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser", "sphinx_design", "sphinx_copybutton", "sphinx.ext.autodoc", "sphinx.ext.napoleon"]
+extensions = [
+    "myst_parser",
+    "sphinx_design",
+    "sphinx_copybutton",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.githubpages",
+]
 myst_enable_extensions = ["colon_fence"]
 
 autodoc_member_order = "groupwise"

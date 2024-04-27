@@ -20,6 +20,7 @@ if year == 2024:
 else:
     copyright = f"2024-{year}, {author}"
 
+html_title = f"{project} {release}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

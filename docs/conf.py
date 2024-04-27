@@ -3,12 +3,23 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+from datetime import date
+
+import zint  # You will need it installed anyway for autodoc
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "Zint Bindings"
-copyright = "2024, Anna Zhukova"
 author = "Anna Zhukova"
+release = zint.__version__
+
+year = date.today().year
+if year == 2024:
+    copyright = f"2024, {author}"
+else:
+    copyright = f"2024-{year}, {author}"
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

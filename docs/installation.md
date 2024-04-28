@@ -1,7 +1,7 @@
 # Installation
 Zint bindings are available as a package, installable from pip:
 ```sh
-pip install zint
+pip install zint-bindings
 ```
 
 Binary wheels are provided for the most common platforms. If your platform is not supported, pip will build the package from a source distribution.
@@ -24,13 +24,13 @@ After the environment is set up, simply run `pip install`:
 :::{tab-item} From pip
 Assuming your platform does not have a binary distribution:
 ```sh
-pip install zint
+pip install zint-bindings
 ```
 :::
 :::{tab-item} From sdist
 sdists for particular versions can be downloaded from <https://pypi.org/project/zint/#files>
 ```sh
-pip install zint-1.0.0.tar.gz
+pip install zint_bindings-<VERSION>.tar.gz
 ```
 :::
 :::{tab-item} From source

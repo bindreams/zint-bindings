@@ -32,7 +32,7 @@ Features:
 
 Install the package with:
 ```sh
-pip install zint
+pip install zint-bindings
 ```
 Detailed instructions and usage examples are available in the [official documentation](https://bindreams.github.io/zint-bindings/getting-started.html).
 

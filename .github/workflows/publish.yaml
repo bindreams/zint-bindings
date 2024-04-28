@@ -1,0 +1,40 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Target repository
+        type: choice
+        options: [PyPI, TestPyPI]
+        default: TestPyPI
+        required: true
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Publish to ${{ options.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: ./.github/workflows/build.yaml
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: dist
+          merge-multiple: true
+
+      - name: Determine upload URL
+        run: |
+          case "${{ inputs.repository }}" in
+            "TestPyPI") URL="https://test.pypi.org/legacy/";;
+                "PyPI") URL="https://upload.pypi.org/legacy/";;
+                     *) echo "Incorrect input"; exit 1;;
+          esac
+          echo "UPLOAD_URL=$URL" >> "$GITHUB_ENV"
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: $UPLOAD_URL

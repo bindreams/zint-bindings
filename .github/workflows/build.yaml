@@ -1,6 +1,11 @@
-name: Build package
+name: Build distribution files
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   sdist:

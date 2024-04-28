@@ -1,12 +1,42 @@
 [project]
-name = "zint"
-version = "0.1.0"
-description="A minimal example package (with pybind11)"
+name = "zint-bindings"
+version = "1.0.0"
+authors = [
+    { name = "Anna Zhukova" }
+]
+
+description = "A barcode encoding library supporting over 50 symbologies."
+readme = "README.md"
+keywords = ["QR", "Datamatrix", "Barcode", "generator"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+	"Topic :: Communications",
+	"Topic :: Multimedia :: Graphics",
+]
+
 requires-python = ">=3.8"
 dependencies = [
     "numpy",
     "typing-extensions >= 4.6.0",
 ]
+
+[project.urls]
+Documentation = "https://bindreams.github.io/zint-bindings/"
+Repository = "https://github.com/bindreams/zint-bindings"
+Issues = "https://github.com/bindreams/zint-bindings/issues"
 
 [project.optional-dependencies]
 test = [

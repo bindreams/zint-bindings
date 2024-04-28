@@ -1,3 +1,6 @@
+# See also:
+#   https://github.com/pypa/gh-action-pypi-publish
+#   https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/
 name: Publish
 
 on:
@@ -13,28 +16,26 @@ on:
     types: [published]
 
 jobs:
+  build:
+    name: Build distribution files
+    uses: ./.github/workflows/build.yaml
+
   publish:
-    name: Publish to ${{ options.repository }}
+    name: Publish to ${{ inputs.repository }}
+    needs: [build]
     runs-on: ubuntu-latest
+    environment:
+      name: publish-${{ inputs.repository }}
+      url: ${{ vars.DEPLOYMENT_URL }}
     permissions:
       id-token: write
     steps:
-      - uses: ./.github/workflows/build.yaml
       - uses: actions/download-artifact@v4
         with:
           pattern: package-*
           path: dist
           merge-multiple: true
 
-      - name: Determine upload URL
-        run: |
-          case "${{ inputs.repository }}" in
-            "TestPyPI") URL="https://test.pypi.org/legacy/";;
-                "PyPI") URL="https://upload.pypi.org/legacy/";;
-                     *) echo "Incorrect input"; exit 1;;
-          esac
-          echo "UPLOAD_URL=$URL" >> "$GITHUB_ENV"
-
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: $UPLOAD_URL
+          repository_url: ${{ vars.UPLOAD_ENDPOINT }}

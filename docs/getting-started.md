@@ -2,7 +2,7 @@
 ## Installation
 Zint bindings are available to install from pip:
 ```sh
-pip install zint
+pip install zint-bindings
 ```
 
 the `zint` package contains both the compiled bindings, as well as a `pyi` syntax file which should help you in your IDE.

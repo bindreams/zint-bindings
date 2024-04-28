@@ -21,7 +21,7 @@ jobs:
         run: sphinx-build docs build
 
       - name: Deploy to GitHub Pages
-        if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build

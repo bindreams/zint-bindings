@@ -12,8 +12,6 @@ on:
         options: [PyPI, TestPyPI]
         default: TestPyPI
         required: true
-  release:
-    types: [published]
 
 jobs:
   build:

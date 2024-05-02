@@ -1,13 +1,11 @@
 """Generate src/generated/enums.hpp file. Run this from the root directory."""
 
+import io
 import json
 import re
-import subprocess as sp
 import sys
-import textwrap
-
-import clang_format as cf
-import varformat as vf
+from dataclasses import dataclass
+from textwrap import dedent
 
 re_base_define = r"^#define (\w+) +((?:0x)?\d+)"
 """`#define BARCODE_CODE128 0x01`"""
@@ -21,6 +19,15 @@ re_comment_note = r"\n *\/\* (.*?)\s+?\*\/"
 re_define = re_base_define + " *" + re_comment + "(?:" + re_comment_note + ")?"
 
 
+@dataclass
+class EnumInfo:
+    name: str
+    values: list
+    cpp_base: str = "int"
+    py_base: str = "enum.Enum"
+    docstring: str = ""
+
+
 def find_line_re(pattern, source: str, start=0):
     m = re.search(pattern, source[start:], re.MULTILINE | re.DOTALL)
     if m:
@@ -29,17 +36,12 @@ def find_line_re(pattern, source: str, start=0):
     return None
 
 
-def clang_format(text: str):
-    exe = cf._get_executable("clang-format")
-    return sp.check_output([exe, "-"], encoding="utf-8", input=text)
-
-
 def escape_string(s: str):
     """Escape a string for double quotes in C++."""
     return json.dumps(s, ensure_ascii=False)[1:-1]
 
 
-def parse_enum(
+def parse_enum_values(
     source: str,
     *,
     header: str,
@@ -95,156 +97,147 @@ def enum_definition(enum, *, class_name: str, base_type: str = "int"):
     return f"enum class {class_name} : {base_type} {{ {values} }};"
 
 
-def enum_binding(enum, *, class_name: str, docstring: str, arithmetic=False):
-    values = "".join(f'.value("{name}", {class_name}::{name}, "{escape_string(comment)}")' for name, _, comment in enum)
+def write_enum_macro(fd, enum: EnumInfo):
+    fd.write(f'ENUM_BEGIN({enum.name}, {enum.cpp_base}, "{enum.py_base}", "{escape_string(enum.docstring)}")\n')
 
-    if arithmetic == True:
-        arithmetic_tag = "py::arithmetic{},"
-    else:
-        arithmetic_tag = ""
+    for name, value, value_docstring in enum.values:
+        fd.write(f'ENUM_VALUE({enum.name}, {name}, {value}, "{escape_string(value_docstring)}")\n')
 
-    return f'py::enum_<{class_name}>(m, "{class_name}", {arithmetic_tag} "{escape_string(docstring)}") {values};'
+    fd.write(f"ENUM_END({enum.name})\n\n")
+
+
+def p11x_declare_enum(fd, enum: EnumInfo):
+    # P11X_DECLARE_ENUM(
+    #   "NameOfPythonEnum",
+    #   "enum.Enum",  // or "enum.IntEnum", etc.
+    #   {"PyNameA", CEnumMemberA}, {"PyNameB", CEnumMemberB}, ...
+    # )
+
+    fd.write(f'P11X_DECLARE_ENUM("{enum.name}", {enum.name}, "{enum.py_base}", "{enum.docstring}")')
+
+    for name, value, value_docstring in enum.values:
+        fd.write(f'.add("{name}", {enum.name}::{name})')
+
+    fd.write(";\n")
 
 
 def main():
     with open("external/zint/backend/zint.h", "r", encoding="utf-8") as f:
         source = f.read()
 
-    # Symbology enum
-    symbology_enum = parse_enum(
-        source,
-        header=re.escape("/* Symbologies (`symbol->symbology`) */"),
-        prefix="BARCODE_",
-        blacklist=lambda name, _, comment: comment == "Legacy" or name == "LAST",
-    )
+    enums = [
+        EnumInfo(
+            name="Symbology",
+            docstring="Values for `Symbol.symbology`",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Symbologies (`symbol->symbology`) */"),
+                prefix="BARCODE_",
+                blacklist=lambda name, _, comment: comment == "Legacy" or name == "LAST",
+            ),
+        ),
+        EnumInfo(
+            name="OutputOptions",
+            docstring="Values for `Symbol.output_options`",
+            py_base="enum.Flag",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Output options (`symbol->output_options`) */"),
+            ),
+        ),
+        EnumInfo(
+            name="InputMode",
+            docstring="Values for `Symbol.input_mode`",
+            py_base="enum.Flag",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Input data types (`symbol->input_mode`) */"),
+                footer=r"^\/\*(?! The following may be OR-ed with above)",  # Do not terminate on a top-level comment
+                suffix="_MODE",
+            ),
+        ),
+        EnumInfo(
+            name="DataMatrixOptions",
+            docstring="Data Matrix specific options (`symbol->option_3`)",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Data Matrix specific options (`symbol->option_3`) */"),
+                prefix="DM_",
+            ),
+        ),
+        EnumInfo(
+            name="QrFamilyOptions",
+            docstring="QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* QR, Han Xin, Grid Matrix specific options (`symbol->option_3`) */"),
+                prefix="ZINT_",
+            ),
+        ),
+        EnumInfo(
+            name="UltracodeOptions",
+            docstring="Ultracode specific option (`symbol->option_3`)",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Ultracode specific option (`symbol->option_3`) */"),
+            ),
+        ),
+        EnumInfo(
+            name="WarningLevel",
+            docstring="Warning level (`symbol->warn_level`)",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Warning level (`symbol->warn_level`) */"),
+                prefix="WARN_",
+            ),
+        ),
+        EnumInfo(
+            name="CapabilityFlags",
+            docstring="Capability flags (ZBarcode_Cap() `cap_flag`)",
+            cpp_base="unsigned int",
+            values=parse_enum_values(
+                source,
+                header=re.escape("/* Capability flags (ZBarcode_Cap() `cap_flag`) */"),
+                prefix="ZINT_CAP_",
+                blacklist=lambda _1, _2, comment: comment == "Legacy",
+            ),
+        ),
+    ]
 
-    output_options_enum = parse_enum(
-        source,
-        header=re.escape("/* Output options (`symbol->output_options`) */"),
-    )
+    # Write files ------------------------------------------------------------------------------------------------------
+    # Write enums.inc
+    with open("src/generated/enums.inc", "w", encoding="utf-8", newline="\n") as fd:
+        for enum in enums:
+            write_enum_macro(fd, enum)
 
-    imput_mode_enum = parse_enum(
-        source,
-        header=re.escape("/* Input data types (`symbol->input_mode`) */"),
-        footer=r"^\/\*(?! The following may be OR-ed with above)",  # Do not terminate on a top-level comment
-        suffix="_MODE",
-    )
-
-    datamatrix_options_enum = parse_enum(
-        source,
-        header=re.escape("/* Data Matrix specific options (`symbol->option_3`) */"),
-        prefix="DM_",
-    )
-
-    qr_family_options_enum = parse_enum(
-        source,
-        header=re.escape("/* QR, Han Xin, Grid Matrix specific options (`symbol->option_3`) */"),
-        prefix="ZINT_",
-    )
-
-    ultracode_options_enum = parse_enum(
-        source,
-        header=re.escape("/* Ultracode specific option (`symbol->option_3`) */"),
-    )
-
-    warning_level_enum = parse_enum(
-        source,
-        header=re.escape("/* Warning level (`symbol->warn_level`) */"),
-        prefix="WARN_",
-    )
-
-    capability_flags_enum = parse_enum(
-        source,
-        header=re.escape("/* Capability flags (ZBarcode_Cap() `cap_flag`) */"),
-        prefix="ZINT_CAP_",
-    )
-
-    # Write file -------------------------------------------------------------------------------------------------------
-    template = textwrap.dedent(
+    enum_declarations_template = dedent(
         """\
-        /// This file was generated automatically by scripts/generate-enums.py. Please do not edit it manually.
+        /// This file was generated automatically by `scripts/generate-enums.py`. Please do not edit it manually.
         #pragma once
-        #include <pybind11/pybind11.h>
 
-        namespace py = pybind11;
+        #include "../enum_util.hpp"
+        #include "../enums.hpp"
 
-        ${code}
+        #if defined(_MSC_VER)
+            #pragma warning(push)
+            #pragma warning(disable : 4706)  // assignment within conditional expression
+        #endif
 
-        inline void init_enum_bindings(pybind11::module_& m) {
-            ${bindings}
-        }
+        {contents}
+
+        #if defined(_MSC_VER)
+            #pragma warning(pop)
+        #endif
         """
     )
 
-    text = vf.format(
-        template,
-        code="\n".join(
-            [
-                enum_definition(symbology_enum, class_name="Symbology"),
-                enum_definition(output_options_enum, class_name="OutputOptions"),
-                enum_definition(imput_mode_enum, class_name="InputMode"),
-                enum_definition(datamatrix_options_enum, class_name="DataMatrixOptions"),
-                enum_definition(qr_family_options_enum, class_name="QrFamilyOptions"),
-                enum_definition(ultracode_options_enum, class_name="UltracodeOptions"),
-                enum_definition(warning_level_enum, class_name="WarningLevel"),
-                enum_definition(
-                    capability_flags_enum,
-                    class_name="CapabilityFlags",
-                    base_type="unsigned int",
-                ),
-            ]
-        ),
-        bindings="\n".join(
-            [
-                enum_binding(
-                    symbology_enum,
-                    class_name="Symbology",
-                    docstring="Values for `Symbol.symbology`",
-                ),
-                enum_binding(
-                    output_options_enum,
-                    class_name="OutputOptions",
-                    docstring="Values for `Symbol.output_options`",
-                    arithmetic=True,
-                ),
-                enum_binding(
-                    imput_mode_enum,
-                    class_name="InputMode",
-                    docstring="Values for `Symbol.input_mode`",
-                    arithmetic=True,
-                ),
-                enum_binding(
-                    datamatrix_options_enum,
-                    class_name="DataMatrixOptions",
-                    docstring="Data Matrix specific options (`symbol->option_3`)",
-                ),
-                enum_binding(
-                    qr_family_options_enum,
-                    class_name="QrFamilyOptions",
-                    docstring="QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)",
-                ),
-                enum_binding(
-                    ultracode_options_enum,
-                    class_name="UltracodeOptions",
-                    docstring="Ultracode specific option (`symbol->option_3`)",
-                ),
-                enum_binding(
-                    warning_level_enum,
-                    class_name="WarningLevel",
-                    docstring="Warning level (`symbol->warn_level`)",
-                ),
-                enum_binding(
-                    capability_flags_enum,
-                    class_name="CapabilityFlags",
-                    docstring="Capability flags (ZBarcode_Cap() `cap_flag`)",
-                ),
-            ]
-        ),
-    )
+    # Write enum_declarations.hpp
+    contents = io.StringIO()
+    for enum in enums:
+        p11x_declare_enum(contents, enum)
 
-    text = clang_format(text)
-    with open("src/generated/enums.hpp", "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
+    with open("src/generated/enum_declarations.hpp", "w", encoding="utf-8", newline="\n") as f:
+        f.write(enum_declarations_template.format(contents=contents.getvalue()))
 
 
 if __name__ == "__main__":

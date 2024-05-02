@@ -1,6 +1,6 @@
 import logging
 
-from zint import Seg, Symbol, Symbology
+from zint import InputMode, Seg, Symbol, Symbology
 
 
 def test_basic_usage():
@@ -62,3 +62,9 @@ def test_vector():
     for _ in s.vector.circles:
         size += 1
     assert size == len(s.vector.circles)
+
+
+def test_input_mode():
+    """Test that the input_mode is assignable from an enum."""
+    s = Symbol()
+    s.input_mode |= InputMode.UNICODE

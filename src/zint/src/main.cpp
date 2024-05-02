@@ -11,7 +11,7 @@
 #include <string_view>
 #include <type_traits>
 
-#include "generated/enums.hpp"
+#include "enums.hpp"
 #include "utility.hpp"
 
 #include <fmt/core.h>
@@ -302,8 +302,8 @@ struct Symbol {
 	void set_show_hrt(bool val) { m_handle->show_hrt = val; }
 	bool get_show_hrt() { return m_handle->show_hrt; }
 
-	void set_input_mode(int val) { m_handle->input_mode = val; }
-	int get_input_mode() { return m_handle->input_mode; }
+	void set_input_mode(InputMode val) { m_handle->input_mode = static_cast<int>(val); }
+	InputMode get_input_mode() { return static_cast<InputMode>(m_handle->input_mode); }
 
 	void set_eci(int val) { m_handle->eci = val; }
 	int get_eci() { return m_handle->eci; }
@@ -430,7 +430,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		);
 	}();
 
-	init_enum_bindings(m);
+	p11x::bind_enums(m);
 
 	// clang-format off
 	py::class_<VectorRect>(m, "VectorRect")

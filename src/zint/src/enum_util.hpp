@@ -33,6 +33,12 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace p11x {
 namespace {
@@ -43,11 +49,16 @@ struct EnumInfo {
 	std::string name;
 	std::string py_base;
 	std::string docstring;
-	std::vector<std::pair<std::string, std::ptrdiff_t>> items = {};
+
+	// Actual enum items. The numeric value is a py::object because python integers are signed and have no max size.
+	std::vector<std::pair<std::string, py::object>> items = {};
 
 	template<typename T>
 	EnumInfo& add(std::string_view name, T value) {
-		items.emplace_back(name, static_cast<std::ptrdiff_t>(value));
+		static_assert(std::is_enum_v<T> || std::is_integral_v<T>, "Can only add integral values");
+		using underlying_type = std::conditional_t<std::is_enum_v<T>, std::underlying_type_t<T>, T>;
+
+		items.emplace_back(name, py::cast(static_cast<underlying_type>(value)));
 		return *this;
 	}
 };
@@ -58,7 +69,8 @@ void bind_enums(py::module mod) {
 	py::object locate = py::module::import("pydoc").attr("locate");
 
 	for (auto const& info : enums) {
-		py::object cls = locate(info.py_base)(info.name, info.items, py::arg("module") = mod.attr("__name__"));
+		py::object base_enum = locate(info.py_base);
+		py::object cls = base_enum(info.name, info.items, py::arg("module") = mod.attr("__name__"));
 
 		info.type_caster_reference = cls;
 		mod.attr(py::cast(info.name)) = cls;
@@ -88,15 +100,24 @@ void bind_enums(py::module mod) {
 			PyObject* tmp = PyNumber_Index(src.attr("value").ptr());                                                   \
 			if (!tmp) return false;                                                                                    \
                                                                                                                        \
-			auto ival = PyLong_AsLong(tmp);                                                                            \
+			Py_ssize_t ival = 0;                                                                                       \
+			using underlying_type = std::underlying_type_t<type>;                                                      \
+			if constexpr (std::is_signed_v<underlying_type>) {                                                         \
+				ival = PyLong_AsSsize_t(tmp);                                                                          \
+			} else {                                                                                                   \
+				/* This obviously might overflow, but since it's the same size and 2s compliment, it's okay. */        \
+				/* The error value size_t(-1) also maps correctly to -1. */                                            \
+				ival = static_cast<Py_ssize_t>(PyLong_AsSize_t(tmp));                                                  \
+			}                                                                                                          \
+                                                                                                                       \
 			Py_DECREF(tmp);                                                                                            \
 			if (ival == -1 && !PyErr_Occurred()) return false;                                                         \
                                                                                                                        \
-			value = decltype(value)(ival);                                                                             \
+			value = static_cast<type>(ival);                                                                           \
 			return true;                                                                                               \
 		}                                                                                                              \
                                                                                                                        \
-		static handle cast(decltype(value) obj, return_value_policy, handle) {                                         \
+		static handle cast(type obj, return_value_policy, handle) {                                                    \
 			return cls(std::underlying_type_t<type>(obj)).inc_ref();                                                   \
 		}                                                                                                              \
 	};                                                                                                                 \

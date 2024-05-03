@@ -85,14 +85,14 @@ void bind_enums(py::module mod) {
 
 // Immediately converting the args to a vector outside of the lambda avoids
 // name collisions.
-#define P11X_DECLARE_ENUM(py_name, type, py_base_cls, docstring)                                                       \
+#define P11X_DECLARE_ENUM(ENUM_NAME, ENUM_TYPE, PY_BASE, DOCSTRING)                                                    \
 	namespace pybind11::detail {                                                                                       \
 	template<>                                                                                                         \
-	struct type_caster<type> {                                                                                         \
-		static_assert(std::is_enum_v<type>, "Supplied type is not an enum type");                                      \
+	struct type_caster<ENUM_TYPE> {                                                                                    \
+		static_assert(std::is_enum_v<ENUM_TYPE>, "Supplied type is not an enum type");                                 \
                                                                                                                        \
 		static inline pybind11::object cls;                                                                            \
-		PYBIND11_TYPE_CASTER(type, _(py_name));                                                                        \
+		PYBIND11_TYPE_CASTER(ENUM_TYPE, _(ENUM_NAME));                                                                 \
                                                                                                                        \
 		bool load(handle src, bool) {                                                                                  \
 			if (!pybind11::isinstance(src, cls)) return false;                                                         \
@@ -101,7 +101,7 @@ void bind_enums(py::module mod) {
 			if (!tmp) return false;                                                                                    \
                                                                                                                        \
 			Py_ssize_t ival = 0;                                                                                       \
-			using underlying_type = std::underlying_type_t<type>;                                                      \
+			using underlying_type = std::underlying_type_t<ENUM_TYPE>;                                                 \
 			if constexpr (std::is_signed_v<underlying_type>) {                                                         \
 				ival = PyLong_AsSsize_t(tmp);                                                                          \
 			} else {                                                                                                   \
@@ -113,15 +113,15 @@ void bind_enums(py::module mod) {
 			Py_DECREF(tmp);                                                                                            \
 			if (ival == -1 && !PyErr_Occurred()) return false;                                                         \
                                                                                                                        \
-			value = static_cast<type>(ival);                                                                           \
+			value = static_cast<ENUM_TYPE>(ival);                                                                      \
 			return true;                                                                                               \
 		}                                                                                                              \
                                                                                                                        \
-		static handle cast(type obj, return_value_policy, handle) {                                                    \
-			return cls(std::underlying_type_t<type>(obj)).inc_ref();                                                   \
+		static handle cast(ENUM_TYPE obj, return_value_policy, handle) {                                               \
+			return cls(std::underlying_type_t<ENUM_TYPE>(obj)).inc_ref();                                              \
 		}                                                                                                              \
 	};                                                                                                                 \
 	}                                                                                                                  \
                                                                                                                        \
 	p11x::EnumInfo& P11X_CONCAT(_p11x_enum_, __COUNTER__) =                                                            \
-		p11x::enums.emplace_back(pybind11::detail::type_caster<type>::cls, py_name, py_base_cls, docstring)
+		p11x::enums.emplace_back(pybind11::detail::type_caster<ENUM_TYPE>::cls, ENUM_NAME, PY_BASE, DOCSTRING)

@@ -106,21 +106,6 @@ def write_enum_macro(fd, enum: EnumInfo):
     fd.write(f"ENUM_END({enum.name})\n\n")
 
 
-def p11x_declare_enum(fd, enum: EnumInfo):
-    # P11X_DECLARE_ENUM(
-    #   "NameOfPythonEnum",
-    #   "enum.Enum",  // or "enum.IntEnum", etc.
-    #   {"PyNameA", CEnumMemberA}, {"PyNameB", CEnumMemberB}, ...
-    # )
-
-    fd.write(f'P11X_DECLARE_ENUM("{enum.name}", {enum.name}, "{enum.py_base}", "{enum.docstring}")')
-
-    for name, value, value_docstring in enum.values:
-        fd.write(f'.add("{name}", {enum.name}::{name})')
-
-    fd.write(";\n")
-
-
 def main():
     with open("external/zint/backend/zint.h", "r", encoding="utf-8") as f:
         source = f.read()
@@ -209,35 +194,6 @@ def main():
     with open("src/generated/enums.inc", "w", encoding="utf-8", newline="\n") as fd:
         for enum in enums:
             write_enum_macro(fd, enum)
-
-    enum_declarations_template = dedent(
-        """\
-        /// This file was generated automatically by `scripts/generate-enums.py`. Please do not edit it manually.
-        #pragma once
-
-        #include "../enum_util.hpp"
-        #include "../enums.hpp"
-
-        #if defined(_MSC_VER)
-            #pragma warning(push)
-            #pragma warning(disable : 4706)  // assignment within conditional expression
-        #endif
-
-        {contents}
-
-        #if defined(_MSC_VER)
-            #pragma warning(pop)
-        #endif
-        """
-    )
-
-    # Write enum_declarations.hpp
-    contents = io.StringIO()
-    for enum in enums:
-        p11x_declare_enum(contents, enum)
-
-    with open("src/generated/enum_declarations.hpp", "w", encoding="utf-8", newline="\n") as f:
-        f.write(enum_declarations_template.format(contents=contents.getvalue()))
 
 
 if __name__ == "__main__":

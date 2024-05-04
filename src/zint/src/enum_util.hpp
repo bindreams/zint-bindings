@@ -1,34 +1,30 @@
-// This magic was borrowed from https://gist.github.com/anntzer/96f27c0b88634dbc61862d08bff46d10
-//
-// The ``P11X_DECLARE_ENUM`` macro and the ``p11x::bind_enums`` function
-// bind enums to Python's ``enum.Enum`` or one of its subclasses
-// (``enum.IntEnum``, ``enum.Flag``, ``enum.IntFlag``) -- unlike
-// ``pybind11::enum_`` which uses an unrelated implementation.
-//
-// Use as follows:
-//
-// .. code-block:: c++
-//
-//    // Define module_name.NameOfPythonEnum as an enum.Enum subclass, with
-//    // members PyNameA, PyNameB, etc.
-//
-//    // This must happen at the toplevel, not within a namespace.
-//    P11X_DECLARE_ENUM(
-//      "NameOfPythonEnum",
-//      "enum.Enum",  // or "enum.IntEnum", etc.
-//      {"PyNameA", CEnumMemberA}, {"PyNameB", CEnumMemberB}, ...
-//    )
-//
-//    // This must be within PYBIND11_MODULE, in the same translation unit as
-//    // P11X_DECLARE_ENUM.
-//    PYBIND11_MODULE(module_name, m) {
-//      p11x::bind_enums(m);
-//    }
-//
-// The enum members passed to ``P11X_DECLARE_ENUM`` must be actual members of the
-// enum class, not integers with the corresponding value -- their type is used to
-// infer the C class used by the caster.
-
+/** Utilities for declaring native python enums with pybind11.
+ *
+ * Supports any python enum derived from `enum.Enum`. Inspired by
+ * https://gist.github.com/anntzer/96f27c0b88634dbc61862d08bff46d10
+ *
+ * Usage example:
+ * ```c++
+ * enum class MyEnum {
+ *     A = 0,
+ *     B = 1,
+ *     C = 1,
+ *     D = 2
+ * };
+ *
+ * P11X_DECLARE_ENUM("MyEnumPythonIdentifier", MyEnum, "enum.Enum", "My optional class docstring")
+ *     .add("A", MyEnum::A, "Optional docstring")
+ *     .add("B", MyEnum::B)
+ *     .add("C", MyEnum::C)
+ *     .add("D", MyEnum::D);
+ *
+ * // This must be within PYBIND11_MODULE, in the same translation unit as P11X_DECLARE_ENUM.
+ * PYBIND11_MODULE(module_name, m) {
+ *     p11x::bind_enums(m);
+ * }
+ *
+ * ```
+ */
 #pragma once
 
 #include <pybind11/pybind11.h>

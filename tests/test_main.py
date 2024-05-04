@@ -68,3 +68,9 @@ def test_input_mode():
     """Test that the input_mode is assignable from an enum."""
     s = Symbol()
     s.input_mode |= InputMode.UNICODE
+
+
+def test_enum_docstrings():
+    # Test that docstring for enums have been added to the module
+    assert Symbology.__doc__ == "Values for `Symbol.symbology`"
+    assert Symbology.DATAMATRIX.__doc__ == "Data Matrix (ECC200)"

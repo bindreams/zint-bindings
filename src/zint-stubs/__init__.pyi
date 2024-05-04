@@ -28,6 +28,10 @@ __all__: list = [
 ]
 
 class CapabilityFlags(enum.Enum):
+    """
+    Capability flags (ZBarcode_Cap() `cap_flag`)
+    """
+
     COMPLIANT_HEIGHT: typing.ClassVar[
         CapabilityFlags
     ]  # value = <CapabilityFlags.COMPLIANT_HEIGHT: 8192>
@@ -60,6 +64,10 @@ class CapabilityFlags(enum.Enum):
     ]  # value = <CapabilityFlags.STRUCTAPP: 4096>
 
 class DataMatrixOptions(enum.Enum):
+    """
+    Data Matrix specific options (`symbol->option_3`)
+    """
+
     DMRE: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.DMRE: 101>
     ISO_144: typing.ClassVar[
         DataMatrixOptions
@@ -69,6 +77,10 @@ class DataMatrixOptions(enum.Enum):
     ]  # value = <DataMatrixOptions.SQUARE: 100>
 
 class InputMode(enum.Flag):
+    """
+    Values for `Symbol.input_mode`
+    """
+
     ESCAPE: typing.ClassVar[InputMode]  # value = <InputMode.ESCAPE: 8>
     EXTRA_ESCAPE: typing.ClassVar[InputMode]  # value = <InputMode.EXTRA_ESCAPE: 256>
     FAST: typing.ClassVar[InputMode]  # value = <InputMode.FAST: 128>
@@ -79,6 +91,10 @@ class InputMode(enum.Flag):
     UNICODE: typing.ClassVar[InputMode]  # value = <InputMode.UNICODE: 1>
 
 class OutputOptions(enum.Flag):
+    """
+    Values for `Symbol.output_options`
+    """
+
     BARCODE_BIND: typing.ClassVar[
         OutputOptions
     ]  # value = <OutputOptions.BARCODE_BIND: 2>
@@ -125,6 +141,10 @@ class OutputOptions(enum.Flag):
     SMALL_TEXT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.SMALL_TEXT: 32>
 
 class QrFamilyOptions(enum.Enum):
+    """
+    QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)
+    """
+
     FULL_MULTIBYTE: typing.ClassVar[
         QrFamilyOptions
     ]  # value = <QrFamilyOptions.FULL_MULTIBYTE: 200>
@@ -552,6 +572,10 @@ class Symbol:
         """
 
 class Symbology(enum.Enum):
+    """
+    Values for `Symbol.symbology`
+    """
+
     AUSPOST: typing.ClassVar[Symbology]  # value = <Symbology.AUSPOST: 63>
     AUSREDIRECT: typing.ClassVar[Symbology]  # value = <Symbology.AUSREDIRECT: 68>
     AUSREPLY: typing.ClassVar[Symbology]  # value = <Symbology.AUSREPLY: 66>
@@ -657,6 +681,10 @@ class Symbology(enum.Enum):
     VIN: typing.ClassVar[Symbology]  # value = <Symbology.VIN: 73>
 
 class UltracodeOptions(enum.Enum):
+    """
+    Ultracode specific option (`symbol->option_3`)
+    """
+
     ULTRA_COMPRESSION: typing.ClassVar[
         UltracodeOptions
     ]  # value = <UltracodeOptions.ULTRA_COMPRESSION: 128>
@@ -871,6 +899,10 @@ class VectorStrings:
     def __len__(self) -> int: ...
 
 class WarningLevel(enum.Enum):
+    """
+    Warning level (`symbol->warn_level`)
+    """
+
     DEFAULT: typing.ClassVar[WarningLevel]  # value = <WarningLevel.DEFAULT: 0>
     FAIL_ALL: typing.ClassVar[WarningLevel]  # value = <WarningLevel.FAIL_ALL: 2>
 

@@ -75,9 +75,9 @@ struct EnumInfo {
 			// if same size as holder type and unsigned (does not fit)
 			.needs_reinterpretation_as_unsigned =
 				std::is_unsigned_v<underlying_type> && sizeof(underlying_type) == sizeof(Value::value_type),
-			.name{name},
-			.py_base{py_base},
-			.docstring{docstring}
+			.name = std::string{name},
+			.py_base = std::string{py_base},
+			.docstring = std::string{docstring}
 		};
 	}
 
@@ -85,7 +85,11 @@ struct EnumInfo {
 	EnumInfo& add(std::string_view name, T value, std::string_view docstring = "") {
 		static_assert(std::is_enum_v<T> || std::is_integral_v<T>, "Can only add integral values");
 
-		items.push_back(Value{.name{name}, .value = static_cast<Value::value_type>(value), .docstring{docstring}});
+		items.push_back(Value{
+			.name = std::string{name},
+			.value = static_cast<Value::value_type>(value),
+			.docstring = std::string{docstring}
+		});
 		return *this;
 	}
 

@@ -27,7 +27,7 @@ __all__: list = [
     "WarningLevel",
 ]
 
-class CapabilityFlags(enum.Enum):
+class CapabilityFlags(enum.Flag):
     """
     Capability flags (ZBarcode_Cap() `cap_flag`)
     """
@@ -63,7 +63,7 @@ class CapabilityFlags(enum.Enum):
         CapabilityFlags
     ]  # value = <CapabilityFlags.STRUCTAPP: 4096>
 
-class DataMatrixOptions(enum.Enum):
+class DataMatrixOptions(enum.IntEnum):
     """
     Data Matrix specific options (`symbol->option_3`)
     """
@@ -75,6 +75,12 @@ class DataMatrixOptions(enum.Enum):
     SQUARE: typing.ClassVar[
         DataMatrixOptions
     ]  # value = <DataMatrixOptions.SQUARE: 100>
+    @classmethod
+    def __new__(cls, value): ...
+    def __format__(self, format_spec):
+        """
+        Convert to a string according to format_spec.
+        """
 
 class InputMode(enum.Flag):
     """
@@ -140,7 +146,7 @@ class OutputOptions(enum.Flag):
     ]  # value = <OutputOptions.READER_INIT: 16>
     SMALL_TEXT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.SMALL_TEXT: 32>
 
-class QrFamilyOptions(enum.Enum):
+class QrFamilyOptions(enum.IntEnum):
     """
     QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)
     """
@@ -148,6 +154,12 @@ class QrFamilyOptions(enum.Enum):
     FULL_MULTIBYTE: typing.ClassVar[
         QrFamilyOptions
     ]  # value = <QrFamilyOptions.FULL_MULTIBYTE: 200>
+    @classmethod
+    def __new__(cls, value): ...
+    def __format__(self, format_spec):
+        """
+        Convert to a string according to format_spec.
+        """
 
 class Seg:
     """
@@ -680,7 +692,7 @@ class Symbology(enum.Enum):
     USPS_IMAIL: typing.ClassVar[Symbology]  # value = <Symbology.USPS_IMAIL: 85>
     VIN: typing.ClassVar[Symbology]  # value = <Symbology.VIN: 73>
 
-class UltracodeOptions(enum.Enum):
+class UltracodeOptions(enum.IntEnum):
     """
     Ultracode specific option (`symbol->option_3`)
     """
@@ -688,6 +700,12 @@ class UltracodeOptions(enum.Enum):
     ULTRA_COMPRESSION: typing.ClassVar[
         UltracodeOptions
     ]  # value = <UltracodeOptions.ULTRA_COMPRESSION: 128>
+    @classmethod
+    def __new__(cls, value): ...
+    def __format__(self, format_spec):
+        """
+        Convert to a string according to format_spec.
+        """
 
 class Vector:
     """

@@ -131,17 +131,17 @@ ENUM_VALUE(InputMode, FAST, 128, "Use faster if less optimal encodation or other
 ENUM_VALUE(InputMode, EXTRA_ESCAPE, 256, "Process special symbology-specific escape sequences. Note: currently Code 128 only")
 ENUM_END(InputMode)
 
-ENUM_BEGIN(DataMatrixOptions, int, "enum.Enum", "Data Matrix specific options (`symbol->option_3`)")
+ENUM_BEGIN(DataMatrixOptions, int, "enum.IntEnum", "Data Matrix specific options (`symbol->option_3`)")
 ENUM_VALUE(DataMatrixOptions, SQUARE, 100, "Only consider square versions on automatic symbol size selection")
 ENUM_VALUE(DataMatrixOptions, DMRE, 101, "Consider DMRE versions on automatic symbol size selection")
 ENUM_VALUE(DataMatrixOptions, ISO_144, 128, "Use ISO instead of \"de facto\" format for 144x144 (i.e. don't skew ECC)")
 ENUM_END(DataMatrixOptions)
 
-ENUM_BEGIN(QrFamilyOptions, int, "enum.Enum", "QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)")
+ENUM_BEGIN(QrFamilyOptions, int, "enum.IntEnum", "QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)")
 ENUM_VALUE(QrFamilyOptions, FULL_MULTIBYTE, 200, "Enable Kanji/Hanzi compression for Latin-1 & binary data")
 ENUM_END(QrFamilyOptions)
 
-ENUM_BEGIN(UltracodeOptions, int, "enum.Enum", "Ultracode specific option (`symbol->option_3`)")
+ENUM_BEGIN(UltracodeOptions, int, "enum.IntEnum", "Ultracode specific option (`symbol->option_3`)")
 ENUM_VALUE(UltracodeOptions, ULTRA_COMPRESSION, 128, "Enable Ultracode compression (experimental)")
 ENUM_END(UltracodeOptions)
 
@@ -150,7 +150,7 @@ ENUM_VALUE(WarningLevel, DEFAULT, 0, "Default behaviour")
 ENUM_VALUE(WarningLevel, FAIL_ALL, 2, "Treat warning as error")
 ENUM_END(WarningLevel)
 
-ENUM_BEGIN(CapabilityFlags, unsigned int, "enum.Enum", "Capability flags (ZBarcode_Cap() `cap_flag`)")
+ENUM_BEGIN(CapabilityFlags, unsigned int, "enum.Flag", "Capability flags (ZBarcode_Cap() `cap_flag`)")
 ENUM_VALUE(CapabilityFlags, HRT, 1, "Prints Human Readable Text?")
 ENUM_VALUE(CapabilityFlags, STACKABLE, 2, "Is stackable?")
 ENUM_VALUE(CapabilityFlags, EANUPC, 4, "Is EAN/UPC?")

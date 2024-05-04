@@ -144,6 +144,7 @@ def main():
         EnumInfo(
             name="DataMatrixOptions",
             docstring="Data Matrix specific options (`symbol->option_3`)",
+            py_base="enum.IntEnum",
             values=parse_enum_values(
                 source,
                 header=re.escape("/* Data Matrix specific options (`symbol->option_3`) */"),
@@ -153,6 +154,7 @@ def main():
         EnumInfo(
             name="QrFamilyOptions",
             docstring="QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)",
+            py_base="enum.IntEnum",
             values=parse_enum_values(
                 source,
                 header=re.escape("/* QR, Han Xin, Grid Matrix specific options (`symbol->option_3`) */"),
@@ -162,6 +164,7 @@ def main():
         EnumInfo(
             name="UltracodeOptions",
             docstring="Ultracode specific option (`symbol->option_3`)",
+            py_base="enum.IntEnum",
             values=parse_enum_values(
                 source,
                 header=re.escape("/* Ultracode specific option (`symbol->option_3`) */"),
@@ -180,6 +183,7 @@ def main():
             name="CapabilityFlags",
             docstring="Capability flags (ZBarcode_Cap() `cap_flag`)",
             cpp_base="unsigned int",
+            py_base="enum.Flag",
             values=parse_enum_values(
                 source,
                 header=re.escape("/* Capability flags (ZBarcode_Cap() `cap_flag`) */"),

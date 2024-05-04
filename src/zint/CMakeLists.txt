@@ -40,7 +40,7 @@ set_target_properties(zint-static PROPERTIES
 
 set(TARGET_NAME "zint_bindings")
 pybind11_add_module(${TARGET_NAME} MODULE src/main.cpp)
-file(GLOB_RECURSE ${TARGET_NAME}_HEADERS CONFIGURE_DEPENDS "src/*.hpp")
+file(GLOB_RECURSE ${TARGET_NAME}_HEADERS CONFIGURE_DEPENDS "src/*.hpp" "src/*.inc")
 target_sources(${TARGET_NAME} PRIVATE FILE_SET HEADERS BASE_DIRS src FILES ${${TARGET_NAME}_HEADERS})
 set_target_properties(${TARGET_NAME} PROPERTIES
 	OUTPUT_NAME zint
@@ -61,17 +61,11 @@ install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION . COMPONENT ${TARGET_NAME})
 
 # generate-enums.py script =============================================================================================
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
-execute_process(
-	COMMAND pip --disable-pip-version-check
-		install -r "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-enums.requirements.txt"
-	COMMAND_ERROR_IS_FATAL ANY
-)
-
 add_custom_target(_generate_enums_hpp
 	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-enums.py"
-	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.hpp"
-	COMMENT "Creating src/generated/enums.hpp"
+	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.inc"
+	COMMENT "Generating generated/enums.inc"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 	VERBATIM
 )

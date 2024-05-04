@@ -1,6 +1,6 @@
 import logging
 
-from zint import Seg, Symbol, Symbology
+from zint import InputMode, Seg, Symbol, Symbology, CapabilityFlags, DataMatrixOptions, QrFamilyOptions, UltracodeOptions, OutputOptions, WarningLevel
 
 
 def test_basic_usage():
@@ -62,3 +62,39 @@ def test_vector():
     for _ in s.vector.circles:
         size += 1
     assert size == len(s.vector.circles)
+
+
+def test_enum_input_output_mode():
+    """Test that the input_mode is assignable from an enum."""
+    s = Symbol()
+    s.input_mode |= InputMode.UNICODE | InputMode.FAST
+    s.output_options |= OutputOptions.BARCODE_BIND | OutputOptions.BARCODE_NO_QUIET_ZONES
+
+
+def test_enum_warn_level():
+    s = Symbol()
+    s.warn_level = WarningLevel.FAIL_ALL
+
+
+def test_enum_docstrings():
+    # Test that docstring for enums have been added to the module
+    assert Symbology.__doc__ == "Values for `Symbol.symbology`"
+    assert Symbology.DATAMATRIX.__doc__ == "Data Matrix (ECC200)"
+
+def test_enum_options():
+    s = Symbol()
+    s.symbology = Symbology.DATAMATRIX
+    s.option_3 = DataMatrixOptions.ISO_144
+
+    s.symbology = Symbology.QRCODE
+    s.option_3 = QrFamilyOptions.FULL_MULTIBYTE
+
+    s.symbology = Symbology.ULTRA
+    s.option_3 = UltracodeOptions.ULTRA_COMPRESSION
+
+def test_capabilities():
+    assert Symbol.capabilities(Symbology.DATAMATRIX) & CapabilityFlags.GS1
+    assert not (Symbol.capabilities(Symbology.DATAMATRIX) & CapabilityFlags.HRT)
+
+    assert not (Symbol.capabilities(Symbology.CODE128) & CapabilityFlags.GS1)
+    assert Symbol.capabilities(Symbology.CODE128) & CapabilityFlags.HRT

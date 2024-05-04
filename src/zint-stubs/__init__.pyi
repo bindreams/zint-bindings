@@ -474,13 +474,13 @@ class Symbol:
     @outfile.setter
     def outfile(self, arg1: str) -> None: ...
     @property
-    def output_options(self) -> int:
+    def output_options(self) -> OutputOptions:
         """
         Various output parameters (bind, box etc, see below)
         """
 
     @output_options.setter
-    def output_options(self, arg1: int) -> None: ...
+    def output_options(self, arg1: OutputOptions) -> None: ...
     @property
     def primary(self) -> str:
         """
@@ -554,13 +554,13 @@ class Symbol:
         """
 
     @property
-    def warn_level(self) -> int:
+    def warn_level(self) -> WarningLevel:
         """
         Affects error/warning value returned by Zint API (see WARN_XXX below)
         """
 
     @warn_level.setter
-    def warn_level(self, arg1: int) -> None: ...
+    def warn_level(self, arg1: WarningLevel) -> None: ...
     @property
     def whitespace_height(self) -> int:
         """

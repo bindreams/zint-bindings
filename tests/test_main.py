@@ -1,6 +1,6 @@
 import logging
 
-from zint import InputMode, Seg, Symbol, Symbology
+from zint import InputMode, Seg, Symbol, Symbology, CapabilityFlags, DataMatrixOptions, QrFamilyOptions, UltracodeOptions
 
 
 def test_basic_usage():
@@ -74,3 +74,21 @@ def test_enum_docstrings():
     # Test that docstring for enums have been added to the module
     assert Symbology.__doc__ == "Values for `Symbol.symbology`"
     assert Symbology.DATAMATRIX.__doc__ == "Data Matrix (ECC200)"
+
+def test_enum_options():
+    s = Symbol()
+    s.symbology = Symbology.DATAMATRIX
+    s.option_3 = DataMatrixOptions.ISO_144
+
+    s.symbology = Symbology.QRCODE
+    s.option_3 = QrFamilyOptions.FULL_MULTIBYTE
+
+    s.symbology = Symbology.ULTRA
+    s.option_3 = UltracodeOptions.ULTRA_COMPRESSION
+
+def test_capabilities():
+    assert Symbol.capabilities(Symbology.DATAMATRIX) & CapabilityFlags.GS1
+    assert not (Symbol.capabilities(Symbology.DATAMATRIX) & CapabilityFlags.HRT)
+
+    assert not (Symbol.capabilities(Symbology.CODE128) & CapabilityFlags.GS1)
+    assert Symbol.capabilities(Symbology.CODE128) & CapabilityFlags.HRT

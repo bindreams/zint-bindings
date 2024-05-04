@@ -84,7 +84,6 @@ struct EnumInfo {
 	template<typename T>
 	EnumInfo& add(std::string_view name, T value, std::string_view docstring = "") {
 		static_assert(std::is_enum_v<T> || std::is_integral_v<T>, "Can only add integral values");
-		using underlying_type = std::conditional_t<std::is_enum_v<T>, std::underlying_type_t<T>, T>;
 
 		items.push_back(Value{.name{name}, .value = static_cast<Value::value_type>(value), .docstring{docstring}});
 		return *this;

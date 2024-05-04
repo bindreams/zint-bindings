@@ -11,7 +11,7 @@
 #include <string_view>
 #include <type_traits>
 
-#include "generated/enums.hpp"
+#include "enums.hpp"
 #include "utility.hpp"
 
 #include <fmt/core.h>
@@ -247,8 +247,8 @@ struct Symbol {
 	void set_border_width(int val) { m_handle->border_width = val; }
 	int get_border_width() { return m_handle->border_width; }
 
-	void set_output_options(int val) { m_handle->output_options = val; }
-	int get_output_options() { return m_handle->output_options; }
+	void set_output_options(OutputOptions val) { m_handle->output_options = static_cast<int>(val); }
+	OutputOptions get_output_options() { return static_cast<OutputOptions>(m_handle->output_options); }
 
 	void set_fgcolour(std::string_view val) {
 		static constexpr int size = std::extent_v<decltype(m_handle->fgcolour)>;
@@ -302,8 +302,8 @@ struct Symbol {
 	void set_show_hrt(bool val) { m_handle->show_hrt = val; }
 	bool get_show_hrt() { return m_handle->show_hrt; }
 
-	void set_input_mode(int val) { m_handle->input_mode = val; }
-	int get_input_mode() { return m_handle->input_mode; }
+	void set_input_mode(InputMode val) { m_handle->input_mode = static_cast<int>(val); }
+	InputMode get_input_mode() { return static_cast<InputMode>(m_handle->input_mode); }
 
 	void set_eci(int val) { m_handle->eci = val; }
 	int get_eci() { return m_handle->eci; }
@@ -327,8 +327,8 @@ struct Symbol {
 		return reinterpret_cast<StructApp&>(m_handle->structapp);
 	}
 
-	void set_warn_level(int val) { m_handle->warn_level = val; }
-	int get_warn_level() { return m_handle->warn_level; }
+	void set_warn_level(WarningLevel val) { m_handle->warn_level = static_cast<int>(val); }
+	WarningLevel get_warn_level() { return static_cast<WarningLevel>(m_handle->warn_level); }
 
 	void set_debug(int val) { m_handle->debug = val; }
 	int get_debug() { return m_handle->debug; }
@@ -430,7 +430,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		);
 	}();
 
-	init_enum_bindings(m);
+	p11x::bind_enums(m);
 
 	// clang-format off
 	py::class_<VectorRect>(m, "VectorRect")

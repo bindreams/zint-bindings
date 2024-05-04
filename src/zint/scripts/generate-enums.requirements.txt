@@ -1,2 +1,0 @@
-clang-format >= 18
-varformat

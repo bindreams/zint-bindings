@@ -64,10 +64,8 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_custom_target(_generate_enums_hpp
 	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-enums.py"
-	BYPRODUCTS
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.inc"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums_declarations.hpp"
-	COMMENT "Generating enum files"
+	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.inc"
+	COMMENT "Generating generated/enums.inc"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 	VERBATIM
 )

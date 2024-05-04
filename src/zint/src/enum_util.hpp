@@ -44,21 +44,45 @@ namespace p11x {
 namespace {
 namespace py = pybind11;
 
+/** Helper class holding info for a yet-unconstructed enum
+ *
+ * For constructing this, use the static method `Create`.
+ */
 struct EnumInfo {
 	py::object& type_caster_reference;  /// pybind11::detail::type_caster's reference to a created class
+	const bool needs_reinterpretation_as_unsigned;
+
 	std::string name;
 	std::string py_base;
 	std::string docstring;
 
 	// Actual enum items. The numeric value is a py::object because python integers are signed and have no max size.
-	std::vector<std::pair<std::string, py::object>> items = {};
+	using value_type = std::intmax_t;
+	std::vector<std::pair<std::string, value_type>> items = {};
+
+	template<typename EnumType>
+	static EnumInfo Create(std::string_view name, std::string_view py_base, std::string_view docstring = "") {
+		using underlying_type = std::underlying_type_t<EnumType>;
+		static_assert(sizeof(underlying_type) <= sizeof(value_type), "Supplied enum's underlying type is too big");
+
+		return EnumInfo{
+			.type_caster_reference = pybind11::detail::type_caster<EnumType>::cls,
+
+			// if same size as holder type and unsigned (does not fit)
+			.needs_reinterpretation_as_unsigned =
+				std::is_unsigned_v<underlying_type> && sizeof(underlying_type) == sizeof(value_type),
+			.name{name},
+			.py_base{py_base},
+			.docstring{docstring}
+		};
+	}
 
 	template<typename T>
 	EnumInfo& add(std::string_view name, T value) {
 		static_assert(std::is_enum_v<T> || std::is_integral_v<T>, "Can only add integral values");
 		using underlying_type = std::conditional_t<std::is_enum_v<T>, std::underlying_type_t<T>, T>;
 
-		items.emplace_back(name, py::cast(static_cast<underlying_type>(value)));
+		items.emplace_back(name, static_cast<value_type>(value));
 		return *this;
 	}
 };
@@ -70,7 +94,22 @@ void bind_enums(py::module mod) {
 
 	for (auto const& info : enums) {
 		py::object base_enum = locate(info.py_base);
-		py::object cls = base_enum(info.name, info.items, py::arg("module") = mod.attr("__name__"));
+		py::object cls;
+
+		if (info.needs_reinterpretation_as_unsigned) {
+			// If the contained values need reinterpretation as unsigned (meaning they are stored as std::intmax_t but
+			// may have overflown during conversion), convert them into std::uintmax_t before passing to python.
+			std::vector<std::pair<std::string_view, std::uintmax_t>> converted_items;
+			converted_items.reserve(info.items.size());
+
+			std::transform(info.items.begin(), info.items.end(), std::back_inserter(converted_items), [](auto& item) {
+				return std::pair{std::string_view{item.first}, static_cast<std::uintmax_t>(item.second)};
+			});
+
+			cls = base_enum(info.name, converted_items, py::arg("module") = mod.attr("__name__"));
+		} else {
+			cls = base_enum(info.name, info.items, py::arg("module") = mod.attr("__name__"));
+		}
 
 		info.type_caster_reference = cls;
 		mod.attr(py::cast(info.name)) = cls;
@@ -124,4 +163,4 @@ void bind_enums(py::module mod) {
 	}                                                                                                                  \
                                                                                                                        \
 	p11x::EnumInfo& P11X_CONCAT(_p11x_enum_, __COUNTER__) =                                                            \
-		p11x::enums.emplace_back(pybind11::detail::type_caster<ENUM_TYPE>::cls, ENUM_NAME, PY_BASE, DOCSTRING)
+		p11x::enums.emplace_back(p11x::EnumInfo::Create<ENUM_TYPE>(ENUM_NAME, PY_BASE, DOCSTRING))

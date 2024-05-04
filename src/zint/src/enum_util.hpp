@@ -111,6 +111,8 @@ void bind_enums(py::module mod) {
 			cls = base_enum(info.name, info.items, py::arg("module") = mod.attr("__name__"));
 		}
 
+		if (info.docstring != "") cls.doc() = info.docstring;
+
 		info.type_caster_reference = cls;
 		mod.attr(py::cast(info.name)) = cls;
 	}

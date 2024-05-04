@@ -1,6 +1,6 @@
 import logging
 
-from zint import InputMode, Seg, Symbol, Symbology, CapabilityFlags, DataMatrixOptions, QrFamilyOptions, UltracodeOptions
+from zint import InputMode, Seg, Symbol, Symbology, CapabilityFlags, DataMatrixOptions, QrFamilyOptions, UltracodeOptions, OutputOptions, WarningLevel
 
 
 def test_basic_usage():
@@ -64,10 +64,16 @@ def test_vector():
     assert size == len(s.vector.circles)
 
 
-def test_input_mode():
+def test_enum_input_output_mode():
     """Test that the input_mode is assignable from an enum."""
     s = Symbol()
-    s.input_mode |= InputMode.UNICODE
+    s.input_mode |= InputMode.UNICODE | InputMode.FAST
+    s.output_options |= OutputOptions.BARCODE_BIND | OutputOptions.BARCODE_NO_QUIET_ZONES
+
+
+def test_enum_warn_level():
+    s = Symbol()
+    s.warn_level = WarningLevel.FAIL_ALL
 
 
 def test_enum_docstrings():

@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://bindreams.github.io/zint-bindings/"
+Documentation = "https://zint-bindings.readthedocs.io/"
 Repository = "https://github.com/bindreams/zint-bindings"
 Issues = "https://github.com/bindreams/zint-bindings/issues"
 

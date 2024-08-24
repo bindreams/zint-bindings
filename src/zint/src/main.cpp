@@ -440,14 +440,14 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("height", &VectorRect::height)
 		.def_readonly("colour", &VectorRect::colour, py::doc{"-1 for foreground, 1-8 for Cyan, Blue, Magenta, Red, Yellow, Green, Black, White"})
 		.def_readonly("color", &VectorRect::colour, py::doc{"-1 for foreground, 1-8 for Cyan, Blue, Magenta, Red, Yellow, Green, Black, White. Alias of `colour`"})
-		.doc() = "Rectangle vector elements returned from `zint.Vector.rectangles`";
+		.doc() = "Rectangle vector elements returned from `Vector.rectangles`";
 
 	py::class_<VectorHexagon>(m, "VectorHexagon")
 		.def_readonly("x", &VectorHexagon::x, py::doc{"Centre"})
 		.def_readonly("y", &VectorHexagon::y, py::doc{"Centre"})
 		.def_readonly("diameter", &VectorHexagon::diameter, py::doc{"Short (minimal) diameter (i.e. diameter of inscribed circle)"})
 		.def_readonly("rotation", &VectorHexagon::rotation, py::doc{"0, 90, 180, 270 degrees, where 0 has apex at top, i.e. short diameter is horizontal"})
-		.doc() = "Hexagon vector elements returned from `zint.Vector.hexagons`";
+		.doc() = "Hexagon vector elements returned from `Vector.hexagons`";
 
 	py::class_<VectorString>(m, "VectorString")
 		.def_readonly("x", &VectorString::x, py::doc{"Relative to halign (i.e. centre, left, right)"})
@@ -458,7 +458,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("rotation", &VectorString::rotation, py::doc{"0, 90, 180, 270 degrees"})
 		.def_readonly("halign", &VectorString::halign, py::doc{"Horizontal alignment: 0 for centre, 1 for left, 2 for right (end)"})
 		.def_property_readonly("text", &VectorString::get_text)
-		.doc() = "String vector elements returned from `zint.Vector.strings`";
+		.doc() = "String vector elements returned from `Vector.strings`";
 
 	py::class_<VectorCircle>(m, "VectorCircle")
 		.def_readonly("x", &VectorCircle::x, py::doc{"Centre"})
@@ -467,7 +467,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readonly("width", &VectorCircle::width, py::doc{"Width of circle perimeter (circumference). 0 for fill (disc)"})
 		.def_readonly("colour", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy))"})
 		.def_readonly("color", &VectorCircle::colour, py::doc{"Zero for draw with foreground colour (else draw with background colour (legacy)). Alias of `colour`"})
-		.doc() = "Circle vector elements returned from `zint.Vector.circles`";
+		.doc() = "Circle vector elements returned from `Vector.circles`";
 
 	declare_vector_list<VectorRect>(m, "VectorRects");
 	declare_vector_list<VectorHexagon>(m, "VectorHexagons");
@@ -477,11 +477,11 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 	py::class_<Vector>(m, "Vector")
 		.def_readonly("width", &Vector::width, py::doc{"Width of barcode image (including text, whitespace)"})
 		.def_readonly("height", &Vector::height, py::doc{"Height of barcode image (including text, whitespace)"})
-		.def_property_readonly("rectangles", &Vector::get_rectangles, py::doc{"An iterable over rectangles (`zint.VectorRectangle`)"})
-		.def_property_readonly("hexagons", &Vector::get_hexagons, py::doc{"An iterable over hexagons (`zint.VectorHexagon`)"})
-		.def_property_readonly("strings", &Vector::get_strings, py::doc{"An iterable over strings (`zint.VectorString`)"})
-		.def_property_readonly("circles", &Vector::get_circles, py::doc{"An iterable over circles (`zint.VectorCircle`)"})
-		.doc() = "Vector image information, returned from `zint.Symbol.vector` after calling `zint.Symbol.buffer_vector`";
+		.def_property_readonly("rectangles", &Vector::get_rectangles, py::doc{"An iterable over rectangles (`VectorRectangle`)"})
+		.def_property_readonly("hexagons", &Vector::get_hexagons, py::doc{"An iterable over hexagons (`VectorHexagon`)"})
+		.def_property_readonly("strings", &Vector::get_strings, py::doc{"An iterable over strings (`VectorString`)"})
+		.def_property_readonly("circles", &Vector::get_circles, py::doc{"An iterable over circles (`VectorCircle`)"})
+		.doc() = "Vector image information, returned from `Symbol.vector` after calling `Symbol.buffer_vector`";
 
 	py::class_<StructApp>(m, "StructApp")
 		.def(py::init<>())
@@ -489,14 +489,14 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_readwrite("index", &StructApp::index, py::doc{"Position in Structured Append sequence, 1-based. Must be <= `count`"})
 		.def_readwrite("count", &StructApp::count, py::doc{"Number of symbols in Structured Append sequence. Set >= 2 to add SA Info"})
 		.def_property("id", &StructApp::get_id, &StructApp::set_id, py::doc{"Optional ID to distinguish sequence, ASCII, max 32 long"})
-		.doc() = "Structural append information (see `zint.Symbol.structapp`).\n\nIgnored unless `zint.StructApp.count` is non-zero";
+		.doc() = "Structural append information (see `Symbol.structapp`).\n\nIgnored unless `StructApp.count` is non-zero";
 
 	py::class_<Seg>(m, "Seg")
 		.def(py::init<>())
 		.def(py::init<py::buffer const&, int>())
 		.def_property("source", &Seg::get_source, &Seg::set_source, py::doc{"Data to encode"})
 		.def_readwrite("eci", &Seg::eci, py::doc{"Extended Channel Interpretation"})
-		.doc() = "Segment for use with `zint.Symbol.encode_segs`.";
+		.doc() = "Segment for use with `Symbol.encode_segs`.";
 
 	py::class_<Symbol>(m, "Symbol")
 		.def(py::init<>())
@@ -514,13 +514,13 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_static("default_xdim", &Symbol::default_xdim, py::arg{"symbology"}, py::pos_only{}, py::doc{"Return default X-dimension in mm for symbology `symbology`. Returns 0 on error (invalid `symbology`)"})
 		.def_static("scale_from_xdim_dp", &Symbol::scale_from_xdim_dp, py::arg{"symbology"}, py::pos_only{}, py::arg{"x_dim_mm"}, py::kw_only{}, py::arg{"dpmm"}, py::arg{"filetype"} = py::none{}, py::doc{"Return the scale to use for `symbology` for non-zero X-dimension `x_dim_mm` at `dpmm` dots per mm for `filetype`. If `dpmm` zero defaults to 12. If `filetype` is None, defaults to \"GIF\". Returns 0 on error"})
 		.def_static("xdim_dp_from_scale", &Symbol::xdim_dp_from_scale, py::arg{"symbology"},py::pos_only{},  py::arg{"scale"}, py::kw_only{}, py::arg{"x_dim_mm_or_dpmm"}, py::arg{"filetype"} = py::none{}, py::doc{"Reverse of `Symbol.scale_from_xdim_dp`. Estimate the X-dimension or dpmm given non-zero `scale` and non-zero `x_dim_mm_or_dpmm`. Return value bound to dpmm max not X-dimension max. Returns 0 on error"})
-		.def_property("symbology", &Symbol::get_symbology, &Symbol::set_symbology, py::doc{"Symbol to use (see BARCODE_XXX below)"})
+		.def_property("symbology", &Symbol::get_symbology, &Symbol::set_symbology, py::doc{"Symbol type to use (see `Symbology`)"})
 		.def_property("height", &Symbol::get_height, &Symbol::set_height, py::doc{"Barcode height in X-dimensions (ignored for fixed-width barcodes)"})
 		.def_property("scale", &Symbol::get_scale, &Symbol::set_scale, py::doc{"Scale factor when printing barcode, i.e. adjusts X-dimension. Default 1"})
 		.def_property("whitespace_width", &Symbol::get_whitespace_width, &Symbol::set_whitespace_width, py::doc{"Width in X-dimensions of whitespace to left & right of barcode"})
 		.def_property("whitespace_height", &Symbol::get_whitespace_height, &Symbol::set_whitespace_height, py::doc{"Height in X-dimensions of whitespace above & below the barcode"})
 		.def_property("border_width", &Symbol::get_border_width, &Symbol::set_border_width, py::doc{"Size of border in X-dimensions"})
-		.def_property("output_options", &Symbol::get_output_options, &Symbol::set_output_options, py::doc{"Various output parameters (bind, box etc, see below)"})
+		.def_property("output_options", &Symbol::get_output_options, &Symbol::set_output_options, py::doc{"Various output parameters (bind, box etc, see `OutputOptions`)"})
 		.def_property("fgcolour", &Symbol::get_fgcolour, &Symbol::set_fgcolour, py::doc{"Foreground as hexadecimal RGB/RGBA or decimal \"C,M,Y,K\" string"})
 		.def_property("bgcolour", &Symbol::get_bgcolour, &Symbol::set_bgcolour, py::doc{"Background as hexadecimal RGB/RGBA or decimal \"C,M,Y,K\" string"})
 		.def_property("fgcolor", &Symbol::get_fgcolour, &Symbol::set_fgcolour, py::doc{"Foreground as hexadecimal RGB/RGBA or decimal \"C,M,Y,K\" string. Alias of fgcolour."})
@@ -531,14 +531,14 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_property("option_2", &Symbol::get_option_2, &Symbol::set_option_2, py::doc{"Symbol-specific options"})
 		.def_property("option_3", &Symbol::get_option_3, &Symbol::set_option_3, py::doc{"Symbol-specific options"})
 		.def_property("show_hrt", &Symbol::get_show_hrt, &Symbol::set_show_hrt, py::doc{"Show (1) or hide (0) Human Readable Text (HRT). Default 1"})
-		.def_property("input_mode", &Symbol::get_input_mode, &Symbol::set_input_mode, py::doc{"Encoding of input data (see DATA_MODE etc below). Default DATA_MODE"})
+		.def_property("input_mode", &Symbol::get_input_mode, &Symbol::set_input_mode, py::doc{"Encoding of input data (see `InputMode`). Default `InputMode.DATA`"})
 		.def_property("eci", &Symbol::get_eci, &Symbol::set_eci, py::doc{"Extended Channel Interpretation. Default 0 (none)"})
 		.def_property("dpmm", &Symbol::get_dpmm, &Symbol::set_dpmm, py::doc{"Resolution of output in dots per mm (BMP/EMF/PCX/PNG/TIF only). Default 0 (none)"})
 		.def_property("dot_size", &Symbol::get_dot_size, &Symbol::set_dot_size, py::doc{"Size of dots used in BARCODE_DOTTY_MODE. Default 0.8"})
 		.def_property("text_gap", &Symbol::get_text_gap, &Symbol::set_text_gap, py::doc{"Gap between barcode and text (HRT) in X-dimensions. Default 1"})
 		.def_property("guard_descent", &Symbol::get_guard_descent, &Symbol::set_guard_descent, py::doc{"Height in X-dimensions that EAN/UPC guard bars descend. Default 5"})
 		.def_property("structapp", &Symbol::get_structapp, &Symbol::set_structapp, py::doc{"Structured Append info. Default structapp.count 0 (none)"})
-		.def_property("warn_level", &Symbol::get_warn_level, &Symbol::set_warn_level, py::doc{"Affects error/warning value returned by Zint API (see WARN_XXX below)"})
+		.def_property("warn_level", &Symbol::get_warn_level, &Symbol::set_warn_level, py::doc{"Affects error/warning value returned by Zint API (see `WarningLevel`)"})
 		.def_property("debug", &Symbol::get_debug, &Symbol::set_debug, py::doc{"Debugging flags"})
 		.def_property_readonly("text", &Symbol::get_text, py::doc{"Human Readable Text (HRT) (if any), UTF-8 (output only)"})
 		.def_property_readonly("rows", &Symbol::get_rows, py::doc{"Number of rows used by the symbol (output only)"})

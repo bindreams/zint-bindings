@@ -22,6 +22,8 @@ allowed_errors = [
     r"zint\.\w+\.__new__ is inconsistent, stub argument \"value\" differs from runtime argument \"cls\"",
     r"zint\.\w+\.__new__ is inconsistent, stub does not have argument \"value\"",
     # I don't understand this error, I suspect stubtest is wrong and does not recognize classmethods.
+    r"zint\.\w+\._pybind11_conduit_v1_ is inconsistent, stub is a staticmethod but runtime is not",
+    # _pybind11_conduit_v1_ is an implementation detail of pybind11 and should have never appeared in the stub.
 ]
 
 for i, pattern in enumerate(allowed_errors):

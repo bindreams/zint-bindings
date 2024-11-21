@@ -13,7 +13,7 @@ message(STATUS "Zint bindings: version ${PROJECT_VERSION}")
 
 if(WIN32)
 	if (NOT MSVC)
-		message(FATAL_ERROR "Zint can only be compiled on Windows using the MSVC compiler.")
+		message(FATAL_ERROR "Zint can only be compiled on Windows using the MSVC compiler. Please restart the command from a MSVC Developer shell.")
 	endif()
 
 	if(CMAKE_GENERATOR MATCHES "Visual Studio .*")

@@ -59,7 +59,7 @@ docs = [
 [build-system]
 requires = [
     "scikit-build-core >= 0.10.5",
-    "pybind11 >= 2.13, < 3",
+    "pybind11 == 2.13.6",
     # Build dependencies from CMake. Please keep this in sync with relevant requirements files.
     "pip >= 24",
     # src/zint/scripts/generate-stub.requirements.txt

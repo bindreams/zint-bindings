@@ -95,7 +95,6 @@ x.text_gap = -5  # Adjust the margin between barcode and text...
 
 x.encode("130170X178")
 print(x.text)  # When encoded, `x.text` contains the human readable interpretation as a string.
-
 ```
 
 ## More information

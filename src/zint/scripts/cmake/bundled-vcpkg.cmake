@@ -15,7 +15,7 @@ if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
 			COMMAND "${GIT_EXECUTABLE}"
 				-c advice.detachedHead=false
 				clone https://github.com/microsoft/vcpkg
-				--branch 2024.03.25
+				--branch 2024.11.16
 				"${BUNDLED_VCPKG_PATH}"
 			COMMAND_ERROR_IS_FATAL ANY
 		)

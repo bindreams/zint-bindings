@@ -82,6 +82,22 @@ x.buffer()
 print(x.bitmap.shape)  # -> (192, 192, 3)
 ```
 
+### Human-readable text (human-readable interpretation, HRT, HRI)
+By default, supported symbols (such as many barcodes) display a human-readable interpretation of the encoded data with the symbol itself. The following methods can be used to configure this behavior:
+```python
+from zint import Symbol, Symbology
+
+x = Symbol()
+x.symbology = Symbology.CODE128
+
+x.text_gap = -5  # Adjust the margin between barcode and text...
+#x.show_text = False  # ...or disable the HRT altogether
+
+x.encode("130170X178")
+print(x.text)  # When encoded, `x.text` contains the human readable interpretation as a string.
+
+```
+
 ## More information
 Most of the configuration possibilites are not covered in this guide. But since Zint Bindings mirrors the original Zint API almost perfectly, you can consult the Zint manual ([general API](https://www.zint.org.uk/manual/chapter/5), [specific symbols](https://www.zint.org.uk/manual/chapter/6/1)).
 

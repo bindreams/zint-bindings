@@ -458,11 +458,19 @@ class Symbol:
     @property
     def show_hrt(self) -> bool:
         """
-        Show (1) or hide (0) Human Readable Text (HRT). Default 1
+        If `True`, display Human Readable Text (HRT) on supported barcodes. Default `True`. Alias of `Symbol.show_text`.
         """
 
     @show_hrt.setter
     def show_hrt(self, arg1: bool) -> None: ...
+    @property
+    def show_text(self) -> bool:
+        """
+        If `True`, display Human Readable Text (HRT) on supported barcodes. Default `True`
+        """
+
+    @show_text.setter
+    def show_text(self, arg1: bool) -> None: ...
     @property
     def structapp(self) -> StructApp:
         """
@@ -488,7 +496,7 @@ class Symbol:
     @property
     def text_gap(self) -> float:
         """
-        Gap between barcode and text (HRT) in X-dimensions. Default 1
+        Gap between barcode and Human Readable Text (HRT) in X-dimensions. Default 1
         """
 
     @text_gap.setter

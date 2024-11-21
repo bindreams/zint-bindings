@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: Install 'build' package
         run: pip install build
 
@@ -45,9 +45,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: Install cibuildwheel
-        run: pip install cibuildwheel==2.20.0
+        run: pip install cibuildwheel==2.21.3
 
       - uses: ilammy/msvc-dev-cmd@v1
         if: startsWith(matrix.os, 'windows')
@@ -59,15 +59,6 @@ jobs:
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         # See https://stackoverflow.com/a/65277351 about SDKROOT variable
         run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
-
-      - name: Install custom Python 3.8
-        if: matrix.os == 'macos-14'
-        # See https://cibuildwheel.pypa.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
-        # Default behavior breaks generate-stub.py script because it imports compiled module
-        run: |
-          curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
-          sudo installer -pkg /tmp/Python38.pkg -target /
-          sh "/Applications/Python 3.8/Install Certificates.command"
 
       - name: Build wheels
         # See https://stackoverflow.com/a/65277351 about SDKROOT if: startsWith(matrix.os, 'ubuntu')

@@ -32,36 +32,20 @@ class CapabilityFlags(enum.Flag):
     Capability flags (ZBarcode_Cap() `cap_flag`)
     """
 
-    COMPLIANT_HEIGHT: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.COMPLIANT_HEIGHT: 8192>
-    COMPOSITE: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.COMPOSITE: 8>
+    COMPLIANT_HEIGHT: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.COMPLIANT_HEIGHT: 8192>
+    COMPOSITE: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.COMPOSITE: 8>
     DOTTY: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.DOTTY: 64>
     EANUPC: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.EANUPC: 4>
     ECI: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.ECI: 16>
-    FIXED_RATIO: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.FIXED_RATIO: 256>
-    FULL_MULTIBYTE: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.FULL_MULTIBYTE: 1024>
+    FIXED_RATIO: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.FIXED_RATIO: 256>
+    FULL_MULTIBYTE: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.FULL_MULTIBYTE: 1024>
     GS1: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.GS1: 32>
     HRT: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.HRT: 1>
     MASK: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.MASK: 2048>
-    QUIET_ZONES: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.QUIET_ZONES: 128>
-    READER_INIT: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.READER_INIT: 512>
-    STACKABLE: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.STACKABLE: 2>
-    STRUCTAPP: typing.ClassVar[
-        CapabilityFlags
-    ]  # value = <CapabilityFlags.STRUCTAPP: 4096>
+    QUIET_ZONES: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.QUIET_ZONES: 128>
+    READER_INIT: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.READER_INIT: 512>
+    STACKABLE: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.STACKABLE: 2>
+    STRUCTAPP: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.STRUCTAPP: 4096>
 
 class DataMatrixOptions(enum.IntEnum):
     """
@@ -69,12 +53,8 @@ class DataMatrixOptions(enum.IntEnum):
     """
 
     DMRE: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.DMRE: 101>
-    ISO_144: typing.ClassVar[
-        DataMatrixOptions
-    ]  # value = <DataMatrixOptions.ISO_144: 128>
-    SQUARE: typing.ClassVar[
-        DataMatrixOptions
-    ]  # value = <DataMatrixOptions.SQUARE: 100>
+    ISO_144: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.ISO_144: 128>
+    SQUARE: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.SQUARE: 100>
     @classmethod
     def __new__(cls, value): ...
     def __format__(self, format_spec):
@@ -101,49 +81,21 @@ class OutputOptions(enum.Flag):
     Values for `Symbol.output_options`
     """
 
-    BARCODE_BIND: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_BIND: 2>
-    BARCODE_BIND_TOP: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_BIND_TOP: 1>
-    BARCODE_BOX: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_BOX: 4>
-    BARCODE_DOTTY_MODE: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_DOTTY_MODE: 256>
-    BARCODE_NO_QUIET_ZONES: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_NO_QUIET_ZONES: 4096>
-    BARCODE_QUIET_ZONES: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_QUIET_ZONES: 2048>
-    BARCODE_STDOUT: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.BARCODE_STDOUT: 8>
+    BARCODE_BIND: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_BIND: 2>
+    BARCODE_BIND_TOP: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_BIND_TOP: 1>
+    BARCODE_BOX: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_BOX: 4>
+    BARCODE_DOTTY_MODE: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_DOTTY_MODE: 256>
+    BARCODE_NO_QUIET_ZONES: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_NO_QUIET_ZONES: 4096>
+    BARCODE_QUIET_ZONES: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_QUIET_ZONES: 2048>
+    BARCODE_STDOUT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_STDOUT: 8>
     BOLD_TEXT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BOLD_TEXT: 64>
-    CMYK_COLOUR: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.CMYK_COLOUR: 128>
-    COMPLIANT_HEIGHT: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.COMPLIANT_HEIGHT: 8192>
-    EANUPC_GUARD_WHITESPACE: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.EANUPC_GUARD_WHITESPACE: 16384>
-    EMBED_VECTOR_FONT: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.EMBED_VECTOR_FONT: 32768>
-    GS1_GS_SEPARATOR: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.GS1_GS_SEPARATOR: 512>
-    OUT_BUFFER_INTERMEDIATE: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.OUT_BUFFER_INTERMEDIATE: 1024>
-    READER_INIT: typing.ClassVar[
-        OutputOptions
-    ]  # value = <OutputOptions.READER_INIT: 16>
+    CMYK_COLOUR: typing.ClassVar[OutputOptions]  # value = <OutputOptions.CMYK_COLOUR: 128>
+    COMPLIANT_HEIGHT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.COMPLIANT_HEIGHT: 8192>
+    EANUPC_GUARD_WHITESPACE: typing.ClassVar[OutputOptions]  # value = <OutputOptions.EANUPC_GUARD_WHITESPACE: 16384>
+    EMBED_VECTOR_FONT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.EMBED_VECTOR_FONT: 32768>
+    GS1_GS_SEPARATOR: typing.ClassVar[OutputOptions]  # value = <OutputOptions.GS1_GS_SEPARATOR: 512>
+    OUT_BUFFER_INTERMEDIATE: typing.ClassVar[OutputOptions]  # value = <OutputOptions.OUT_BUFFER_INTERMEDIATE: 1024>
+    READER_INIT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.READER_INIT: 16>
     SMALL_TEXT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.SMALL_TEXT: 32>
 
 class QrFamilyOptions(enum.IntEnum):
@@ -151,9 +103,7 @@ class QrFamilyOptions(enum.IntEnum):
     QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)
     """
 
-    FULL_MULTIBYTE: typing.ClassVar[
-        QrFamilyOptions
-    ]  # value = <QrFamilyOptions.FULL_MULTIBYTE: 200>
+    FULL_MULTIBYTE: typing.ClassVar[QrFamilyOptions]  # value = <QrFamilyOptions.FULL_MULTIBYTE: 200>
     @classmethod
     def __new__(cls, value): ...
     def __format__(self, format_spec):
@@ -163,9 +113,11 @@ class QrFamilyOptions(enum.IntEnum):
 
 class Seg:
     """
-    Segment for use with `zint.Symbol.encode_segs`.
+    Segment for use with `Symbol.encode_segs`.
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @typing.overload
     def __init__(self) -> None: ...
     @typing.overload
@@ -189,11 +141,13 @@ class Seg:
 
 class StructApp:
     """
-    Structural append information (see `zint.Symbol.structapp`).
+    Structural append information (see `Symbol.structapp`).
 
-    Ignored unless `zint.StructApp.count` is non-zero
+    Ignored unless `StructApp.count` is non-zero
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @typing.overload
     def __init__(self) -> None: ...
     @typing.overload
@@ -229,6 +183,8 @@ class Symbol:
     """
 
     @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
+    @staticmethod
     def capabilities(symbology: Symbology) -> CapabilityFlags:
         """
         Return the capability flags for symbology `symbology`
@@ -242,12 +198,7 @@ class Symbol:
 
     @staticmethod
     def scale_from_xdim_dp(
-        symbology: Symbology,
-        /,
-        x_dim_mm: float,
-        *,
-        dpmm: float,
-        filetype: str | None = None,
+        symbology: Symbology, /, x_dim_mm: float, *, dpmm: float, filetype: str | None = None
     ) -> float:
         """
         Return the scale to use for `symbology` for non-zero X-dimension `x_dim_mm` at `dpmm` dots per mm for `filetype`. If `dpmm` zero defaults to 12. If `filetype` is None, defaults to "GIF". Returns 0 on error
@@ -255,12 +206,7 @@ class Symbol:
 
     @staticmethod
     def xdim_dp_from_scale(
-        symbology: Symbology,
-        /,
-        scale: float,
-        *,
-        x_dim_mm_or_dpmm: float,
-        filetype: str | None = None,
+        symbology: Symbology, /, scale: float, *, x_dim_mm_or_dpmm: float, filetype: str | None = None
     ) -> float:
         """
         Reverse of `Symbol.scale_from_xdim_dp`. Estimate the X-dimension or dpmm given non-zero `scale` and non-zero `x_dim_mm_or_dpmm`. Return value bound to dpmm max not X-dimension max. Returns 0 on error
@@ -436,7 +382,7 @@ class Symbol:
     @property
     def input_mode(self) -> InputMode:
         """
-        Encoding of input data (see DATA_MODE etc below). Default DATA_MODE
+        Encoding of input data (see `InputMode`). Default `InputMode.DATA`
         """
 
     @input_mode.setter
@@ -476,7 +422,7 @@ class Symbol:
     @property
     def output_options(self) -> OutputOptions:
         """
-        Various output parameters (bind, box etc, see below)
+        Various output parameters (bind, box etc, see `OutputOptions`)
         """
 
     @output_options.setter
@@ -528,7 +474,7 @@ class Symbol:
     @property
     def symbology(self) -> Symbology:
         """
-        Symbol to use (see BARCODE_XXX below)
+        Symbol type to use (see `Symbology`)
         """
 
     @symbology.setter
@@ -556,7 +502,7 @@ class Symbol:
     @property
     def warn_level(self) -> WarningLevel:
         """
-        Affects error/warning value returned by Zint API (see WARN_XXX below)
+        Affects error/warning value returned by Zint API (see `WarningLevel`)
         """
 
     @warn_level.setter
@@ -617,17 +563,13 @@ class Symbology(enum.Enum):
     DATAMATRIX: typing.ClassVar[Symbology]  # value = <Symbology.DATAMATRIX: 71>
     DBAR_EXP: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_EXP: 31>
     DBAR_EXPSTK: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_EXPSTK: 81>
-    DBAR_EXPSTK_CC: typing.ClassVar[
-        Symbology
-    ]  # value = <Symbology.DBAR_EXPSTK_CC: 139>
+    DBAR_EXPSTK_CC: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_EXPSTK_CC: 139>
     DBAR_EXP_CC: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_EXP_CC: 134>
     DBAR_LTD: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_LTD: 30>
     DBAR_LTD_CC: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_LTD_CC: 133>
     DBAR_OMN: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_OMN: 29>
     DBAR_OMNSTK: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_OMNSTK: 80>
-    DBAR_OMNSTK_CC: typing.ClassVar[
-        Symbology
-    ]  # value = <Symbology.DBAR_OMNSTK_CC: 138>
+    DBAR_OMNSTK_CC: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_OMNSTK_CC: 138>
     DBAR_OMN_CC: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_OMN_CC: 132>
     DBAR_STK: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_STK: 79>
     DBAR_STK_CC: typing.ClassVar[Symbology]  # value = <Symbology.DBAR_STK_CC: 137>
@@ -697,9 +639,7 @@ class UltracodeOptions(enum.IntEnum):
     Ultracode specific option (`symbol->option_3`)
     """
 
-    ULTRA_COMPRESSION: typing.ClassVar[
-        UltracodeOptions
-    ]  # value = <UltracodeOptions.ULTRA_COMPRESSION: 128>
+    ULTRA_COMPRESSION: typing.ClassVar[UltracodeOptions]  # value = <UltracodeOptions.ULTRA_COMPRESSION: 128>
     @classmethod
     def __new__(cls, value): ...
     def __format__(self, format_spec):
@@ -709,13 +649,15 @@ class UltracodeOptions(enum.IntEnum):
 
 class Vector:
     """
-    Vector image information, returned from `zint.Symbol.vector` after calling `zint.Symbol.buffer_vector`
+    Vector image information, returned from `Symbol.vector` after calling `Symbol.buffer_vector`
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def circles(self) -> VectorCircles:
         """
-        An iterable over circles (`zint.VectorCircle`)
+        An iterable over circles (`VectorCircle`)
         """
 
     @property
@@ -727,19 +669,19 @@ class Vector:
     @property
     def hexagons(self) -> VectorHexagons:
         """
-        An iterable over hexagons (`zint.VectorHexagon`)
+        An iterable over hexagons (`VectorHexagon`)
         """
 
     @property
     def rectangles(self) -> VectorRects:
         """
-        An iterable over rectangles (`zint.VectorRectangle`)
+        An iterable over rectangles (`VectorRectangle`)
         """
 
     @property
     def strings(self) -> VectorStrings:
         """
-        An iterable over strings (`zint.VectorString`)
+        An iterable over strings (`VectorString`)
         """
 
     @property
@@ -750,9 +692,11 @@ class Vector:
 
 class VectorCircle:
     """
-    Circle vector elements returned from `zint.Vector.circles`
+    Circle vector elements returned from `Vector.circles`
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def color(self) -> int:
         """
@@ -790,14 +734,18 @@ class VectorCircle:
         """
 
 class VectorCircles:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     def __iter__(self) -> typing.Iterator[VectorCircle]: ...
     def __len__(self) -> int: ...
 
 class VectorHexagon:
     """
-    Hexagon vector elements returned from `zint.Vector.hexagons`
+    Hexagon vector elements returned from `Vector.hexagons`
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def diameter(self) -> float:
         """
@@ -823,14 +771,18 @@ class VectorHexagon:
         """
 
 class VectorHexagons:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     def __iter__(self) -> typing.Iterator[VectorHexagon]: ...
     def __len__(self) -> int: ...
 
 class VectorRect:
     """
-    Rectangle vector elements returned from `zint.Vector.rectangles`
+    Rectangle vector elements returned from `Vector.rectangles`
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def color(self) -> int:
         """
@@ -860,14 +812,18 @@ class VectorRect:
         """
 
 class VectorRects:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     def __iter__(self) -> typing.Iterator[VectorRect]: ...
     def __len__(self) -> int: ...
 
 class VectorString:
     """
-    String vector elements returned from `zint.Vector.strings`
+    String vector elements returned from `Vector.strings`
     """
 
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def fsize(self) -> float:
         """
@@ -913,6 +869,8 @@ class VectorString:
         """
 
 class VectorStrings:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs): ...
     def __iter__(self) -> typing.Iterator[VectorString]: ...
     def __len__(self) -> int: ...
 

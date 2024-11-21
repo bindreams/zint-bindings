@@ -7,10 +7,10 @@ pybind11-stubgen does not have a usable API, so instead this script pre-imports 
 substitutes argv with arguments for pybind11-stubgen.
 """
 
+import subprocess as sp
 import sys
 from pathlib import Path
 
-import black
 import pybind11_stubgen
 
 
@@ -39,7 +39,7 @@ def main():
     assert stub.exists()
     stub = stub.replace("zint-stubs/__init__.pyi")
 
-    black.main([str(stub), "--quiet"], standalone_mode=False)
+    sp.run([sys.executable, "-m", "black", str(stub), "--quiet"], check=True)
 
 
 if __name__ == "__main__":

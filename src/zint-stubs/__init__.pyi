@@ -891,4 +891,4 @@ class WarningLevel(enum.Enum):
     FAIL_ALL: typing.ClassVar[WarningLevel]  # value = <WarningLevel.FAIL_ALL: 2>
 
 __upstream_version__: str = "2.13.0"
-__version__: str = "1.1.0"
+__version__: str = "1.2.0"

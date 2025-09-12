@@ -8,6 +8,13 @@ set(BUNDLED_VCPKG_TOOLCHAIN "${BUNDLED_VCPKG_PATH}/scripts/buildsystems/vcpkg.cm
 set(CMAKE_TOOLCHAIN_FILE "${BUNDLED_VCPKG_TOOLCHAIN}" CACHE STRING "Toolchain file")
 
 if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
+	if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json")
+		message(FATAL_ERROR "Could not find vcpkg.json in \"${CMAKE_CURRENT_SOURCE_DIR}\".\nbundled-vcpkg.cmake requires vcpkg.json with a specified version.")
+	endif()
+
+	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json" VCPKG_JSON)
+	string(JSON BUNDLED_VCPKG_SHA GET "${VCPKG_JSON}" "builtin-baseline")
+
 	# If using our toolchain, clone vcpkg and run bootstrap on it
 	if (NOT EXISTS "${BUNDLED_VCPKG_PATH}")
 		find_program(GIT_EXECUTABLE git REQUIRED)
@@ -15,7 +22,7 @@ if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
 			COMMAND "${GIT_EXECUTABLE}"
 				-c advice.detachedHead=false
 				clone https://github.com/microsoft/vcpkg
-				--branch 2024.11.16
+				--revision "${BUNDLED_VCPKG_SHA}"
 				"${BUNDLED_VCPKG_PATH}"
 			COMMAND_ERROR_IS_FATAL ANY
 		)

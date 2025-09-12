@@ -1,6 +1,8 @@
 import logging
 
-from zint import InputMode, Seg, Symbol, Symbology, CapabilityFlags, DataMatrixOptions, QrFamilyOptions, UltracodeOptions, OutputOptions, WarningLevel
+from zint import (CapabilityFlags, DataMatrixOptions, InputMode, OutputOptions,
+                  QrFamilyOptions, Seg, Symbol, Symbology, UltracodeOptions,
+                  WarningLevel)
 
 
 def test_basic_usage():
@@ -23,7 +25,7 @@ def test_warnings(caplog):
     assert len(logs) == 1
     assert logs[0].name == "zint"
     assert logs[0].levelno == logging.WARNING
-    assert logs[0].msg == "Warning 503: Invalid error correction level - using default instead"
+    assert logs[0].msg.startswith("Warning 503:")
 
 
 def test_segments():

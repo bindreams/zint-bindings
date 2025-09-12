@@ -39,7 +39,7 @@ Detailed instructions and usage examples are available in the [official document
 ## License
 <img align="right" width="150px" height="150px" src="https://www.apache.org/foundation/press/kit/img/the-apache-way-badge/Indigo-THE_APACHE_WAY_BADGE-rgb.svg">
 
-Copyright 2024, Anna Zhukova
+Copyright 2024-2025, Anna Zhukova
 
 This project is licensed under the Apache 2.0 license. The license text can be found at [LICENSE.md](/LICENSE.md).
 

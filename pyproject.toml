@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 	"Topic :: Communications",
@@ -58,12 +59,12 @@ docs = [
 
 [build-system]
 requires = [
-    "scikit-build-core >= 0.10.5",
-    "pybind11 == 2.13.6",
+    "scikit-build-core >= 0.11.6",
+    "pybind11 == 3.0.1",
     # Build dependencies from CMake. Please keep this in sync with relevant requirements files.
     "pip >= 24",
     # src/zint/scripts/generate-stub.requirements.txt
-    "pybind11-stubgen == 2.5.1",
+    "pybind11-stubgen == 2.5.5",
     "numpy >= 1.24.4, < 3",
     "typing-extensions >= 4.6",
     "black >= 24"
@@ -72,7 +73,7 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 cmake.source-dir = "src/zint"
-cmake.targets = ["zint_bindings"]
+build.targets = ["zint_bindings"]
 install.components = ["zint_bindings"]
 
 cmake.version = ">=3.28"

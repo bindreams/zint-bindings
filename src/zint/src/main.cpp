@@ -333,7 +333,12 @@ struct Symbol {
 	void set_debug(int val) { m_handle->debug = val; }
 	int get_debug() { return m_handle->debug; }
 
-	std::string_view get_text() { return reinterpret_cast<char*>(m_handle->text); }
+	std::string_view get_text() {
+		return {
+			reinterpret_cast<char*>(m_handle->text),
+			static_cast<std::size_t>(m_handle->text_length),
+		};
+	}
 
 	int get_rows() { return m_handle->rows; }
 
@@ -362,12 +367,11 @@ struct Symbol {
 		return reinterpret_cast<Vector*>(m_handle->vector);
 	}
 
-	// In a future release...
-	// py::object get_memfile() {
-	// 	if (m_handle->memfile == nullptr) return py::none{};
+	py::object get_memfile() {
+		if (m_handle->memfile == nullptr) return py::none{};
 
-	// 	return to_memoryview<1>(m_handle->memfile, {m_handle->memfile_size}, true);
-	// }
+		return to_memoryview<1>(m_handle->memfile, {m_handle->memfile_size}, true);
+	}
 
 private:
 	void handle_error(int code) {
@@ -550,8 +554,8 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_property_readonly("bitmap", &Symbol::get_bitmap, py::doc{"Stored bitmap image (raster output only)"})
 		.def_property_readonly("alphamap", &Symbol::get_alphamap, py::doc{"Array of alpha values used (raster output only)"})
 		.def_property_readonly("vector", &Symbol::get_vector, py::doc{"Vector header (vector output only)"})
+		.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"})
 		.doc() = "Main symbol structure.";
-		//.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"});  // In a future release
 
 	m.attr("__all__") = std::array{
 		// The order will be reflected in the API documentation.

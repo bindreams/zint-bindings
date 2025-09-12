@@ -333,7 +333,12 @@ struct Symbol {
 	void set_debug(int val) { m_handle->debug = val; }
 	int get_debug() { return m_handle->debug; }
 
-	std::string_view get_text() { return {reinterpret_cast<char*>(m_handle->text), m_handle->text_length}; }
+	std::string_view get_text() {
+		return {
+			reinterpret_cast<char*>(m_handle->text),
+			static_cast<std::size_t>(m_handle->text_length),
+		};
+	}
 
 	int get_rows() { return m_handle->rows; }
 

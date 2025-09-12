@@ -79,7 +79,6 @@ execute_process(
 )
 add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
-	MAIN_DEPENDENCY ${TARGET_NAME}
 	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/zint-stubs"
 	COMMENT "Generating stub file"
 	VERBATIM
@@ -91,7 +90,6 @@ if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is release
 		COMMAND "${CMAKE_COMMAND}" -E copy_directory
 			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
 			"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
-		MAIN_DEPENDENCY ${TARGET_NAME}
 		BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
 		COMMENT "Updating reference stub file"
 		VERBATIM

@@ -38,30 +38,29 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13 is x86, 14 is arm64 (https://cibuildwheel.pypa.io/en/stable/setup/#github-actions)
-        os: [windows-latest, ubuntu-latest, macos-13, macos-14]
+        # macos-13 is x86, latest is arm64 (https://cibuildwheel.pypa.io/en/stable/setup/#github-actions)
+        os: [windows-latest, ubuntu-latest, macos-13, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Install cibuildwheel
-        run: pip install cibuildwheel==2.21.3
+        run: pip install cibuildwheel==3.1.4
 
       - uses: ilammy/msvc-dev-cmd@v1
-        if: startsWith(matrix.os, 'windows')
+        if: runner.os == 'Windows'
         with:
           arch: x64
 
       - name: Enable Xcode SDK
-        if: startsWith(matrix.os, 'macos')
+        if: runner.os == 'macOS'
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         # See https://stackoverflow.com/a/65277351 about SDKROOT variable
         run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
 
       - name: Build wheels
-        # See https://stackoverflow.com/a/65277351 about SDKROOT if: startsWith(matrix.os, 'ubuntu')
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_VERBOSITY: 1

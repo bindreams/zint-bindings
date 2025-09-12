@@ -73,7 +73,7 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 cmake.source-dir = "src/zint"
-cmake.targets = ["zint_bindings"]
+build.targets = ["zint_bindings"]
 install.components = ["zint_bindings"]
 
 cmake.version = ">=3.28"

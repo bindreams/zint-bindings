@@ -20,10 +20,17 @@ if(CMAKE_TOOLCHAIN_FILE STREQUAL "${BUNDLED_VCPKG_TOOLCHAIN}")
 		find_program(GIT_EXECUTABLE git REQUIRED)
 		execute_process(
 			COMMAND "${GIT_EXECUTABLE}"
-				-c advice.detachedHead=false
 				clone https://github.com/microsoft/vcpkg
-				--revision "${BUNDLED_VCPKG_SHA}"
+				--no-checkout
 				"${BUNDLED_VCPKG_PATH}"
+			COMMAND_ERROR_IS_FATAL ANY
+		)
+		execute_process(
+			COMMAND "${GIT_EXECUTABLE}"
+				-c advice.detachedHead=false
+				switch --detach
+				"${BUNDLED_VCPKG_SHA}"
+			WORKING_DIRECTORY "${BUNDLED_VCPKG_PATH}"
 			COMMAND_ERROR_IS_FATAL ANY
 		)
 	endif()

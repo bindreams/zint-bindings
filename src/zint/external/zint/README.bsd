@@ -1,4 +1,5 @@
-% Tested on FreeBSD 13.2-RELEASE (with X11 + GNOME installed) and OpenBSD 7.3 (with X11)
+% README.bsd 2025-02-02
+% Tested on FreeBSD 14.2-RELEASE (with X11 + GNOME installed), OpenBSD 7.6 (with X11) and NetBSD 10.1 (with X11)
 
 1. Prerequisites for building zint
 ==================================
@@ -13,6 +14,12 @@ or OpenBSD (make and clang should already be installed):
 
     su
     pkg_add git cmake png
+    exit
+
+or NetBSD (make and gcc should already be installed):
+
+    su
+    pkgin install git cmake png
     exit
 
 Then clone the latest source
@@ -36,12 +43,19 @@ On OpenBSD:
     pkg_add qtbase qttools qtsvg
     exit
 
+On NetBSD:
+
+    su
+    pkgin install qt5-qtbase qt5-qttools qt5-qtsvg
+    exit
+
 
 3. Build
 ========
 
 The rest is standard CMake (allowing for absence of sudo)
 
+    cd zint
     mkdir build
     cd build
     cmake ..
@@ -54,10 +68,27 @@ except that on OpenBSD you need to use
 
     cmake -DCMAKE_PREFIX_PATH=/usr/local/lib/qt5/cmake ..
 
+and on NetBSD
+
+    cmake -DCMAKE_PREFIX_PATH=/usr/pkg/qt5 ..
+
 instead.
 
 
-3. CMake options
+4. Run
+======
+
+On FreeBSD and OpenBSD, the CLI zint and GUI zint-qt should run without issue from the command line.
+
+On NetBSD you may have to set LD_LIBRARY_PATH if using the default ksh. For zint ("libzint.so" and "libpng16.so") and
+zint-qt (Qt5 libraries and "libGL.so"):
+
+    setenv LD_LIBRARY_PATH /usr/local/lib:/usr/pkg/lib:/usr/pkg/qt5/lib:/usr/X11R7/lib
+
+Place in "~/.cshrc" to make permanent.
+
+
+5. CMake options
 ================
 
 See "README.linux". Note for running the test suite on FreeBSD, if using the default csh, to set LD_LIBRARY_PATH use:

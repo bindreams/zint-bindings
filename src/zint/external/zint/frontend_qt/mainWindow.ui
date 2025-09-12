@@ -1609,7 +1609,8 @@ as delimiters for GS1 Application Identifiers
              <item>
               <widget class="QCheckBox" name="chkGS1NoCheck">
                <property name="toolTip">
-                <string>Do not check GS1 data for validity
+                <string>Do not check GS1 data for validity (note that certain
+checks necessary for encodation are still performed)
 (ignored if disabled)</string>
                </property>
                <property name="text">
@@ -2008,7 +2009,7 @@ the barcode in X-dimensions</string>
                 <double>0.100000000000000</double>
                </property>
                <property name="maximum">
-                <double>100.000000000000000</double>
+                <double>200.000000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.500000000000000</double>

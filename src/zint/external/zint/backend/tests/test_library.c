@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -34,7 +34,6 @@
 #include <math.h>
 #include <sys/stat.h>
 #include "testcommon.h"
-#include "../common.h"
 
 static void test_checks(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
@@ -42,7 +41,7 @@ static void test_checks(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
+        const char *data;
         int length;
         int input_mode;
         int eci;
@@ -57,15 +56,15 @@ static void test_checks(const testCtx *const p_ctx) {
         int warn_level;
         int ret;
 
-        char *expected;
+        const char *expected;
         int expected_symbology;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_CODE128, -1, "1234", -1, -1, 3, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 217: Symbology does not support ECI switching", -1 },
         /*  1*/ { BARCODE_CODE128, -1, "1234", -1, -1, 0, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", -1 },
         /*  2*/ { BARCODE_QRCODE, -1, "1234", -1, -1, 3, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", -1 },
-        /*  3*/ { BARCODE_QRCODE, -1, "1234", -1, -1, 999999 + 1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 218: Invalid ECI code 1000000", -1 },
+        /*  3*/ { BARCODE_QRCODE, -1, "1234", -1, -1, 999999 + 1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 218: ECI code '1000000' out of range (0 to 999999, excluding 1, 2, 14 and 19)", -1 },
         /*  4*/ { BARCODE_CODE128, -1, "1234", -1, -1, -1, 0, 0, 0, 0, 0.009, -1, 0, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 227: Scale out of range (0.01 to 200)", -1 },
         /*  5*/ { BARCODE_CODE128, -1, "1234", -1, -1, -1, 0, 0, 0, 0, 200.01, -1, 0, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 227: Scale out of range (0.01 to 200)", -1 },
         /*  6*/ { BARCODE_CODE128, -1, "1234", -1, -1, -1, 0, 0, 0, 0, -1, 20.1, 0, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 221: Dot size out of range (0.01 to 20)", -1 },
@@ -107,7 +106,7 @@ static void test_checks(const testCtx *const p_ctx) {
         /* 42*/ { 15, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_EANX },
         /* 43*/ { 17, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_UPCA },
         /* 44*/ { 17, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_UPCA },
-        /* 45*/ { 19, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_TOO_LONG, "Error 362: Input too short (3 character minimum)", BARCODE_CODABAR },
+        /* 45*/ { 19, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_TOO_LONG, "Error 362: Input length 1 too short (minimum 3)", BARCODE_CODABAR },
         /* 46*/ { 19, -1, "A1B", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 207: Codabar 18 not supported", BARCODE_CODABAR },
         /* 47*/ { 19, -1, "A1B", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 207: Codabar 18 not supported", -1 },
         /* 48*/ { 26, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_UPCA },
@@ -120,7 +119,7 @@ static void test_checks(const testCtx *const p_ctx) {
         /* 55*/ { 36, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_UPCA },
         /* 56*/ { 39, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_UPCE },
         /* 57*/ { 39, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_UPCE },
-        /* 58*/ { 41, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_NONCOMPLIANT, "Warning 479: Input length is not standard (5, 9 or 11 characters)", BARCODE_POSTNET },
+        /* 58*/ { 41, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_NONCOMPLIANT, "Warning 479: Input length 1 is not standard (should be 5, 9 or 11 digits)", BARCODE_POSTNET },
         /* 59*/ { 41, -1, "12345", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_POSTNET },
         /* 60*/ { 41, -1, "12345", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_POSTNET },
         /* 61*/ { 42, -1, "12345", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_POSTNET },
@@ -152,12 +151,12 @@ static void test_checks(const testCtx *const p_ctx) {
         /* 87*/ { 88, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 252: Data does not start with an AI", BARCODE_GS1_128 },
         /* 88*/ { 88, -1, "[10]12", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_GS1_128 },
         /* 89*/ { 88, -1, "[10]12", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_GS1_128 },
-        /* 90*/ { 91, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 212: Symbology out of range", BARCODE_CODE128 },
-        /* 91*/ { 91, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 212: Symbology out of range", -1 },
-        /* 92*/ { 94, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 213: Symbology out of range", BARCODE_CODE128 },
-        /* 93*/ { 94, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 213: Symbology out of range", -1 },
-        /* 94*/ { 95, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 213: Symbology out of range", BARCODE_CODE128 },
-        /* 95*/ { 95, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 213: Symbology out of range", -1 },
+        /* 90*/ { 91, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /* 91*/ { 91, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /* 92*/ { 94, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /* 93*/ { 94, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /* 94*/ { 95, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /* 95*/ { 95, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
         /* 96*/ { 100, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_HIBC_128 },
         /* 97*/ { 100, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_HIBC_128 },
         /* 98*/ { 101, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_HIBC_39 },
@@ -172,49 +171,52 @@ static void test_checks(const testCtx *const p_ctx) {
         /*107*/ { 109, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_HIBC_MICPDF },
         /*108*/ { 111, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", BARCODE_HIBC_BLOCKF },
         /*109*/ { 111, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, 0, "", BARCODE_HIBC_BLOCKF },
-        /*110*/ { 113, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 214: Symbology out of range", BARCODE_CODE128 },
-        /*111*/ { 113, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 214: Symbology out of range", -1 },
-        /*112*/ { 114, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 214: Symbology out of range", BARCODE_CODE128 },
-        /*113*/ { 114, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 214: Symbology out of range", -1 },
-        /*114*/ { 117, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*115*/ { 117, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*116*/ { 118, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*117*/ { 118, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*118*/ { 122, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*119*/ { 122, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*120*/ { 123, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*121*/ { 123, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*122*/ { 124, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*123*/ { 124, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*124*/ { 125, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*125*/ { 125, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*126*/ { 126, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*127*/ { 126, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*128*/ { 127, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 215: Symbology out of range", BARCODE_CODE128 },
-        /*129*/ { 127, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 215: Symbology out of range", -1 },
-        /*130*/ { 147, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 216: Symbology out of range", BARCODE_CODE128 },
-        /*131*/ { 147, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 216: Symbology out of range", -1 },
-        /*132*/ { BARCODE_LAST + 1, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 216: Symbology out of range", BARCODE_CODE128 },
-        /*133*/ { BARCODE_LAST + 1, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 216: Symbology out of range", -1 },
-        /*134*/ { BARCODE_CODE128, -1, "\200", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input data", -1 },
-        /*135*/ { BARCODE_GS1_128, -1, "[01]12345678901234", -1, GS1_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_NONCOMPLIANT, "Warning 261: AI (01) position 14: Bad checksum '4', expected '1'", -1 },
-        /*136*/ { BARCODE_GS1_128, -1, "[01]12345678901234", -1, GS1_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_NONCOMPLIANT, "Error 261: AI (01) position 14: Bad checksum '4', expected '1'", -1 },
-        /*137*/ { BARCODE_QRCODE, -1, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", -1 },
-        /*138*/ { BARCODE_QRCODE, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_USES_ECI, "Warning 222: Encoded data includes ECI 13", -1 },
-        /*139*/ { BARCODE_QRCODE, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_USES_ECI, "Error 222: Encoded data includes ECI 13", -1 },
-        /*140*/ { BARCODE_CODEONE, -1, "[01]12345678901231", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 512: ECI ignored for GS1 mode", -1 },
-        /*141*/ { BARCODE_CODEONE, -1, "[01]12345678901231", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 512: ECI ignored for GS1 mode", -1 },
-        /*142*/ { BARCODE_CODEONE, -1, "[01]12345678901234", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 512: ECI ignored for GS1 mode", -1 }, /* Warning in encoder overrides library warnings */
-        /*143*/ { BARCODE_CODEONE, -1, "[01]12345678901234", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_NONCOMPLIANT, "Error 261: AI (01) position 14: Bad checksum '4', expected '1'", -1 }, /* But not errors */
-        /*144*/ { BARCODE_AZTEC, -1, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", -1 },
-        /*145*/ { BARCODE_AZTEC, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_USES_ECI, "Warning 222: Encoded data includes ECI 13", -1 },
-        /*146*/ { BARCODE_AZTEC, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_USES_ECI, "Error 222: Encoded data includes ECI 13", -1 },
-        /*147*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 503: Invalid error correction level - using default instead", -1 },
-        /*148*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 503: Invalid error correction level - using default instead", -1 },
-        /*149*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_USES_ECI, "Warning 222: Encoded data includes ECI 13", -1 }, /* ECI warning trumps all other warnings */
-        /*150*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 503: Invalid error correction level - using default instead", -1 }, /* But not errors */
+        /*110*/ { 113, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*111*/ { 113, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*112*/ { 114, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*113*/ { 114, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*114*/ { 117, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*115*/ { 117, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*116*/ { 118, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*117*/ { 118, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*118*/ { 122, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*119*/ { 122, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*120*/ { 123, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*121*/ { 123, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*122*/ { 124, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*123*/ { 124, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*124*/ { 125, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*125*/ { 125, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*126*/ { 126, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*127*/ { 126, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*128*/ { 127, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*129*/ { 127, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*130*/ { 148, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*131*/ { 148, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*132*/ { BARCODE_LAST + 1, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 206: Symbology out of range", BARCODE_CODE128 },
+        /*133*/ { BARCODE_LAST + 1, -1, "1", -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 206: Symbology out of range", -1 },
+        /*134*/ { BARCODE_CODE128, -1, "\200", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input", -1 },
+        /*135*/ { BARCODE_CODE128, -1, "\\o200", -1, UNICODE_MODE | ESCAPE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input", -1 },
+        /*136*/ { BARCODE_MAXICODE, -1, "\200", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input", -1 },
+        /*137*/ { BARCODE_MAXICODE, -1, "\\o200", -1, UNICODE_MODE | ESCAPE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input", -1 },
+        /*138*/ { BARCODE_GS1_128, -1, "[01]12345678901234", -1, GS1_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_NONCOMPLIANT, "Warning 261: AI (01) position 14: Bad checksum '4', expected '1'", -1 },
+        /*139*/ { BARCODE_GS1_128, -1, "[01]12345678901234", -1, GS1_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_NONCOMPLIANT, "Error 261: AI (01) position 14: Bad checksum '4', expected '1'", -1 },
+        /*140*/ { BARCODE_QRCODE, -1, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", -1 },
+        /*141*/ { BARCODE_QRCODE, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_USES_ECI, "Warning 222: Encoded data includes ECI 13", -1 },
+        /*142*/ { BARCODE_QRCODE, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_USES_ECI, "Error 222: Encoded data includes ECI 13", -1 },
+        /*143*/ { BARCODE_CODEONE, -1, "[01]12345678901231", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 512: ECI ignored for GS1 mode", -1 },
+        /*144*/ { BARCODE_CODEONE, -1, "[01]12345678901231", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 512: ECI ignored for GS1 mode", -1 },
+        /*145*/ { BARCODE_CODEONE, -1, "[01]12345678901234", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 512: ECI ignored for GS1 mode", -1 }, /* Warning in encoder overrides library warnings */
+        /*146*/ { BARCODE_CODEONE, -1, "[01]12345678901234", -1, GS1_MODE, 3, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_NONCOMPLIANT, "Error 261: AI (01) position 14: Bad checksum '4', expected '1'", -1 }, /* But not errors */
+        /*147*/ { BARCODE_AZTEC, -1, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, "", -1 },
+        /*148*/ { BARCODE_AZTEC, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_USES_ECI, "Warning 222: Encoded data includes ECI 13", -1 },
+        /*149*/ { BARCODE_AZTEC, -1, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_USES_ECI, "Error 222: Encoded data includes ECI 13", -1 },
+        /*150*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_INVALID_OPTION, "Warning 503: Error correction level '6' out of range (1 to 4), ignoring", -1 },
+        /*151*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, 13, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 503: Error correction level '6' out of range (1 to 4)", -1 },
+        /*152*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, -1, ZINT_WARN_USES_ECI, "Warning 222: Encoded data includes ECI 13", -1 }, /* ECI warning trumps all other warnings */
+        /*153*/ { BARCODE_AZTEC, 6, "ก", -1, UNICODE_MODE, -1, 0, 0, 0, 0, -1, -1, 0, -1, WARN_FAIL_ALL, ZINT_ERROR_INVALID_OPTION, "Error 503: Error correction level '6' out of range (1 to 4)", -1 }, /* But not errors */
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -256,7 +258,7 @@ static void test_checks(const testCtx *const p_ctx) {
             symbol->warn_level = data[i].warn_level;
         }
 
-        ret = ZBarcode_Encode(symbol, TU(data[i].data), length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode(%d) ret %d != %d (%s)\n", i, data[i].symbology, ret, data[i].ret, symbol->errtxt);
 
         ret = strcmp(symbol->errtxt, data[i].expected);
@@ -287,27 +289,27 @@ static void test_checks_segs(const testCtx *const p_ctx) {
         int warn_level;
         int ret;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_CODE128, -1, { { NULL, 0, 0 }, { NULL, 0, 0 } }, 0, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 205: No input data" },
-        /*  1*/ { BARCODE_CODE128, -1, { { NULL, 0, 0 }, { NULL, 0, 0 } }, 257, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 771: Too many input segments (max 256)" },
+        /*  1*/ { BARCODE_CODE128, -1, { { NULL, 0, 0 }, { NULL, 0, 0 } }, 257, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 771: Too many input segments (maximum 256)" },
         /*  2*/ { BARCODE_CODE128, -1, { { NULL, 0, 0 }, { NULL, 0, 0 } }, 1, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 772: Input segment 0 source NULL" },
         /*  3*/ { BARCODE_CODE128, -1, { { TU(""), 0, 0 }, { NULL, 0, 0 } }, 1, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 778: No input data" },
         /*  4*/ { BARCODE_CODE128, -1, { { TU("A"), 0, 0 }, { NULL, 0, 0 } }, 2, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 772: Input segment 1 source NULL" },
         /*  5*/ { BARCODE_CODE128, -1, { { TU("A"), 0, 0 }, { TU(""), 0, 0 } }, 2, -1, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 773: Input segment 1 empty" },
-        /*  6*/ { BARCODE_CODE128, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 0 } }, 2, -1, 4, -1, ZINT_ERROR_INVALID_OPTION, "Error 774: Symbol ECI 4 must match segment zero ECI 3" },
+        /*  6*/ { BARCODE_CODE128, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 0 } }, 2, -1, 4, -1, ZINT_ERROR_INVALID_OPTION, "Error 774: Symbol ECI '4' must match segment zero ECI '3'" },
         /*  7*/ { BARCODE_CODE128, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 4 } }, 2, -1, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 775: Symbology does not support multiple segments" },
         /*  8*/ { BARCODE_CODE128, -1, { { TU("A"), 0, 3 }, { NULL, 0, 0 } }, 1, -1, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 217: Symbology does not support ECI switching" },
-        /*  9*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 1 } }, 2, -1, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 218: Invalid ECI code 1" },
+        /*  9*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 1 } }, 2, -1, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 218: ECI code '1' out of range (0 to 999999, excluding 1, 2, 14 and 19)" },
         /* 10*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 4 } }, 2, GS1_MODE, -1, -1, ZINT_ERROR_INVALID_OPTION, "Error 776: GS1 mode not supported for multiple segments" },
-        /* 11*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 3 }, { TU("\200"), 0, 4 } }, 2, UNICODE_MODE, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input data" },
+        /* 11*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 3 }, { TU("\200"), 0, 4 } }, 2, UNICODE_MODE, -1, -1, ZINT_ERROR_INVALID_DATA, "Error 245: Invalid UTF-8 in input" },
         /* 12*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 3 }, { TU("B"), 0, 4 } }, 2, -1, -1, -1, 0, "" },
         /* 13*/ { BARCODE_AZTEC, -1, { { TU("A"), 0, 0 }, { TU("B"), 0, 4 } }, 2, -1, 3, -1, 0, "" },
-        /* 14*/ { BARCODE_AZTEC, -1, { { TU("A"), ZINT_MAX_DATA_LEN, 3 }, { TU("B"), 1, 4 } }, 2, -1, -1, -1, ZINT_ERROR_TOO_LONG, "Error 243: Input data too long" },
+        /* 14*/ { BARCODE_AZTEC, -1, { { TU("A"), ZINT_MAX_DATA_LEN, 3 }, { TU("B"), 1, 4 } }, 2, -1, -1, -1, ZINT_ERROR_TOO_LONG, "Error 243: Input too long" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -343,28 +345,28 @@ static void test_input_data(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int input_mode;
-        char *data;
+        const char *data;
         int length;
-        char *composite;
+        const char *composite;
         int ret;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_CODE128, -1, "1234", -1, "", 0, "" },
         /*  1*/ { BARCODE_GS1_128, -1, "[01]12345678901231", -1, "", 0, "" },
         /*  2*/ { BARCODE_GS1_128, -1, "", -1, "", ZINT_ERROR_INVALID_DATA, "Error 778: No input data" },
         /*  3*/ { BARCODE_GS1_128_CC, -1, "[01]12345678901231", -1, "[10]121212", 0, "" },
-        /*  4*/ { BARCODE_GS1_128_CC, -1, "[01]12345678901231", -1, "", ZINT_ERROR_INVALID_DATA, "Error 779: No composite data in 2D component" },
+        /*  4*/ { BARCODE_GS1_128_CC, -1, "[01]12345678901231", -1, "", ZINT_ERROR_INVALID_DATA, "Error 779: No composite data (2D component)" },
         /*  5*/ { BARCODE_GS1_128_CC, -1, "", -1, "[10]121212", ZINT_ERROR_INVALID_OPTION, "Error 445: No primary (linear) message" },
-        /*  6*/ { BARCODE_DATAMATRIX, -1, "", -1, "", ZINT_ERROR_INVALID_DATA, "Error 778: No input data (segment 0 empty)" },
+        /*  6*/ { BARCODE_DATAMATRIX, -1, "", -1, "", ZINT_ERROR_INVALID_DATA, "Error 228: No input data (segment 0 empty)" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
-    char *text;
+    const char *text;
 
     testStartSymbol("test_input_data", &symbol);
 
@@ -383,7 +385,7 @@ static void test_input_data(const testCtx *const p_ctx) {
         }
         length = testUtilSetSymbol(symbol, data[i].symbology, data[i].input_mode, -1 /*eci*/, -1 /*option_1*/, -1, -1, -1 /*output_options*/, text, -1, debug);
 
-        ret = ZBarcode_Encode(symbol, (unsigned char *) text, length);
+        ret = ZBarcode_Encode(symbol, TCU(text), length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode(%d) ret %d != %d (%s)\n", i, data[i].symbology, ret, data[i].ret, symbol->errtxt);
 
         ret = strcmp(symbol->errtxt, data[i].expected);
@@ -392,21 +394,154 @@ static void test_input_data(const testCtx *const p_ctx) {
         ZBarcode_Delete(symbol);
     }
 
+    if (p_ctx->index == -1 && p_ctx->exclude[0] == -1) {
+        char data_buf[ZINT_MAX_DATA_LEN + 10];
+        int expected_ret = ZINT_ERROR_TOO_LONG;
+        const char *expected_errtxt[] = { "Error 797: Input too long", "Error 340: Input length 17399 too long (maximum 256)" };
+
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        /* Caught by `ZBarcode_Encode_Segs()` de-escape loop */
+        symbol->input_mode = ESCAPE_MODE;
+        testUtilStrCpyRepeat(data_buf, "A", ZINT_MAX_DATA_LEN);
+        data_buf[ZINT_MAX_DATA_LEN] = '\\';
+        data_buf[ZINT_MAX_DATA_LEN + 1] = 'n';
+
+        ret = ZBarcode_Encode(symbol, (unsigned char *) data_buf, ZINT_MAX_DATA_LEN + 2);
+        assert_equal(ret, expected_ret, "ZBarcode_Encode(%d) ret %d != %d (%s)\n", symbol->symbology, ret, expected_ret, symbol->errtxt);
+        assert_zero(strcmp(symbol->errtxt, expected_errtxt[0]), "i:%d strcmp(%s, %s) != 0\n", i, symbol->errtxt, expected_errtxt[0]);
+
+        /* Passes de-escape loop, caught by `code128()` */
+        symbol->errtxt[0] = '\0';
+        data_buf[ZINT_MAX_DATA_LEN - 2] = '\\';
+        data_buf[ZINT_MAX_DATA_LEN - 1] = 'n';
+
+        ret = ZBarcode_Encode(symbol, (unsigned char *) data_buf, ZINT_MAX_DATA_LEN);
+        assert_equal(ret, expected_ret, "ZBarcode_Encode(%d) ret %d != %d (%s)\n", symbol->symbology, ret, expected_ret, symbol->errtxt);
+        assert_zero(strcmp(symbol->errtxt, expected_errtxt[1]), "i:%d strcmp(%s, %s) != 0\n", i, symbol->errtxt, expected_errtxt[1]);
+
+        ZBarcode_Delete(symbol);
+    }
+
     testFinish();
+}
+
+static int test_prev_map_invalid_symbology(int *p_symbology) {
+    int symbology = *p_symbology;
+    int warn_number = 0;
+
+    if (symbology < 1) {
+        warn_number = ZINT_WARN_INVALID_OPTION;
+        symbology = BARCODE_CODE128;
+    /* symbol->symbologys 1 to 126 are defined by tbarcode */
+    } else if (symbology == 5) {
+        symbology = BARCODE_C25STANDARD;
+    } else if ((symbology >= 10) && (symbology <= 12)) {
+        symbology = BARCODE_EANX;
+    } else if (symbology == 15) {
+        symbology = BARCODE_EANX;
+    } else if (symbology == 17) {
+        symbology = BARCODE_UPCA;
+    } else if (symbology == 19) {
+        warn_number = ZINT_WARN_INVALID_OPTION;
+        symbology = BARCODE_CODABAR;
+    } else if (symbology == 26) { /* UPC-A up to tbarcode 9, ISSN for tbarcode 10+ */
+        symbology = BARCODE_UPCA;
+    } else if (symbology == 27) { /* UPCD1 up to tbarcode 9, ISSN + 2 digit add-on for tbarcode 10+ */
+        return ZINT_ERROR_INVALID_OPTION;
+    } else if (symbology == 33) {
+        symbology = BARCODE_GS1_128;
+    } else if (symbology == 36) {
+        symbology = BARCODE_UPCA;
+    } else if (symbology == 39) {
+        symbology = BARCODE_UPCE;
+    } else if ((symbology >= 41) && (symbology <= 45)) {
+        symbology = BARCODE_POSTNET;
+    } else if (symbology == 46) {
+        symbology = BARCODE_PLESSEY;
+    } else if (symbology == 48) {
+        symbology = BARCODE_NVE18;
+    } else if ((symbology == 59) || (symbology == 61)) {
+        symbology = BARCODE_CODE128;
+    } else if (symbology == 62) {
+        symbology = BARCODE_CODE93;
+    } else if ((symbology == 64) || (symbology == 65)) {
+        symbology = BARCODE_AUSPOST;
+    } else if (symbology == 78) {
+        symbology = BARCODE_DBAR_OMN;
+    } else if (symbology == 83) {
+        symbology = BARCODE_PLANET;
+    } else if (symbology == 88) {
+        symbology = BARCODE_GS1_128;
+    } else if (symbology == 91) { /* BC412 up to tbarcode 9, Code 32 for tbarcode 10+ */
+        warn_number = ZINT_WARN_INVALID_OPTION;
+        symbology = BARCODE_CODE128;
+    } else if ((symbology >= 94) && (symbology <= 95)) {
+        warn_number = ZINT_WARN_INVALID_OPTION;
+        symbology = BARCODE_CODE128;
+    } else if (symbology == 100) {
+        symbology = BARCODE_HIBC_128;
+    } else if (symbology == 101) {
+        symbology = BARCODE_HIBC_39;
+    } else if (symbology == 103) {
+        symbology = BARCODE_HIBC_DM;
+    } else if (symbology == 105) {
+        symbology = BARCODE_HIBC_QR;
+    } else if (symbology == 107) {
+        symbology = BARCODE_HIBC_PDF;
+    } else if (symbology == 109) {
+        symbology = BARCODE_HIBC_MICPDF;
+    } else if (symbology == 111) {
+        symbology = BARCODE_HIBC_BLOCKF;
+    } else if ((symbology == 113) || (symbology == 114)) {
+        warn_number = ZINT_WARN_INVALID_OPTION;
+        symbology = BARCODE_CODE128;
+    } else if ((symbology >= 117) && (symbology <= 127)) {
+        if (symbology < 119 || symbology > 121) { /* BARCODE_MAILMARK_2D/4S/UPU_S10 */
+            warn_number = ZINT_WARN_INVALID_OPTION;
+            symbology = BARCODE_CODE128;
+        }
+    /* Everything from 128 up is Zint-specific */
+    } else if (symbology > BARCODE_LAST) {
+        warn_number = ZINT_WARN_INVALID_OPTION;
+        symbology = BARCODE_CODE128;
+    }
+    if (symbology == *p_symbology) { /* Should never happen */
+        return ZINT_ERROR_ENCODING_PROBLEM;
+    }
+
+    *p_symbology = symbology;
+
+    return warn_number;
 }
 
 static void test_symbologies(const testCtx *const p_ctx) {
     int i, ret;
-    struct zint_symbol symbol = {0};
+    struct zint_symbol s_symbol = {0};
+    struct zint_symbol *symbol = &s_symbol;
 
     testStart("test_symbologies");
 
     for (i = -1; i < 148; i++) {
         if (testContinue(p_ctx, i)) continue;
 
-        symbol.symbology = i;
-        ret = ZBarcode_Encode(&symbol, TU("1"), 0);
-        assert_notequal(ret, ZINT_ERROR_ENCODING_PROBLEM, "i:%d Encoding problem (%s)\n", i, symbol.errtxt);
+        symbol->symbology = i;
+        ret = ZBarcode_Encode(symbol, TCU(""), 0);
+        assert_notequal(ret, ZINT_ERROR_ENCODING_PROBLEM, "i:%d Encoding problem (%s)\n", i, symbol->errtxt);
+
+        if (!ZBarcode_ValidID(i)) {
+            int prev_symbology = i;
+            int prev_ret = test_prev_map_invalid_symbology(&prev_symbology);
+            if (ret != ZINT_ERROR_INVALID_DATA) {
+                assert_equal(prev_ret, ret, "i:%d prev_ret (%d) != ret (%d)\n", i, prev_ret, ret);
+            }
+            assert_equal(prev_symbology, symbol->symbology, "i:%d prev_symbology (%d) != symbol->symbology (%d)\n",
+                            i, prev_symbology, symbol->symbology);
+        } else {
+            /* No input data */
+            assert_equal(ret, ZINT_ERROR_INVALID_DATA, "i:%d ret (%d) != ZINT_ERROR_INVALID_DATA\n", i, ret);
+        }
     }
 
     testFinish();
@@ -416,27 +551,28 @@ static void test_input_mode(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
     struct item {
-        char *data;
+        const char *data;
         int input_mode;
         int ret;
 
         int expected_input_mode;
+        const char *expected_errtxt;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
-        /*  0*/ { "1234", DATA_MODE, 0, DATA_MODE },
-        /*  1*/ { "1234", DATA_MODE | ESCAPE_MODE, 0, DATA_MODE | ESCAPE_MODE },
-        /*  2*/ { "1234", UNICODE_MODE, 0, UNICODE_MODE },
-        /*  3*/ { "1234", UNICODE_MODE | ESCAPE_MODE, 0, UNICODE_MODE | ESCAPE_MODE },
-        /*  4*/ { "[01]12345678901231", GS1_MODE, 0, GS1_MODE },
-        /*  5*/ { "[01]12345678901231", GS1_MODE | ESCAPE_MODE, 0, GS1_MODE | ESCAPE_MODE },
-        /*  6*/ { "1234", 4 | ESCAPE_MODE, 0, DATA_MODE }, /* Unknown mode reset to bare DATA_MODE */
-        /*  7*/ { "1234", -1, 0, DATA_MODE },
-        /*  8*/ { "1234", DATA_MODE | 0x10, 0, DATA_MODE | 0x10 }, /* Unknown flags kept (but ignored) */
-        /*  9*/ { "1234", UNICODE_MODE | 0x10, 0, UNICODE_MODE | 0x10 },
-        /* 10*/ { "[01]12345678901231", GS1_MODE | 0x20, 0, GS1_MODE | 0x20 },
+    static const struct item data[] = {
+        /*  0*/ { "1234", DATA_MODE, 0, DATA_MODE, "" },
+        /*  1*/ { "1234", DATA_MODE | ESCAPE_MODE, 0, DATA_MODE | ESCAPE_MODE, "" },
+        /*  2*/ { "1234", UNICODE_MODE, 0, UNICODE_MODE, "" },
+        /*  3*/ { "1234", UNICODE_MODE | ESCAPE_MODE, 0, UNICODE_MODE | ESCAPE_MODE, "" },
+        /*  4*/ { "[01]12345678901231", GS1_MODE, 0, GS1_MODE, "" },
+        /*  5*/ { "[01]12345678901231", GS1_MODE | ESCAPE_MODE, 0, GS1_MODE | ESCAPE_MODE, "" },
+        /*  6*/ { "1234", 4 | ESCAPE_MODE, ZINT_WARN_INVALID_OPTION, DATA_MODE, "Warning 212: Invalid input mode - reset to DATA_MODE" }, /* Unknown mode reset to bare DATA_MODE. Note: now warns */
+        /*  7*/ { "1234", -1, 0, DATA_MODE, "" },
+        /*  8*/ { "1234", DATA_MODE | 0x10, 0, DATA_MODE | 0x10, "" }, /* Unknown flags kept (but ignored) */
+        /*  9*/ { "1234", UNICODE_MODE | 0x10, 0, UNICODE_MODE | 0x10, "" },
+        /* 10*/ { "[01]12345678901231", GS1_MODE | 0x20, 0, GS1_MODE | 0x20, "" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -451,9 +587,10 @@ static void test_input_mode(const testCtx *const p_ctx) {
 
         length = testUtilSetSymbol(symbol, BARCODE_CODE49 /*Supports GS1*/, data[i].input_mode, -1 /*eci*/, -1 /*option_1*/, -1, -1, -1 /*output_options*/, data[i].data, -1, debug);
 
-        ret = ZBarcode_Encode(symbol, TU(data[i].data), length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
         assert_equal(symbol->input_mode, data[i].expected_input_mode, "i:%d symbol->input_mode %d != %d\n", i, symbol->input_mode, data[i].expected_input_mode);
+        assert_zero(strcmp(symbol->errtxt, data[i].expected_errtxt), "i:%d ZBarcode_Encode strcmp(%s, %s) != 0\n", i, symbol->errtxt, data[i].expected_errtxt);
 
         ZBarcode_Delete(symbol);
     }
@@ -468,107 +605,111 @@ static void test_escape_char_process(const testCtx *const p_ctx) {
         int symbology;
         int input_mode;
         int eci;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
         int expected_width;
-        char *expected;
+        const char *expected;
         int compare_previous;
-        char *comment;
+        const char *comment;
     };
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 26, "01 05 08 09 0A 0B 0C 0D 0E 1C 1E 1F EB 02 5D 81 21 0D 92 2E 3D FD B6 9A 37 2A CD 61 FB 95", 0, "" },
         /*  1*/ { BARCODE_CODABLOCKF, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 101, "(45) 67 62 43 40 44 47 48 29 6A 67 62 0B 49 4A 4B 4C 18 6A 67 62 0C 4D 5B 5D 5E 62 6A 67", 0, "" },
         /*  2*/ { BARCODE_CODE16K, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 70, "(20) 14 64 68 71 72 73 74 75 76 77 91 93 94 101 65 60 103 103 45 61", 0, "" },
         /*  3*/ { BARCODE_DOTCODE, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 28, "65 40 44 47 48 49 4A 4B 4C 4D 5B 5D 5E 6E 41 3C 6A", 0, "" },
         /*  4*/ { BARCODE_GRIDMATRIX, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 30, "30 1A 00 02 01 61 00 48 28 16 0C 06 46 63 51 74 05 38 00", 0, "" },
         /*  5*/ { BARCODE_HANXIN, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 23, "2F 80 10 72 09 28 B3 0D 6F F3 00 20 E8 F4 0A E0 00", 0, "" },
-        /*  6*/ { BARCODE_MAXICODE, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 30, "(144) 04 3E 3E 00 04 07 08 09 0A 0B 03 3D 2C 24 19 1E 23 1B 18 0E 0C 0D 1E 21 3C 1E 3C 31", 0, "" },
+        /*  6*/ { BARCODE_MAXICODE, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 30, "(144) 04 3E 3E 00 04 07 08 09 0A 0B 03 3D 2C 24 19 1E 23 1B 18 0E 0C 0D 1E 3F 1D 1E 3C 31", 0, "" },
         /*  7*/ { BARCODE_PDF417, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 120, "(24) 16 901 0 23 655 318 98 18 461 639 893 122 129 92 900 900 872 438 359 646 522 773 831", 0, "" },
         /*  8*/ { BARCODE_ULTRA, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\", "", 0, 20, "(15) 257 0 4 7 8 9 10 11 12 13 27 29 30 129 92", 0, "" },
         /*  9*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\d129\\o201\\\\", "", 0, 18, "(32) 01 05 08 09 0A 0B 0C 0D 0E 1C 1E 1F E7 32 45 DB 70 5D E3 16 7B 2B 44 60 E1 55 F7 08", 0, "" },
         /* 10*/ { BARCODE_HANXIN, DATA_MODE, -1, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\d129\\o201\\\\", "", 0, 23, "2F 80 10 72 09 28 B3 0D 6F F3 00 30 E8 F4 0C 0C 0A E0 00 00 00", 0, "" },
-        /* 11*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\c", "", ZINT_ERROR_INVALID_DATA, 0, "Error 234: Unrecognised escape character '\\c' in input data", 0, "" },
-        /* 12*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\", "", ZINT_ERROR_INVALID_DATA, 0, "Error 236: Incomplete escape character in input data", 0, "" },
-        /* 13*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\x", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\x' escape sequence in input data", 0, "" },
-        /* 14*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\x1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\x' escape sequence in input data", 0, "" },
-        /* 15*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\x1g", "", ZINT_ERROR_INVALID_DATA, 0, "Error 233: Invalid character for '\\x' escape sequence in input data (hexadecimal only)", 0, "" },
-        /* 16*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\d' escape sequence in input data", 0, "" },
-        /* 17*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\d' escape sequence in input data", 0, "" },
-        /* 18*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d12", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\d' escape sequence in input data", 0, "" },
-        /* 19*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d12a", "", ZINT_ERROR_INVALID_DATA, 0, "Error 233: Invalid character for '\\d' escape sequence in input data (decimal only)", 0, "" },
-        /* 20*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\o' escape sequence in input data", 0, "" },
-        /* 21*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\o' escape sequence in input data", 0, "" },
-        /* 22*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o12", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\o' escape sequence in input data", 0, "" },
-        /* 23*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o128", "", ZINT_ERROR_INVALID_DATA, 0, "Error 233: Invalid character for '\\o' escape sequence in input data (octal only)", 0, "" },
-        /* 24*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\xA01\\xFF", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 0, "" },
-        /* 25*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d1601\\d255", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
-        /* 26*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o2401\\o377", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
-        /* 27*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\u00A01\\u00FF", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
-        /* 28*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\U0000A01\\U0000FF", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
-        /* 29*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\xc3\\xbF", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 0, "" },
-        /* 30*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d195\\d191", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
-        /* 31*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o303\\o277", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
-        /* 32*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u00fF", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
-        /* 33*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U0000fF", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
-        /* 34*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\xc3\\xbF", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 0, "" },
-        /* 35*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\d195\\d191", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
-        /* 36*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\o303\\o277", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
-        /* 37*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\u00fF", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
-        /* 38*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\U0000fF", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
-        /* 39*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input data", 0, "" },
-        /* 40*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\uF", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input data", 0, "" },
-        /* 41*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u0F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input data", 0, "" },
-        /* 42*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\uFG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input data", 0, "" },
-        /* 43*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u00F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input data", 0, "" },
-        /* 44*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u00FG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 211: Invalid character for '\\u' escape sequence in input data (hexadecimal only)", 0, "" },
-        /* 45*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\ufffe", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Invalid value for '\\u' escape sequence in input data", 0, "Reversed BOM" },
-        /* 46*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\ud800", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Invalid value for '\\u' escape sequence in input data", 0, "Surrogate" },
-        /* 47*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\udfff", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Invalid value for '\\u' escape sequence in input data", 0, "Surrogate" },
-        /* 48*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 17, "\\xE2\\x82\\xAC", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 0, "Zint manual 4.10 Ex1" },
-        /* 49*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 17, "\\u20AC", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 1, "" },
-        /* 50*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 17, "\\U0020AC", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 1, "" },
-        /* 51*/ { BARCODE_DATAMATRIX, DATA_MODE, 17, "\\xA4", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 1, "" },
-        /* 52*/ { BARCODE_DATAMATRIX, DATA_MODE, 28, "\\xB1\\x60", "", 0, 12, "F1 1D EB 32 61 D9 1C 0C C2 46 C3 B2", 0, "Zint manual 4.10 Ex2" },
-        /* 53*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 28, "\\u5E38", "", 0, 12, "F1 1D EB 32 61 D9 1C 0C C2 46 C3 B2", 1, "" },
-        /* 54*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 28, "\\U005E38", "", 0, 12, "F1 1D EB 32 61 D9 1C 0C C2 46 C3 B2", 1, "" },
-        /* 55*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\u007F", "", 0, 10, "80 81 46 73 64 88 6A 84", 0, "" },
-        /* 56*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\U00007F", "", 0, 10, "80 81 46 73 64 88 6A 84", 0, "" },
-        /* 57*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 58*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\UF", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 59*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U0F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 60*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\UFG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 61*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U00F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 62*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U00FG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 63*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\Ufffe", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "Reversed BOM" },
-        /* 64*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\Ud800", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "Surrogate" },
-        /* 65*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\Udfff", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "Surrogate" },
-        /* 66*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U000F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 67*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U0000F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input data", 0, "" },
-        /* 68*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U110000", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Invalid value for '\\U' escape sequence in input data", 0, "" },
-        /* 69*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 25, "\\U10FFFF", "", 0, 14, "F1 1A E7 57 C7 81 F7 AC 09 06 28 51 F3 00 E1 8C 2A 1C", 0, "" },
-        /* 70*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 26, "\\U10FFFF", "", 0, 14, "F1 1B E7 57 E0 11 D7 6C 4F 45 E2 B3 FF F1 72 AB 54 9F", 0, "" },
-        /* 71*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 32, "\\U10FFFF", "", 0, 14, "F1 21 EB 64 33 EB 1B 36 1D F7 B1 6D 8C A6 34 64 19 3A", 0, "" },
-        /* 72*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 33, "\\U10FFFF", "", 0, 14, "F1 22 E7 57 EB 5D 17 8C C1 B0 B6 B2 53 78 E4 7D 61 CB", 0, "" },
-        /* 73*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 34, "\\U10FFFF", "", 0, 14, "F1 23 01 11 EB 80 EB 80 90 33 51 1B FA AE 78 F7 05 44", 0, "" },
-        /* 74*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 35, "\\U10FFFF", "", 0, 14, "F1 24 EB 80 EB 80 11 01 17 BA C6 05 9F 4C EA E5 18 31", 0, "" },
-        /* 75*/ { BARCODE_GS1_128_CC, GS1_MODE, -1, "[20]10", "[10]A", 0, 99, "(7) 105 102 20 10 100 59 106", 0, "" },
-        /* 76*/ { BARCODE_GS1_128_CC, GS1_MODE, -1, "[2\\x30]1\\d048", "[\\x310]\\x41", 0, 99, "(7) 105 102 20 10 100 59 106", 1, "" },
-        /* 77*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\^A1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 798: Escape '\\^' only valid for Code 128 in extra escape mode", 0, "" },
-        /* 78*/ { BARCODE_CODE128, DATA_MODE | EXTRA_ESCAPE_MODE, -1, "\\^A1", "", 0, 46, "(4) 103 17 17 106", 0, "" },
-        /* 79*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, -1, "\\^", "", 0, 57, "(5) 104 60 62 82 106", 0, "Partial special escape '\\^' at end allowed" },
-        /* 80*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, -1, "\\^D1", "", 0, 79, "(7) 104 60 62 36 17 52 106", 0, "Unknown special escapes passed straight thu" },
+        /* 11*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\c", "", ZINT_ERROR_INVALID_DATA, 0, "Error 234: Unrecognised escape character '\\c' in input", 0, "" },
+        /* 12*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\", "", ZINT_ERROR_INVALID_DATA, 0, "Error 236: Incomplete escape character in input", 0, "" },
+        /* 13*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\x", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\x' escape sequence in input", 0, "" },
+        /* 14*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\x1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\x' escape sequence in input", 0, "" },
+        /* 15*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\x1g", "", ZINT_ERROR_INVALID_DATA, 0, "Error 238: Invalid character in escape sequence '\\x1g' in input (hexadecimal only)", 0, "" },
+        /* 16*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\d' escape sequence in input", 0, "" },
+        /* 17*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\d' escape sequence in input", 0, "" },
+        /* 18*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d12", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\d' escape sequence in input", 0, "" },
+        /* 19*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d12a", "", ZINT_ERROR_INVALID_DATA, 0, "Error 238: Invalid character in escape sequence '\\d12a' in input (decimal only)", 0, "" },
+        /* 20*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d256", "", ZINT_ERROR_INVALID_DATA, 0, "Error 237: Value of escape sequence '\\d256' in input out of range (000 to 255)", 0, "" },
+        /* 21*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\o' escape sequence in input", 0, "" },
+        /* 22*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\o' escape sequence in input", 0, "" },
+        /* 23*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o12", "", ZINT_ERROR_INVALID_DATA, 0, "Error 232: Incomplete '\\o' escape sequence in input", 0, "" },
+        /* 24*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o128", "", ZINT_ERROR_INVALID_DATA, 0, "Error 238: Invalid character in escape sequence '\\o128' in input (octal only)", 0, "" },
+        /* 25*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o400", "", ZINT_ERROR_INVALID_DATA, 0, "Error 237: Value of escape sequence '\\o400' in input out of range (000 to 377)", 0, "" },
+        /* 26*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\xA01\\xFF", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 0, "" },
+        /* 27*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d1601\\d255", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
+        /* 28*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o2401\\o377", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
+        /* 29*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\u00A01\\u00FF", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
+        /* 30*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\U0000A01\\U0000FF", "", 0, 12, "EB 21 32 EB 80 D8 49 44 DC 7D 9E 3B", 1, "" },
+        /* 31*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\xc3\\xbF", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 0, "" },
+        /* 32*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\d195\\d191", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
+        /* 33*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\o303\\o277", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
+        /* 34*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u00fF", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
+        /* 35*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U0000fF", "", 0, 12, "EB 44 EB 40 81 30 87 17 C5 68 5C 91", 1, "" },
+        /* 36*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\xc3\\xbF", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 0, "" },
+        /* 37*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\d195\\d191", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
+        /* 38*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\o303\\o277", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
+        /* 39*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\u00fF", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
+        /* 40*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\U0000fF", "", 0, 10, "EB 80 81 47 1E 45 FC 93", 1, "" },
+        /* 41*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input", 0, "" },
+        /* 42*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\uF", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input", 0, "" },
+        /* 43*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u0F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input", 0, "" },
+        /* 44*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\uFG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input", 0, "" },
+        /* 45*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u00F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\u' escape sequence in input", 0, "" },
+        /* 46*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\u00FG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 211: Invalid character for '\\u' escape sequence in input (hexadecimal only)", 0, "" },
+        /* 47*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\ufffe", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Value of escape sequence '\\ufffe' in input out of range", 0, "Reversed BOM" },
+        /* 48*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\ud800", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Value of escape sequence '\\ud800' in input out of range", 0, "Surrogate" },
+        /* 49*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\udfff", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Value of escape sequence '\\udfff' in input out of range", 0, "Surrogate" },
+        /* 50*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\uffff", "", 0, 12, "E7 2C B0 16 AB A1 1F 85 EB 50 A1 4C", 0, "" },
+        /* 51*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 17, "\\xE2\\x82\\xAC", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 0, "Zint manual 4.10 Ex1" },
+        /* 52*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 17, "\\u20AC", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 1, "" },
+        /* 53*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 17, "\\U0020AC", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 1, "" },
+        /* 54*/ { BARCODE_DATAMATRIX, DATA_MODE, 17, "\\xA4", "", 0, 12, "F1 12 EB 25 81 4A 0A 8C 31 AC E3 2E", 1, "" },
+        /* 55*/ { BARCODE_DATAMATRIX, DATA_MODE, 28, "\\xB1\\x60", "", 0, 12, "F1 1D EB 32 61 D9 1C 0C C2 46 C3 B2", 0, "Zint manual 4.10 Ex2" },
+        /* 56*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 28, "\\u5E38", "", 0, 12, "F1 1D EB 32 61 D9 1C 0C C2 46 C3 B2", 1, "" },
+        /* 57*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 28, "\\U005E38", "", 0, 12, "F1 1D EB 32 61 D9 1C 0C C2 46 C3 B2", 1, "" },
+        /* 58*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\u007F", "", 0, 10, "80 81 46 73 64 88 6A 84", 0, "" },
+        /* 59*/ { BARCODE_DATAMATRIX, UNICODE_MODE, -1, "\\U00007F", "", 0, 10, "80 81 46 73 64 88 6A 84", 0, "" },
+        /* 60*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 61*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\UF", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 62*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U0F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 63*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\UFG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 64*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U00F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 65*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U00FG", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 66*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\Ufffe", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "Reversed BOM" },
+        /* 67*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\Ud800", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "Surrogate" },
+        /* 68*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\Udfff", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "Surrogate" },
+        /* 69*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U000F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 70*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U0000F", "", ZINT_ERROR_INVALID_DATA, 0, "Error 209: Incomplete '\\U' escape sequence in input", 0, "" },
+        /* 71*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\U110000", "", ZINT_ERROR_INVALID_DATA, 0, "Error 246: Value of escape sequence '\\U110000' in input out of range", 0, "" },
+        /* 72*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 25, "\\U10FFFF", "", 0, 14, "F1 1A E7 57 C7 81 F7 AC 09 06 28 51 F3 00 E1 8C 2A 1C", 0, "" },
+        /* 73*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 26, "\\U10FFFF", "", 0, 14, "F1 1B E7 57 E0 11 D7 6C 4F 45 E2 B3 FF F1 72 AB 54 9F", 0, "" },
+        /* 74*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 32, "\\U10FFFF", "", 0, 14, "F1 21 EB 64 33 EB 1B 36 1D F7 B1 6D 8C A6 34 64 19 3A", 0, "" },
+        /* 75*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 33, "\\U10FFFF", "", 0, 14, "F1 22 E7 57 EB 5D 17 8C C1 B0 B6 B2 53 78 E4 7D 61 CB", 0, "" },
+        /* 76*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 34, "\\U10FFFF", "", 0, 14, "F1 23 01 11 EB 80 EB 80 90 33 51 1B FA AE 78 F7 05 44", 0, "" },
+        /* 77*/ { BARCODE_DATAMATRIX, UNICODE_MODE, 35, "\\U10FFFF", "", 0, 14, "F1 24 EB 80 EB 80 11 01 17 BA C6 05 9F 4C EA E5 18 31", 0, "" },
+        /* 78*/ { BARCODE_GS1_128_CC, GS1_MODE, -1, "[20]10", "[10]A", 0, 99, "(7) 105 102 20 10 100 59 106", 0, "" },
+        /* 79*/ { BARCODE_GS1_128_CC, GS1_MODE, -1, "[2\\x30]1\\d048", "[\\x310]\\x41", 0, 99, "(7) 105 102 20 10 100 59 106", 1, "" },
+        /* 80*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\^A1", "", ZINT_ERROR_INVALID_DATA, 0, "Error 798: Escape '\\^' only valid for Code 128 in extra escape mode", 0, "" },
+        /* 81*/ { BARCODE_CODE128, DATA_MODE | EXTRA_ESCAPE_MODE, -1, "\\^A1", "", 0, 46, "(4) 103 17 17 106", 0, "" },
+        /* 82*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, -1, "\\^", "", 0, 57, "(5) 104 60 62 82 106", 0, "Partial special escape '\\^' at end allowed" },
+        /* 83*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, -1, "\\^D1", "", 0, 79, "(7) 104 60 62 36 17 52 106", 0, "Unknown special escapes passed straight thu" },
+        /* 84*/ { BARCODE_DATAMATRIX, DATA_MODE, -1, "\\w", "", ZINT_ERROR_INVALID_DATA, 0, "Error 234: Unrecognised escape character '\\w' in input", 0, "" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
     char escaped[1024];
     char escaped_composite[1024];
     struct zint_symbol previous_symbol;
-    char *input_filename = "test_escape.txt";
+    const char *input_filename = "test_escape.txt";
 
-    char *text;
+    const char *text;
 
     testStartSymbol("test_escape_char_process", &symbol);
 
@@ -590,7 +731,7 @@ static void test_escape_char_process(const testCtx *const p_ctx) {
 
         length = testUtilSetSymbol(symbol, data[i].symbology, data[i].input_mode | ESCAPE_MODE, data[i].eci, -1 /*option_1*/, -1, -1, -1 /*output_options*/, text, -1, debug);
 
-        ret = ZBarcode_Encode(symbol, TU(text), length);
+        ret = ZBarcode_Encode(symbol, TCU(text), length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -655,19 +796,19 @@ static void test_escape_char_process_test(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int input_mode;
-        char *data;
+        const char *data;
         int ret;
-        char *expected;
+        const char *expected;
         int expected_len;
     };
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { 0, 0, "BLANK", 0, "BLANK", 5 },
         /*  1*/ { 0, 0, "\\0\\E\\a\\b\\t\\n\\v\\f\\r\\e\\G\\R\\x81\\\\\\o201\\d255", 0, "\000\004\a\b\t\n\v\f\r\033\035\036\201\\\201\377", 16 },
         /*  2*/ { 0, 0, "\\U010283", 0, "\360\220\212\203", 4 },
         /*  3*/ { 0, 0, "\\u007F\\u0080\\u011E\\u13C9\\U010283", 0, "\177\302\200\304\236\341\217\211\360\220\212\203", 12 },
         /*  4*/ { BARCODE_CODE128, EXTRA_ESCAPE_MODE, "\\^A\\^^\\^B", 0, "\\^A\\^^\\^B", 9 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
 
 
@@ -675,26 +816,27 @@ static void test_escape_char_process_test(const testCtx *const p_ctx) {
 
     for (i = 0; i < data_size; i++) {
 
-        struct zint_symbol symbol = {0};
+        struct zint_symbol s_symbol = {0};
+        struct zint_symbol *symbol = &s_symbol;
         int escaped_len;
         char escaped[1024];
 
         if (testContinue(p_ctx, i)) continue;
 
-        symbol.symbology = data[i].symbology;
-        symbol.input_mode = data[i].input_mode;
-        length = strlen(data[i].data);
+        symbol->symbology = data[i].symbology;
+        symbol->input_mode = data[i].input_mode;
+        length = (int) strlen(data[i].data);
 
         escaped_len = length;
-        ret = escape_char_process_test(&symbol, (unsigned char *) data[i].data, &escaped_len, NULL);
-        assert_equal(ret, data[i].ret, "i:%d escape_char_process_test(NULL) ret %d != %d (%s)\n", i, ret, data[i].ret, symbol.errtxt);
+        ret = escape_char_process_test(symbol, (unsigned char *) data[i].data, &escaped_len, NULL);
+        assert_equal(ret, data[i].ret, "i:%d escape_char_process_test(NULL) ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
         assert_equal(escaped_len, data[i].expected_len, "i:%d NULL escaped_len %d != %d\n", i, escaped_len, data[i].expected_len);
 
         memset(escaped, 0xDD, sizeof(escaped));
 
         escaped_len = length;
-        ret = escape_char_process_test(&symbol, (unsigned char *) data[i].data, &escaped_len, (unsigned char *) escaped);
-        assert_equal(ret, data[i].ret, "i:%d escape_char_process_test(escaped) ret %d != %d (%s)\n", i, ret, data[i].ret, symbol.errtxt);
+        ret = escape_char_process_test(symbol, (unsigned char *) data[i].data, &escaped_len, (unsigned char *) escaped);
+        assert_equal(ret, data[i].ret, "i:%d escape_char_process_test(escaped) ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
         assert_equal(escaped_len, data[i].expected_len, "i:%d escaped escaped_len %d != %d\n", i, escaped_len, data[i].expected_len);
 
         assert_zero(memcmp(escaped, data[i].expected, escaped_len), "i:%d memcmp() != 0\n", i);
@@ -712,7 +854,7 @@ static void test_cap(const testCtx *const p_ctx) {
         unsigned int expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { BARCODE_CODE128, ZINT_CAP_HRT, ZINT_CAP_HRT },
         /* 1*/ { BARCODE_CODE128, ZINT_CAP_HRT | ZINT_CAP_STACKABLE | ZINT_CAP_GS1, ZINT_CAP_HRT | ZINT_CAP_STACKABLE },
         /* 2*/ { BARCODE_PDF417, ZINT_CAP_HRT | ZINT_CAP_ECI | ZINT_CAP_GS1 | ZINT_CAP_READER_INIT | ZINT_CAP_FULL_MULTIBYTE, ZINT_CAP_ECI | ZINT_CAP_READER_INIT },
@@ -723,9 +865,9 @@ static void test_cap(const testCtx *const p_ctx) {
         /* 7*/ { BARCODE_POSTNET, ZINT_CAP_HRT | ZINT_CAP_STACKABLE | ZINT_CAP_EXTENDABLE | ZINT_CAP_COMPOSITE | ZINT_CAP_ECI | ZINT_CAP_GS1 | ZINT_CAP_DOTTY | ZINT_CAP_FIXED_RATIO | ZINT_CAP_READER_INIT | ZINT_CAP_FULL_MULTIBYTE | ZINT_CAP_MASK | ZINT_CAP_STRUCTAPP, 0 },
         /* 8*/ { 0, 0, 0 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i;
-    unsigned int ret;
+    unsigned int uret;
 
     testStart("test_cap");
 
@@ -733,8 +875,8 @@ static void test_cap(const testCtx *const p_ctx) {
 
         if (testContinue(p_ctx, i)) continue;
 
-        ret = ZBarcode_Cap(data[i].symbology, data[i].cap_flag);
-        assert_equal(ret, data[i].expected, "i:%d ZBarcode_Cap(%s, 0x%X) 0x%X != 0x%X\n", i, testUtilBarcodeName(data[i].symbology), data[i].cap_flag, ret, data[i].expected);
+        uret = ZBarcode_Cap(data[i].symbology, data[i].cap_flag);
+        assert_equal(uret, data[i].expected, "i:%d ZBarcode_Cap(%s, 0x%X) 0x%X != 0x%X\n", i, testUtilBarcodeName(data[i].symbology), data[i].cap_flag, uret, data[i].expected);
     }
 
     testFinish();
@@ -742,7 +884,7 @@ static void test_cap(const testCtx *const p_ctx) {
 
 static void test_cap_compliant_height(const testCtx *const p_ctx) {
     int symbol_id;
-    int ret;
+    unsigned int uret;
 
     testStart("test_cap_compliant_height");
 
@@ -750,7 +892,7 @@ static void test_cap_compliant_height(const testCtx *const p_ctx) {
         if (!ZBarcode_ValidID(symbol_id)) continue;
         if (testContinue(p_ctx, symbol_id)) continue;
 
-        ret = ZBarcode_Cap(symbol_id, ZINT_CAP_COMPLIANT_HEIGHT);
+        uret = ZBarcode_Cap(symbol_id, ZINT_CAP_COMPLIANT_HEIGHT);
 
         switch (symbol_id) {
             /*case BARCODE_CODE11: TODO: Find doc */
@@ -822,10 +964,13 @@ static void test_cap_compliant_height(const testCtx *const p_ctx) {
             case BARCODE_DBAR_EXPSTK_CC:
             case BARCODE_CHANNEL:
             case BARCODE_BC412:
-                assert_equal(ret, ZINT_CAP_COMPLIANT_HEIGHT, "symbol_id %d (%s) ret 0x%X != ZINT_CAP_COMPLIANT_HEIGHT\n", symbol_id, testUtilBarcodeName(symbol_id), ret);
+            case BARCODE_DXFILMEDGE:
+                /* Make sure ZINT_CAP_COMPLIANT_HEIGHT set for those that have it */
+                assert_equal(uret, ZINT_CAP_COMPLIANT_HEIGHT, "symbol_id %d (%s) uret 0x%X != ZINT_CAP_COMPLIANT_HEIGHT\n", symbol_id, testUtilBarcodeName(symbol_id), uret);
                 break;
             default:
-                assert_zero(ret, "symbol_id %d (%s) ret 0x%X non-zero\n", symbol_id, testUtilBarcodeName(symbol_id), ret);
+                /* And not set for those that don't */
+                assert_zero(uret, "symbol_id %d (%s) uret 0x%X non-zero\n", symbol_id, testUtilBarcodeName(symbol_id), uret);
                 break;
         }
     }
@@ -835,13 +980,13 @@ static void test_cap_compliant_height(const testCtx *const p_ctx) {
 
 static void test_encode_file_empty(const testCtx *const p_ctx) {
     int ret;
-    struct zint_symbol *symbol;
+    struct zint_symbol *symbol = NULL;
     char filename[] = "in.bin";
     FILE *fstream;
 
     (void)p_ctx;
 
-    testStart("test_encode_file_empty");
+    testStartSymbol("test_encode_file_empty", &symbol);
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -849,7 +994,7 @@ static void test_encode_file_empty(const testCtx *const p_ctx) {
     (void) testUtilRemove(filename); /* In case junk hanging around */
 
     fstream = testUtilOpen(filename, "w+");
-    assert_nonnull(fstream, "testUtilOpen(%s) failed (%d)\n", filename, ferror(fstream));
+    assert_nonnull(fstream, "testUtilOpen(%s) failed (%d)\n", filename, errno);
     ret = fclose(fstream);
     assert_zero(ret, "fclose(%s) %d != 0\n", filename, ret);
 
@@ -868,12 +1013,12 @@ static void test_encode_file_too_large(const testCtx *const p_ctx) {
     char filename[] = "in.bin";
     FILE *fstream;
     int ret;
-    struct zint_symbol *symbol;
+    struct zint_symbol *symbol = NULL;
     char buf[ZINT_MAX_DATA_LEN + 1] = {0};
 
     (void)p_ctx;
 
-    testStart("test_encode_file_too_large");
+    testStartSymbol("test_encode_file_too_large", &symbol);
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -881,7 +1026,7 @@ static void test_encode_file_too_large(const testCtx *const p_ctx) {
     (void) testUtilRemove(filename); /* In case junk hanging around */
 
     fstream = testUtilOpen(filename, "w+");
-    assert_nonnull(fstream, "testUtilOpen(%s) failed (%d)\n", filename, ferror(fstream));
+    assert_nonnull(fstream, "testUtilOpen(%s) failed (%d)\n", filename, errno);
     ret = (int) fwrite(buf, 1, sizeof(buf), fstream);
     assert_equal(ret, sizeof(buf), "fwrite return value: %d != %d\n", ret, (int)sizeof(buf));
     ret = fclose(fstream);
@@ -902,16 +1047,16 @@ static void test_encode_file_too_large(const testCtx *const p_ctx) {
 static void test_encode_file_unreadable(const testCtx *const p_ctx) {
 #ifndef _WIN32
     int ret;
-    struct zint_symbol *symbol;
     char filename[] = "in.bin";
 
     char buf[ZINT_MAX_DATA_LEN + 1] = {0};
     int fd;
 #endif
+    struct zint_symbol *symbol = NULL;
 
     (void)p_ctx;
 
-    testStart("test_encode_file_unreadable");
+    testStartSymbol("test_encode_file_unreadable", &symbol);
 
 #ifdef _WIN32
     testSkip("Test not implemented on Windows");
@@ -947,13 +1092,18 @@ static void test_encode_file_unreadable(const testCtx *const p_ctx) {
 /* #181 Nico Gunkel OSS-Fuzz (buffer not freed on fread() error) Note: unable to reproduce fread() error using this method */
 static void test_encode_file_directory(const testCtx *const p_ctx) {
     int ret;
-    struct zint_symbol *symbol;
+    struct zint_symbol *symbol = NULL;
     char dirname[] = "in_dir";
 
     (void)p_ctx;
 
-    testStart("test_encode_file_directory");
+    testStartSymbol("test_encode_file_directory", &symbol);
 
+#if defined(__NetBSD__) || defined(_AIX)
+    /* Reading a directory works on NetBSD, and get `code128()` ZINT_ERROR_TOO_LONG instead */
+    (void)ret; (void)symbol; (void)dirname;
+    testSkip("Test not implemented on NetBSD or AIX");
+#else
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
 
@@ -970,25 +1120,26 @@ static void test_encode_file_directory(const testCtx *const p_ctx) {
     ZBarcode_Delete(symbol);
 
     testFinish();
+#endif /* __NetBSD__ */
 }
 
 static void test_encode_file(const testCtx *const p_ctx) {
     int ret;
-    struct zint_symbol *symbol;
-    char *data = "1";
-    char *filename = "test_encode_file_in.txt";
-    char *outfile = "test_encode_file_out.gif";
+    struct zint_symbol *symbol = NULL;
+    const char *data = "1";
+    const char *filename = "test_encode_file_in.txt";
+    const char *outfile = "test_encode_file_out.gif";
     FILE *fp;
 
     (void)p_ctx;
 
-    testStart("test_encode_file");
+    testStartSymbol("test_encode_file", &symbol);
 
     (void) testUtilRemove(filename); /* In case junk hanging around */
     (void) testUtilRemove(outfile); /* In case junk hanging around */
 
     fp = testUtilOpen(filename, "w+");
-    assert_nonnull(fp, "testUtilOpen(%s) failed (%d)\n", filename, ferror(fp));
+    assert_nonnull(fp, "testUtilOpen(%s) failed (%d)\n", filename, errno);
     assert_notequal(fputs(data, fp), EOF, "fputs(%s) failed == EOF (%d)\n", data, ferror(fp));
     ret = fclose(fp);
     assert_zero(ret, "fclose(%s) %d != 0\n", filename, ret);
@@ -1039,12 +1190,13 @@ static void test_encode_file(const testCtx *const p_ctx) {
 
 static void test_encode_print_outfile_directory(const testCtx *const p_ctx) {
     int ret;
-    struct zint_symbol *symbol;
+    struct zint_symbol *symbol = NULL;
     char dirname[] = "outdir.txt";
+    char expected[] = "Error 201: Could not open output file";
 
     (void)p_ctx;
 
-    testStart("test_encode_print_outfile_directory");
+    testStartSymbol("test_encode_print_outfile_directory", &symbol);
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -1054,8 +1206,9 @@ static void test_encode_print_outfile_directory(const testCtx *const p_ctx) {
     assert_zero(ret, "testUtilMkDir(%s) %d != 0 (%d: %s)\n", dirname, ret, errno, strerror(errno));
 
     strcpy(symbol->outfile, dirname);
-    ret = ZBarcode_Encode_and_Print(symbol, TU("1"), 0, 0);
+    ret = ZBarcode_Encode_and_Print(symbol, TCU("1"), 0, 0);
     assert_equal(ret, ZINT_ERROR_FILE_ACCESS, "ret %d != ZINT_ERROR_FILE_ACCESS (%s)\n", ret, symbol->errtxt);
+    assert_zero(strcmp(symbol->errtxt, expected), "strcmp(%s, %s) != 0\n", symbol->errtxt, expected);
 
     ret = testUtilRmDir(dirname);
     assert_zero(ret, "testUtilRmDir(%s) %d != 0 (%d: %s)\n", dirname, ret, errno, strerror(errno));
@@ -1067,17 +1220,28 @@ static void test_encode_print_outfile_directory(const testCtx *const p_ctx) {
 
 static void test_bad_args(const testCtx *const p_ctx) {
     int ret;
-    struct zint_symbol *symbol;
-    char *data = "1";
-    char *filename = "1.png";
-    char *empty = "";
+    unsigned int uret;
+    struct zint_symbol *symbol = NULL;
+    const char *data = "1";
+    const char *filename = "1.png";
+    const char *empty = "";
     struct zint_seg seg = { TU("1"), -1, 4 };
     struct zint_seg seg_empty = { TU(""), -1, 4 };
     struct zint_seg seg_too_long = { TU("1"), ZINT_MAX_DATA_LEN + 1, 4 };
+    const char *expected[] = {
+        "Error 772: Input segment 0 source NULL",
+        "Error 200: Input segments NULL",
+        "Error 239: Filename NULL",
+        "Error 778: No input data",
+        "Error 229: Unable to read input file (", /* Excluding OS-dependent `errno` stuff */
+        "Error 771: Too many input segments (maximum 256)",
+        "Error 205: No input data",
+        "Error 777: Input too long",
+    };
 
     (void)p_ctx;
 
-    testStart("test_bad_args");
+    testStartSymbol("test_bad_args", &symbol);
 
     /* These just return, no error */
     ZBarcode_Clear(NULL);
@@ -1090,22 +1254,22 @@ static void test_bad_args(const testCtx *const p_ctx) {
     assert_zero(ZBarcode_ValidID(0), "ZBarcode_ValidID(0) non-zero\n");
     assert_zero(ZBarcode_ValidID(10), "ZBarcode_ValidID(10) non-zero\n"); /* Note 10 remapped to BARCODE_EANX in ZBarcode_Encode() for tbarcode compat but not counted as valid */
 
-    ret = ZBarcode_Cap(0, ~0);
-    assert_zero(ret, "ZBarcode_Cap(0, ~0) ret 0x%X != 0\n", ret);
-    ret = ZBarcode_Cap(10, ~0);
-    assert_zero(ret, "ZBarcode_Cap(10, ~0) ret 0x%X != 0\n", ret);
+    uret = ZBarcode_Cap(0, ~0);
+    assert_zero(uret, "ZBarcode_Cap(0, ~0) uret 0x%X != 0\n", uret);
+    uret = ZBarcode_Cap(10, ~0);
+    assert_zero(uret, "ZBarcode_Cap(10, ~0) uret 0x%X != 0\n", uret);
 
     /* NULL symbol */
-    assert_equal(ZBarcode_Encode(NULL, TU(data), 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode(NULL, data, 1) != ZINT_ERROR_INVALID_DATA\n");
+    assert_equal(ZBarcode_Encode(NULL, TCU(data), 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode(NULL, data, 1) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Encode_Segs(NULL, &seg, 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs(NULL, &seg, 1) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Print(NULL, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Print(NULL, 0) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Buffer(NULL, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Buffer(NULL, 0) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Buffer_Vector(NULL, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Buffer_Vector(NULL, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_equal(ZBarcode_Encode_and_Print(NULL, TU(data), 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Print(NULL, data, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_equal(ZBarcode_Encode_and_Print(NULL, TCU(data), 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Print(NULL, data, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Encode_Segs_and_Print(NULL, &seg, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Seg_and_Print(NULL, &seg, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_equal(ZBarcode_Encode_and_Buffer(NULL, TU(data), 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer(NULL, data, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_equal(ZBarcode_Encode_and_Buffer(NULL, TCU(data), 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer(NULL, data, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Encode_Segs_and_Buffer(NULL, &seg, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs_and_Buffer(NULL, &seg, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_equal(ZBarcode_Encode_and_Buffer_Vector(NULL, TU(data), 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer_Vector(NULL, data, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_equal(ZBarcode_Encode_and_Buffer_Vector(NULL, TCU(data), 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer_Vector(NULL, data, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Encode_Segs_and_Buffer_Vector(NULL, &seg, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs_and_Buffer_Vector(NULL, &seg, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Encode_File(NULL, filename), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File(NULL, filename) != ZINT_ERROR_INVALID_DATA\n");
     assert_equal(ZBarcode_Encode_File_and_Print(NULL, filename, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Print(NULL, filename, 0) != ZINT_ERROR_INVALID_DATA\n");
@@ -1117,91 +1281,91 @@ static void test_bad_args(const testCtx *const p_ctx) {
     /* NULL data/segs/filename */
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode(symbol, NULL, 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode(symbol, NULL, 1) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode(symbol, NULL, 1) no errtxt\n");
+    assert_zero(strcmp(expected[0], symbol->errtxt), "ZBarcode_Encode(symbol, NULL, 1) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs(symbol, NULL, 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs(symbol, NULL, 1) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs(symbol, NULL, 1) no errtxt\n");
+    assert_zero(strcmp(expected[1], symbol->errtxt), "ZBarcode_Encode_Segs(symbol, NULL, 1) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_and_Print(symbol, NULL, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Print(symbol, NULL, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_and_Print(symbol, NULL, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[0], symbol->errtxt), "ZBarcode_Encode_and_Print(symbol, NULL, 1, 0) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_and_Buffer(symbol, NULL, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer(symbol, NULL, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_and_Buffer(symbol, NULL, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[0], symbol->errtxt), "ZBarcode_Encode_and_Buffer(symbol, NULL, 1, 0) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs_and_Buffer(symbol, NULL, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs_and_Buffer(symbol, NULL, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer(symbol, NULL, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[1], symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer(symbol, NULL, 1, 0) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_and_Buffer_Vector(symbol, NULL, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer_Vector(symbol, NULL, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_and_Buffer_Vector(symbol, NULL, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[0], symbol->errtxt), "ZBarcode_Encode_and_Buffer_Vector(symbol, NULL, 1, 0) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, NULL, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, NULL, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, NULL, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[1], symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, NULL, 1, 0) strcmp(%s, %s) != 0\n", expected[0], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File(symbol, NULL), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File(symbol, NULL) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File(symbol, NULL) no errtxt\n");
+    assert_zero(strcmp(expected[2], symbol->errtxt), "ZBarcode_Encode_File(symbol, NULL) strcmp(%s, %s) != 0\n", expected[2], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File_and_Print(symbol, NULL, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Print(symbol, NULL, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File_and_Print(symbol, NULL, 0) no errtxt\n");
+    assert_zero(strcmp(expected[2], symbol->errtxt), "ZBarcode_Encode_File_and_Print(symbol, NULL, 0) strcmp(%s, %s) != 0\n", expected[2], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File_and_Buffer(symbol, NULL, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Buffer(symbol, NULL, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File_and_Buffer(symbol, NULL, 0) no errtxt\n");
+    assert_zero(strcmp(expected[2], symbol->errtxt), "ZBarcode_Encode_File_and_Buffer(symbol, NULL, 0) strcmp(%s, %s) != 0\n", expected[2], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File_and_Buffer_Vector(symbol, NULL, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Buffer_Vector(symbol, NULL, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File_and_Buffer_Vector(symbol, NULL, 0) no errtxt\n");
+    assert_zero(strcmp(expected[2], symbol->errtxt), "ZBarcode_Encode_File_and_Buffer_Vector(symbol, NULL, 0) strcmp(%s, %s) != 0\n", expected[2], symbol->errtxt);
 
     /* Empty data/segs/filename */
     symbol->errtxt[0] = '\0';
-    assert_equal(ZBarcode_Encode(symbol, TU(empty), 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode(symbol, empty, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode(symbol, empty, 0) no errtxt\n");
+    assert_equal(ZBarcode_Encode(symbol, TCU(empty), 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode(symbol, empty, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode(symbol, TCU(empty), 0) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs(symbol, &seg_empty, 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs(symbol, &seg_empty, 1) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, 1) no errtxt\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, 1) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
-    assert_equal(ZBarcode_Encode_and_Print(symbol, TU(empty), 0, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Print(symbol, empty, 0, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_and_Print(symbol, empty, 0, 0) no errtxt\n");
+    assert_equal(ZBarcode_Encode_and_Print(symbol, TCU(empty), 0, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Print(symbol, empty, 0, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode_and_Print(symbol, TCU(empty), 0, 0) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
-    assert_equal(ZBarcode_Encode_and_Buffer(symbol, TU(empty), 0, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer(symbol, empty, 0, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_and_Buffer(symbol, empty, 0, 0) no errtxt\n");
+    assert_equal(ZBarcode_Encode_and_Buffer(symbol, TCU(empty), 0, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer(symbol, empty, 0, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode_and_Buffer(symbol, TCU(empty), 0, 0) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs_and_Buffer(symbol, &seg_empty, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs_and_Buffer(symbol, &seg_empty, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer(symbol, &seg_empty, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer(symbol, &seg_empty, 1, 0) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
-    assert_equal(ZBarcode_Encode_and_Buffer_Vector(symbol, TU(empty), 0, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer_Vector(symbol, empty, 0, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_and_Buffer_Vector(symbol, empty, 0, 0) no errtxt\n");
+    assert_equal(ZBarcode_Encode_and_Buffer_Vector(symbol, TCU(empty), 0, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_and_Buffer_Vector(symbol, empty, 0, 0) != ZINT_ERROR_INVALID_DATA\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode_and_Buffer_Vector(symbol, TCU(empty), 0, 0) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, &seg_empty, 1, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, &seg_empty, 1, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, &seg_empty, 1, 0) no errtxt\n");
+    assert_zero(strcmp(expected[3], symbol->errtxt), "ZBarcode_Encode_Segs_and_Buffer_Vector(symbol, &seg_empty, 1, 0) strcmp(%s, %s) != 0\n", expected[3], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File(symbol, empty), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File(symbol, empty) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File(symbol, empty) no errtxt\n");
+    assert_zero(strncmp(expected[4], symbol->errtxt, strlen(expected[4])), "ZBarcode_Encode_File(symbol, empty) strncmp(%s, %s, %d) != 0\n", expected[4], symbol->errtxt, (int) strlen(expected[4]));
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File_and_Print(symbol, empty, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Print(symbol, empty, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File_and_Print(symbol, empty, 0) no errtxt\n");
+    assert_zero(strncmp(expected[4], symbol->errtxt, strlen(expected[4])), "ZBarcode_Encode_File(symbol, empty) strncmp(%s, %s, %d) != 0\n", expected[4], symbol->errtxt, (int) strlen(expected[4]));
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File_and_Buffer(symbol, empty, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Buffer(symbol, empty, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File_and_Buffer(symbol, empty, 0) no errtxt\n");
+    assert_zero(strncmp(expected[4], symbol->errtxt, strlen(expected[4])), "ZBarcode_Encode_File(symbol, empty) strncmp(%s, %s, %d) != 0\n", expected[4], symbol->errtxt, (int) strlen(expected[4]));
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_File_and_Buffer_Vector(symbol, empty, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_File_and_Buffer_Vector(symbol, empty, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_File_and_Buffer_Vector(symbol, empty, 0) no errtxt\n");
+    assert_zero(strncmp(expected[4], symbol->errtxt, strlen(expected[4])), "ZBarcode_Encode_File(symbol, empty) strncmp(%s, %s, %d) != 0\n", expected[4], symbol->errtxt, (int) strlen(expected[4]));
 
     /* Bad seg_count */
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs(symbol, &seg_empty, ZINT_MAX_SEG_COUNT + 1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs(symbol, &seg_empty, ZINT_MAX_SEG_COUNT + 1) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, ZINT_MAX_SEG_COUNT + 1) no errtxt\n");
+    assert_zero(strcmp(expected[5], symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, ZINT_MAX_SEG_COUNT + 1) strcmp(%s, %s) != 0\n", expected[5], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs(symbol, &seg_empty, 0), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs(symbol, &seg_empty, 0) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, 0) no errtxt\n");
+    assert_zero(strcmp(expected[6], symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, 0) strcmp(%s, %s) != 0\n", expected[6], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs(symbol, &seg_empty, -1), ZINT_ERROR_INVALID_DATA, "ZBarcode_Encode_Segs(symbol, &seg_empty, -1) != ZINT_ERROR_INVALID_DATA\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, -1) no errtxt\n");
+    assert_zero(strcmp(expected[6], symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_empty, -1) strcmp(%s, %s) != 0\n", expected[6], symbol->errtxt);
 
     /* Data/seg too big */
     symbol->errtxt[0] = '\0';
-    assert_equal(ZBarcode_Encode(symbol, TU(empty), ZINT_MAX_DATA_LEN + 1), ZINT_ERROR_TOO_LONG, "ZBarcode_Encode(symbol, empty, ZINT_MAX_DATA_LEN + 1) != ZINT_ERROR_TOO_LONG\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode(symbol, empty, ZINT_MAX_DATA_LEN + 1) no errtxt\n");
+    assert_equal(ZBarcode_Encode(symbol, TCU(empty), ZINT_MAX_DATA_LEN + 1), ZINT_ERROR_TOO_LONG, "ZBarcode_Encode(symbol, empty, ZINT_MAX_DATA_LEN + 1) != ZINT_ERROR_TOO_LONG\n");
+    assert_zero(strcmp(expected[7], symbol->errtxt), "ZBarcode_Encode(symbol, TCU(empty), ZINT_MAX_DATA_LEN + 1) strcmp(%s, %s) != 0\n", expected[7], symbol->errtxt);
     symbol->errtxt[0] = '\0';
     assert_equal(ZBarcode_Encode_Segs(symbol, &seg_too_long, 1), ZINT_ERROR_TOO_LONG, "ZBarcode_Encode_Segs(symbol, &seg_too_long, 1) != ZINT_ERROR_TOO_LONG\n");
-    assert_nonzero((int) strlen(symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_too_long, 1) no errtxt\n");
+    assert_zero(strcmp(expected[7], symbol->errtxt), "ZBarcode_Encode_Segs(symbol, &seg_too_long, 1) strcmp(%s, %s) != 0\n", expected[7], symbol->errtxt);
 
     ZBarcode_Delete(symbol);
 
@@ -1234,58 +1398,271 @@ static void test_valid_id(const testCtx *const p_ctx) {
     testFinish();
 }
 
-INTERNAL int error_tag_test(struct zint_symbol *symbol, int error_number, const char *error_string);
+static int test_prev_ZBarcode_BarcodeName(int symbol_id, char name[32]) {
+    struct item {
+        const char *name;
+        int define;
+        int val;
+    };
+    static const struct item data[] = {
+        { "", -1, 0 },
+        { "BARCODE_CODE11", BARCODE_CODE11, 1 },
+        { "BARCODE_C25STANDARD", BARCODE_C25STANDARD, 2 },
+        { "BARCODE_C25INTER", BARCODE_C25INTER, 3 },
+        { "BARCODE_C25IATA", BARCODE_C25IATA, 4 },
+        { "", -1, 5 },
+        { "BARCODE_C25LOGIC", BARCODE_C25LOGIC, 6 },
+        { "BARCODE_C25IND", BARCODE_C25IND, 7 },
+        { "BARCODE_CODE39", BARCODE_CODE39, 8 },
+        { "BARCODE_EXCODE39", BARCODE_EXCODE39, 9 },
+        { "", -1, 10 },
+        { "", -1, 11 },
+        { "", -1, 12 },
+        { "BARCODE_EANX", BARCODE_EANX, 13 },
+        { "BARCODE_EANX_CHK", BARCODE_EANX_CHK, 14 },
+        { "", -1, 15 },
+        { "BARCODE_GS1_128", BARCODE_GS1_128, 16 },
+        { "", -1, 17 },
+        { "BARCODE_CODABAR", BARCODE_CODABAR, 18 },
+        { "", -1, 19 },
+        { "BARCODE_CODE128", BARCODE_CODE128, 20 },
+        { "BARCODE_DPLEIT", BARCODE_DPLEIT, 21 },
+        { "BARCODE_DPIDENT", BARCODE_DPIDENT, 22 },
+        { "BARCODE_CODE16K", BARCODE_CODE16K, 23 },
+        { "BARCODE_CODE49", BARCODE_CODE49, 24 },
+        { "BARCODE_CODE93", BARCODE_CODE93, 25 },
+        { "", -1, 26 },
+        { "", -1, 27 },
+        { "BARCODE_FLAT", BARCODE_FLAT, 28 },
+        { "BARCODE_DBAR_OMN", BARCODE_DBAR_OMN, 29 },
+        { "BARCODE_DBAR_LTD", BARCODE_DBAR_LTD, 30 },
+        { "BARCODE_DBAR_EXP", BARCODE_DBAR_EXP, 31 },
+        { "BARCODE_TELEPEN", BARCODE_TELEPEN, 32 },
+        { "", -1, 33 },
+        { "BARCODE_UPCA", BARCODE_UPCA, 34 },
+        { "BARCODE_UPCA_CHK", BARCODE_UPCA_CHK, 35 },
+        { "", -1, 36 },
+        { "BARCODE_UPCE", BARCODE_UPCE, 37 },
+        { "BARCODE_UPCE_CHK", BARCODE_UPCE_CHK, 38 },
+        { "", -1, 39 },
+        { "BARCODE_POSTNET", BARCODE_POSTNET, 40 },
+        { "", -1, 41 },
+        { "", -1, 42 },
+        { "", -1, 43 },
+        { "", -1, 44 },
+        { "", -1, 45 },
+        { "", -1, 46 },
+        { "BARCODE_MSI_PLESSEY", BARCODE_MSI_PLESSEY, 47 },
+        { "", -1, 48 },
+        { "BARCODE_FIM", BARCODE_FIM, 49 },
+        { "BARCODE_LOGMARS", BARCODE_LOGMARS, 50 },
+        { "BARCODE_PHARMA", BARCODE_PHARMA, 51 },
+        { "BARCODE_PZN", BARCODE_PZN, 52 },
+        { "BARCODE_PHARMA_TWO", BARCODE_PHARMA_TWO, 53 },
+        { "BARCODE_CEPNET", BARCODE_CEPNET, 54 },
+        { "BARCODE_PDF417", BARCODE_PDF417, 55 },
+        { "BARCODE_PDF417COMP", BARCODE_PDF417COMP, 56 },
+        { "BARCODE_MAXICODE", BARCODE_MAXICODE, 57 },
+        { "BARCODE_QRCODE", BARCODE_QRCODE, 58 },
+        { "", -1, 59 },
+        { "BARCODE_CODE128AB", BARCODE_CODE128AB, 60 },
+        { "", -1, 61 },
+        { "", -1, 62 },
+        { "BARCODE_AUSPOST", BARCODE_AUSPOST, 63 },
+        { "", -1, 64 },
+        { "", -1, 65 },
+        { "BARCODE_AUSREPLY", BARCODE_AUSREPLY, 66 },
+        { "BARCODE_AUSROUTE", BARCODE_AUSROUTE, 67 },
+        { "BARCODE_AUSREDIRECT", BARCODE_AUSREDIRECT, 68 },
+        { "BARCODE_ISBNX", BARCODE_ISBNX, 69 },
+        { "BARCODE_RM4SCC", BARCODE_RM4SCC, 70 },
+        { "BARCODE_DATAMATRIX", BARCODE_DATAMATRIX, 71 },
+        { "BARCODE_EAN14", BARCODE_EAN14, 72 },
+        { "BARCODE_VIN", BARCODE_VIN, 73 },
+        { "BARCODE_CODABLOCKF", BARCODE_CODABLOCKF, 74 },
+        { "BARCODE_NVE18", BARCODE_NVE18, 75 },
+        { "BARCODE_JAPANPOST", BARCODE_JAPANPOST, 76 },
+        { "BARCODE_KOREAPOST", BARCODE_KOREAPOST, 77 },
+        { "", -1, 78 },
+        { "BARCODE_DBAR_STK", BARCODE_DBAR_STK, 79 },
+        { "BARCODE_DBAR_OMNSTK", BARCODE_DBAR_OMNSTK, 80 },
+        { "BARCODE_DBAR_EXPSTK", BARCODE_DBAR_EXPSTK, 81 },
+        { "BARCODE_PLANET", BARCODE_PLANET, 82 },
+        { "", -1, 83 },
+        { "BARCODE_MICROPDF417", BARCODE_MICROPDF417, 84 },
+        { "BARCODE_USPS_IMAIL", BARCODE_USPS_IMAIL, 85 },
+        { "BARCODE_PLESSEY", BARCODE_PLESSEY, 86 },
+        { "BARCODE_TELEPEN_NUM", BARCODE_TELEPEN_NUM, 87 },
+        { "", -1, 88 },
+        { "BARCODE_ITF14", BARCODE_ITF14, 89 },
+        { "BARCODE_KIX", BARCODE_KIX, 90 },
+        { "", -1, 91 },
+        { "BARCODE_AZTEC", BARCODE_AZTEC, 92 },
+        { "BARCODE_DAFT", BARCODE_DAFT, 93 },
+        { "", -1, 94 },
+        { "", -1, 95 },
+        { "BARCODE_DPD", BARCODE_DPD, 96 },
+        { "BARCODE_MICROQR", BARCODE_MICROQR, 97 },
+        { "BARCODE_HIBC_128", BARCODE_HIBC_128, 98 },
+        { "BARCODE_HIBC_39", BARCODE_HIBC_39, 99 },
+        { "", -1, 100 },
+        { "", -1, 101 },
+        { "BARCODE_HIBC_DM", BARCODE_HIBC_DM, 102 },
+        { "", -1, 103 },
+        { "BARCODE_HIBC_QR", BARCODE_HIBC_QR, 104 },
+        { "", -1, 105 },
+        { "BARCODE_HIBC_PDF", BARCODE_HIBC_PDF, 106 },
+        { "", -1, 107 },
+        { "BARCODE_HIBC_MICPDF", BARCODE_HIBC_MICPDF, 108 },
+        { "", -1, 109 },
+        { "BARCODE_HIBC_BLOCKF", BARCODE_HIBC_BLOCKF, 110 },
+        { "", -1, 111 },
+        { "BARCODE_HIBC_AZTEC", BARCODE_HIBC_AZTEC, 112 },
+        { "", -1, 113 },
+        { "", -1, 114 },
+        { "BARCODE_DOTCODE", BARCODE_DOTCODE, 115 },
+        { "BARCODE_HANXIN", BARCODE_HANXIN, 116 },
+        { "", -1, 117 },
+        { "", -1, 118 },
+        { "BARCODE_MAILMARK_2D", BARCODE_MAILMARK_2D, 119 },
+        { "BARCODE_UPU_S10", BARCODE_UPU_S10, 120 },
+        { "BARCODE_MAILMARK_4S", BARCODE_MAILMARK_4S, 121 },
+        { "", -1, 122 },
+        { "", -1, 123 },
+        { "", -1, 124 },
+        { "", -1, 125 },
+        { "", -1, 126 },
+        { "", -1, 127 },
+        { "BARCODE_AZRUNE", BARCODE_AZRUNE, 128 },
+        { "BARCODE_CODE32", BARCODE_CODE32, 129 },
+        { "BARCODE_EANX_CC", BARCODE_EANX_CC, 130 },
+        { "BARCODE_GS1_128_CC", BARCODE_GS1_128_CC, 131 },
+        { "BARCODE_DBAR_OMN_CC", BARCODE_DBAR_OMN_CC, 132 },
+        { "BARCODE_DBAR_LTD_CC", BARCODE_DBAR_LTD_CC, 133 },
+        { "BARCODE_DBAR_EXP_CC", BARCODE_DBAR_EXP_CC, 134 },
+        { "BARCODE_UPCA_CC", BARCODE_UPCA_CC, 135 },
+        { "BARCODE_UPCE_CC", BARCODE_UPCE_CC, 136 },
+        { "BARCODE_DBAR_STK_CC", BARCODE_DBAR_STK_CC, 137 },
+        { "BARCODE_DBAR_OMNSTK_CC", BARCODE_DBAR_OMNSTK_CC, 138 },
+        { "BARCODE_DBAR_EXPSTK_CC", BARCODE_DBAR_EXPSTK_CC, 139 },
+        { "BARCODE_CHANNEL", BARCODE_CHANNEL, 140 },
+        { "BARCODE_CODEONE", BARCODE_CODEONE, 141 },
+        { "BARCODE_GRIDMATRIX", BARCODE_GRIDMATRIX, 142 },
+        { "BARCODE_UPNQR", BARCODE_UPNQR, 143 },
+        { "BARCODE_ULTRA", BARCODE_ULTRA, 144 },
+        { "BARCODE_RMQR", BARCODE_RMQR, 145 },
+        { "BARCODE_BC412", BARCODE_BC412, 146 },
+        { "BARCODE_DXFILMEDGE", BARCODE_DXFILMEDGE, 147 },
+    };
+
+    name[0] = '\0';
+
+    if (!ZBarcode_ValidID(symbol_id)) {
+        return 1;
+    }
+    if (!(symbol_id >= 0 && symbol_id < ARRAY_SIZE(data) && data[symbol_id].name[0])) {
+        return -1; /* Shouldn't happen */
+    }
+
+    /* Self-check, shouldn't happen */
+    if (data[symbol_id].val != symbol_id || (data[symbol_id].define != -1 && data[symbol_id].define != symbol_id)) {
+        return -1;
+    }
+
+    strcpy(name, data[symbol_id].name);
+
+    return 0;
+}
+
+static void test_barcode_name(const testCtx *const p_ctx) {
+
+    int ret;
+    char name[32] = {0}; /* Suppress clang -fsanitize=memory false positive */
+    int symbol_id;
+
+    (void)p_ctx;
+
+    testStart("test_barcode_name");
+
+    for (symbol_id = -1; symbol_id < 160; symbol_id++) {
+        int prev_ret;
+        char prev_name[32];
+        ret = ZBarcode_BarcodeName(symbol_id, name);
+        if (ZBarcode_ValidID(symbol_id)) {
+            assert_equal(ret, 0, "ZBarcode_BarcodeName(%d) != 0\n", symbol_id);
+            assert_nonzero(*name != '\0', "ZBarcode_BarcodeName(%d) empty when ZBarcode_Valid() true\n", symbol_id);
+        } else {
+            assert_equal(ret, 1, "ZBarcode_BarcodeName(%d) != 1\n", symbol_id);
+            assert_zero(*name, "ZBarcode_BarcodeName(%d) non-empty when ZBarcode_Valid() false\n", symbol_id);
+        }
+        prev_ret = test_prev_ZBarcode_BarcodeName(symbol_id, prev_name);
+        assert_equal(ret, prev_ret, "ZBarcode_BarcodeName(%d) ret %d != prev_ret %d\n", symbol_id, ret, prev_ret);
+        assert_zero(strcmp(name, prev_name), "ZBarcode_BarcodeName(%d) strcmp(%s, %s) != 0\n", symbol_id, name, prev_name);
+    }
+
+    testFinish();
+}
+
+INTERNAL int error_tag_test(int error_number, struct zint_symbol *symbol, const int err_id, const char *error_string);
 
 static void test_error_tag(const testCtx *const p_ctx) {
 
     struct item {
+        int debug_test;
         int error_number;
         int warn_level;
-        char *data;
+        const char *data;
         int ret;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
-        /*  0*/ { ZINT_WARN_INVALID_OPTION, -1, "", ZINT_WARN_INVALID_OPTION, "Warning " },
-        /*  1*/ { ZINT_WARN_INVALID_OPTION, WARN_FAIL_ALL, "", ZINT_ERROR_INVALID_OPTION, "Error " },
-        /*  2*/ { ZINT_WARN_USES_ECI, -1, "", ZINT_WARN_USES_ECI, "Warning " },
-        /*  3*/ { ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "", ZINT_ERROR_USES_ECI, "Error " },
-        /*  4*/ { ZINT_WARN_NONCOMPLIANT, -1, "", ZINT_WARN_NONCOMPLIANT, "Warning " },
-        /*  5*/ { ZINT_WARN_NONCOMPLIANT, WARN_FAIL_ALL, "", ZINT_ERROR_NONCOMPLIANT, "Error " },
-        /*  6*/ { ZINT_WARN_HRT_TRUNCATED, -1, "", ZINT_WARN_HRT_TRUNCATED, "Warning " },
-        /*  7*/ { ZINT_WARN_HRT_TRUNCATED, WARN_FAIL_ALL, "", ZINT_ERROR_HRT_TRUNCATED, "Error " },
-        /*  8*/ { ZINT_ERROR_TOO_LONG, WARN_DEFAULT, "", ZINT_ERROR_TOO_LONG, "Error " },
-        /*  9*/ { ZINT_ERROR_TOO_LONG, WARN_FAIL_ALL, "", ZINT_ERROR_TOO_LONG, "Error " },
-        /* 10*/ { ZINT_WARN_USES_ECI, -1, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_WARN_USES_ECI, "Warning 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901" },
-        /* 11*/ { ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_ERROR_USES_ECI, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
-        /* 12*/ { ZINT_ERROR_INVALID_DATA, -1, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
-        /* 13*/ { ZINT_ERROR_INVALID_DATA, WARN_FAIL_ALL, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
-        /* 14*/ { ZINT_WARN_USES_ECI, -1, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", ZINT_WARN_USES_ECI, "Warning 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901" },
-        /* 15*/ { ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", ZINT_ERROR_USES_ECI, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
-        /* 16*/ { ZINT_ERROR_INVALID_DATA, -1, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /*  0*/ { 0, ZINT_WARN_INVALID_OPTION, -1, "", ZINT_WARN_INVALID_OPTION, "Warning " },
+        /*  1*/ { 0, ZINT_WARN_INVALID_OPTION, WARN_FAIL_ALL, "", ZINT_ERROR_INVALID_OPTION, "Error " },
+        /*  2*/ { 0, ZINT_WARN_USES_ECI, -1, "", ZINT_WARN_USES_ECI, "Warning " },
+        /*  3*/ { 0, ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "", ZINT_ERROR_USES_ECI, "Error " },
+        /*  4*/ { 0, ZINT_WARN_NONCOMPLIANT, -1, "", ZINT_WARN_NONCOMPLIANT, "Warning " },
+        /*  5*/ { 0, ZINT_WARN_NONCOMPLIANT, WARN_FAIL_ALL, "", ZINT_ERROR_NONCOMPLIANT, "Error " },
+        /*  6*/ { 0, ZINT_WARN_HRT_TRUNCATED, -1, "", ZINT_WARN_HRT_TRUNCATED, "Warning " },
+        /*  7*/ { 0, ZINT_WARN_HRT_TRUNCATED, WARN_FAIL_ALL, "", ZINT_ERROR_HRT_TRUNCATED, "Error " },
+        /*  8*/ { 0, ZINT_WARN_HRT_RAW_TEXT, -1, "", ZINT_WARN_HRT_RAW_TEXT, "Warning " },
+        /*  9*/ { 0, ZINT_WARN_HRT_RAW_TEXT, WARN_FAIL_ALL, "", ZINT_ERROR_HRT_RAW_TEXT, "Error " },
+        /* 10*/ { 0, ZINT_ERROR_TOO_LONG, WARN_DEFAULT, "", ZINT_ERROR_TOO_LONG, "Error " },
+        /* 11*/ { 0, ZINT_ERROR_TOO_LONG, WARN_FAIL_ALL, "", ZINT_ERROR_TOO_LONG, "Error " },
+        /* 12*/ { 0, ZINT_WARN_USES_ECI, -1, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901", ZINT_WARN_USES_ECI, "Warning 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901" },
+        /* 13*/ { 1, ZINT_WARN_USES_ECI, -1, "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012", ZINT_WARN_USES_ECI, "Warning 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901" },
+        /* 14*/ { 0, ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123", ZINT_ERROR_USES_ECI, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /* 15*/ { 1, ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_ERROR_USES_ECI, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /* 16*/ { 0, ZINT_ERROR_INVALID_DATA, -1, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /* 17*/ { 1, ZINT_ERROR_INVALID_DATA, -1, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /* 18*/ { 1, ZINT_ERROR_INVALID_DATA, WARN_FAIL_ALL, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /* 19*/ { 1, ZINT_WARN_USES_ECI, -1, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", ZINT_WARN_USES_ECI, "Warning 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901" },
+        /* 20*/ { 1, ZINT_WARN_USES_ECI, WARN_FAIL_ALL, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", ZINT_ERROR_USES_ECI, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
+        /* 21*/ { 1, ZINT_ERROR_INVALID_DATA, -1, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", ZINT_ERROR_INVALID_DATA, "Error 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, ret;
 
     testStart("test_error_tag");
 
     for (i = 0; i < data_size; i++) {
-        struct zint_symbol symbol = {0};
+        struct zint_symbol s_symbol = {0};
+        struct zint_symbol *symbol = &s_symbol;
 
         if (testContinue(p_ctx, i)) continue;
 
-        symbol.warn_level = data[i].warn_level;
+        if (data[i].debug_test) symbol->debug |= ZINT_DEBUG_TEST;
+        symbol->warn_level = data[i].warn_level;
 
-        ret = error_tag_test(&symbol, data[i].error_number, data[i].data);
+        ret = error_tag_test(data[i].error_number, symbol, -1, data[i].data);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
-        assert_zero(strcmp(symbol.errtxt, data[i].expected), "i:%d strcmp(%s, %s) != 0\n", i, symbol.errtxt, data[i].expected);
+        assert_zero(strcmp(symbol->errtxt, data[i].expected), "i:%d strcmp(%s, %s) != 0\n", i, symbol->errtxt, data[i].expected);
 
         if ((int) strlen(data[i].data) < 100) {
-            strcpy(symbol.errtxt, data[i].data);
-            ret = error_tag_test(&symbol, data[i].error_number, NULL);
+            strcpy(symbol->errtxt, data[i].data);
+            ret = error_tag_test(data[i].error_number, symbol, -1, NULL);
             assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
-            assert_zero(strcmp(symbol.errtxt, data[i].expected), "i:%d strcmp(%s, %s) != 0\n", i, symbol.errtxt, data[i].expected);
+            assert_zero(strcmp(symbol->errtxt, data[i].expected), "i:%d strcmp(%s, %s) != 0\n", i, symbol->errtxt, data[i].expected);
         }
     }
 
@@ -1326,12 +1703,12 @@ static void test_strip_bom(const testCtx *const p_ctx) {
 static void test_zero_outfile(const testCtx *const p_ctx) {
 
     int ret;
-    struct zint_symbol *symbol;
-    char *data = "1234";
+    struct zint_symbol *symbol = NULL;
+    const char *data = "1234";
 
     (void)p_ctx;
 
-    testStart("test_zero_outfile");
+    testStartSymbol("test_zero_outfile", &symbol);
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -1339,7 +1716,7 @@ static void test_zero_outfile(const testCtx *const p_ctx) {
     assert_nonzero(symbol->outfile[0], "ZBarcode_Create() outfile zero\n");
     symbol->outfile[0] = '\0';
 
-    ret = ZBarcode_Encode(symbol, TU(data), 0);
+    ret = ZBarcode_Encode(symbol, TCU(data), 0);
     assert_zero(ret, "ZBarcode_Encode(%s) ret %d != 0 (%s)\n", data, ret, symbol->errtxt);
     assert_zero(symbol->outfile[0], "ZBarcode_Encode() outfile non-zero\n");
 
@@ -1359,12 +1736,12 @@ static void test_zero_outfile(const testCtx *const p_ctx) {
 static void test_clear(const testCtx *const p_ctx) {
 
     int ret;
-    struct zint_symbol *symbol;
-    char *data = "1234";
+    struct zint_symbol *symbol = NULL;
+    const char *data = "1234";
 
     (void)p_ctx;
 
-    testStart("test_clear");
+    testStartSymbol("test_clear", &symbol);
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -1379,7 +1756,7 @@ static void test_clear(const testCtx *const p_ctx) {
 
     /* Raster */
 
-    ret = ZBarcode_Encode(symbol, TU(data), 0);
+    ret = ZBarcode_Encode(symbol, TCU(data), 0);
     assert_zero(ret, "ZBarcode_Encode() ret %d != 0 (%s)\n", ret, symbol->errtxt);
 
     assert_nonzero(symbol->rows, "ZBarcode_Encode() rows 0\n");
@@ -1410,7 +1787,7 @@ static void test_clear(const testCtx *const p_ctx) {
 
     /* Vector */
 
-    ret = ZBarcode_Encode(symbol, TU(data), 0);
+    ret = ZBarcode_Encode(symbol, TCU(data), 0);
     assert_zero(ret, "ZBarcode_Encode() ret %d != 0 (%s)\n", ret, symbol->errtxt);
 
     assert_nonzero(symbol->rows, "ZBarcode_Encode() rows 0\n");
@@ -1480,7 +1857,7 @@ static void test_reset(const testCtx *const p_ctx) {
     int ret;
     struct zint_symbol *symbol;
     struct zint_symbol *symbol_def;
-    char *data = "1234";
+    const char *data = "1234";
 
     (void)p_ctx;
 
@@ -1496,7 +1873,7 @@ static void test_reset(const testCtx *const p_ctx) {
 
     /* Raster */
 
-    ret = ZBarcode_Encode(symbol, TU(data), 0);
+    ret = ZBarcode_Encode(symbol, TCU(data), 0);
     assert_zero(ret, "ZBarcode_Encode() ret %d != 0 (%s)\n", ret, symbol->errtxt);
 
     assert_nonzero(symbol->rows, "ZBarcode_Encode() rows 0\n");
@@ -1547,7 +1924,7 @@ static void test_reset(const testCtx *const p_ctx) {
 
     set_symbol_fields(symbol);
 
-    ret = ZBarcode_Encode(symbol, TU(data), 0);
+    ret = ZBarcode_Encode(symbol, TCU(data), 0);
     assert_zero(ret, "ZBarcode_Encode() ret %d != 0 (%s)\n", ret, symbol->errtxt);
 
     assert_nonzero(symbol->rows, "ZBarcode_Encode() rows 0\n");
@@ -1609,11 +1986,11 @@ static void test_scale_from_xdimdp(const testCtx *const p_ctx) {
         float x_dim;
         float dpmm;
         int dpi;
-        char *filetype;
+        const char *filetype;
         float expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_EANX, 0.33f, 2, 50, "gif", 0.5f },
         /*  1*/ { BARCODE_EANX, 0.33f, 2, 50, "emf", 0.33000001f },
         /*  2*/ { BARCODE_EANX, 0.33f, 2, 50, "svg", 0.33000001f },
@@ -1699,7 +2076,7 @@ static void test_scale_from_xdimdp(const testCtx *const p_ctx) {
         /* 82*/ { BARCODE_CODE128, 0.5f, 300, -1, "abcd", 0 }, /* filetype unknown */
         /* 83*/ { BARCODE_QRCODE, 10, 31, 800, "gif", 155 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i;
     float ret;
     float x_dim_from_scale;
@@ -1741,11 +2118,11 @@ static void test_xdimdp_from_scale(const testCtx *const p_ctx) {
         float scale;
         float dpmm; /* Note testing "normal" case that want X-dim, not dpmm */
         int dpi;
-        char *filetype;
+        const char *filetype;
         float expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_EANX, 1, 6, 150, "gif", 0.33333334f },
         /*  1*/ { BARCODE_EANX, 1.32f, 8, 200, "gif", 0.33000001f },
         /*  2*/ { BARCODE_EANX, 1.5f, 8, 200, "gif", 0.375f },
@@ -1774,7 +2151,7 @@ static void test_xdimdp_from_scale(const testCtx *const p_ctx) {
         /* 25*/ { BARCODE_CODE128, 0.5f, 0, -1, "gif", 0 }, /* xdim_mm_or_dpmm zero */
         /* 26*/ { BARCODE_CODE128, 0.5f, 1000.1f, -1, "gif", 0 }, /* xdim_mm_or_dpmm > 1000 */
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i;
     float ret;
     float dpmm_from_dpi;
@@ -1820,6 +2197,7 @@ int main(int argc, char *argv[]) {
         { "test_encode_print_outfile_directory", test_encode_print_outfile_directory },
         { "test_bad_args", test_bad_args },
         { "test_valid_id", test_valid_id },
+        { "test_barcode_name", test_barcode_name },
         { "test_error_tag", test_error_tag },
         { "test_strip_bom", test_strip_bom },
         { "test_zero_outfile", test_zero_outfile },

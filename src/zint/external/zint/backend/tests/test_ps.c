@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -46,13 +46,13 @@ static void test_print(const testCtx *const p_ctx) {
         int option_2;
         float scale;
         float dot_size;
-        char *fgcolour;
-        char *bgcolour;
+        const char *fgcolour;
+        const char *bgcolour;
         int rotate_angle;
-        char *data;
-        char *expected_file;
+        const char *data;
+        const char *expected_file;
     };
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, 0, 0, "", "", 0, "Égjpqy", "code128_egrave_bold.eps" },
         /*  1*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, 0, 0, "", "", 90, "Égjpqy", "code128_egrave_bold_rotate_90.eps" },
         /*  2*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, 0, 0, "", "", 180, "Égjpqy", "code128_egrave_bold_rotate_180.eps" },
@@ -113,12 +113,13 @@ static void test_print(const testCtx *const p_ctx) {
         /* 57*/ { BARCODE_MAXICODE, -1, -1, -1, 3, -1, -1, -1, 0, 0, "", "0000FF00", 180, "12", "maxicode_no_bg_hwsp3_rotate_180.eps" },
         /* 58*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, 2.4, 0, "", "", 90, "12", "maxicode_2.4_rotate_90.eps" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
-    const char *data_dir = "/backend/tests/data/eps";
-    const char *eps = "out.eps";
+    const char data_dir[] = "/backend/tests/data/eps";
+    const char eps[] = "out.eps";
+    const char memfile[] = "mem.eps";
     char expected_file[1024];
     char escaped[1024];
     int escaped_size = 1024;
@@ -166,7 +167,7 @@ static void test_print(const testCtx *const p_ctx) {
             strcpy(symbol->bgcolour, data[i].bgcolour);
         }
 
-        ret = ZBarcode_Encode(symbol, (unsigned char *) data[i].data, length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
         assert_zero(ret, "i:%d %s ZBarcode_Encode ret %d != 0 %s\n", i, testUtilBarcodeName(data[i].symbology), ret, symbol->errtxt);
 
         strcpy(symbol->outfile, eps);
@@ -193,7 +194,25 @@ static void test_print(const testCtx *const p_ctx) {
 
             ret = testUtilCmpEpss(symbol->outfile, expected_file);
             assert_zero(ret, "i:%d %s testUtilCmpEpss(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
-            assert_zero(testUtilRemove(symbol->outfile), "i:%d testUtilRemove(%s) != 0\n", i, symbol->outfile);
+
+            symbol->output_options |= BARCODE_MEMORY_FILE;
+            ret = ZBarcode_Print(symbol, data[i].rotate_angle);
+            assert_zero(ret, "i:%d %s ZBarcode_Print %s ret %d != 0 (%s)\n",
+                            i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret, symbol->errtxt);
+            assert_nonnull(symbol->memfile, "i:%d %s memfile NULL\n", i, testUtilBarcodeName(data[i].symbology));
+            assert_nonzero(symbol->memfile_size, "i:%d %s memfile_size 0\n", i, testUtilBarcodeName(data[i].symbology));
+
+            ret = testUtilWriteFile(memfile, symbol->memfile, symbol->memfile_size, "wb");
+            assert_zero(ret, "%d: testUtilWriteFile(%s) fail ret %d != 0\n", i, memfile, ret);
+
+            ret = testUtilCmpEpss(symbol->outfile, memfile);
+            assert_zero(ret, "i:%d %s testUtilCmpEpss(%s, %s) %d != 0\n",
+                        i, testUtilBarcodeName(data[i].symbology), symbol->outfile, memfile, ret);
+
+            if (!(debug & ZINT_DEBUG_TEST_KEEP_OUTFILE)) {
+                assert_zero(testUtilRemove(symbol->outfile), "i:%d testUtilRemove(%s) != 0\n", i, symbol->outfile);
+                assert_zero(testUtilRemove(memfile), "i:%d testUtilRemove(%s) != 0\n", i, memfile);
+            }
         }
 
         ZBarcode_Delete(symbol);
@@ -207,16 +226,16 @@ INTERNAL void ps_convert_test(const unsigned char *string, unsigned char *ps_str
 static void test_ps_convert(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
-        char *expected;
+        const char *data;
+        const char *expected;
     };
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { "1\\(é)2€3¿", "1\\\\\\(\351\\)23\277" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i;
 
-    unsigned char converted[256];
+    unsigned char converted[256] = {0}; /* Suppress clang -fsanitize=memory false positive */
 
     testStart("test_ps_convert");
 
@@ -251,12 +270,15 @@ static void test_outfile(const testCtx *const p_ctx) {
     skip_readonly_test = getuid() == 0; /* Skip if running as root on Unix as can't create read-only file */
 #endif
     if (!skip_readonly_test) {
+        static char expected_errtxt[] = "645: Could not open EPS output file ("; /* Excluding OS-dependent `errno` stuff */
+
         (void) testUtilRmROFile(symbol.outfile); /* In case lying around from previous fail */
         assert_nonzero(testUtilCreateROFile(symbol.outfile), "ps_plot testUtilCreateROFile(%s) fail (%d: %s)\n", symbol.outfile, errno, strerror(errno));
 
         ret = ps_plot(&symbol, 0);
         assert_equal(ret, ZINT_ERROR_FILE_ACCESS, "ps_plot ret %d != ZINT_ERROR_FILE_ACCESS (%d) (%s)\n", ret, ZINT_ERROR_FILE_ACCESS, symbol.errtxt);
         assert_zero(testUtilRmROFile(symbol.outfile), "ps_plot testUtilRmROFile(%s) != 0 (%d: %s)\n", symbol.outfile, errno, strerror(errno));
+        assert_zero(strncmp(symbol.errtxt, expected_errtxt, sizeof(expected_errtxt) - 1), "strncmp(%s, %s) != 0\n", symbol.errtxt, expected_errtxt);
     }
 
     symbol.output_options |= BARCODE_STDOUT;

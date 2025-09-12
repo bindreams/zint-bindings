@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -57,32 +57,32 @@ extern "C" {
 #define testutil_pclose(stream) _pclose(stream)
 #else
 #include <unistd.h>
-#  if defined(ZINT_IS_C89)
-    extern FILE *popen(const char *command, const char *type);
-    extern int pclose(FILE *stream);
+#  ifndef _WIN32
+extern FILE *popen(const char *command, const char *type);
+extern int pclose(FILE *stream);
 #  endif
 #define testutil_popen(command, mode) popen(command, mode)
 #define testutil_pclose(stream) pclose(stream)
 #endif
 
-#if defined(__clang__) || defined(__GNUC__)
-#  pragma GCC diagnostic ignored "-Wpedantic"
+#if defined(__GNUC__)
 #  pragma GCC diagnostic ignored "-Woverlength-strings"
 #elif defined(_MSC_VER)
 #  pragma warning(disable: 4305) /* truncation from 'double' to 'float' */
+#  pragma warning(disable: 4702) /* unreachable code */
 #endif
 
-extern int assertionFailed;
-extern int assertionNum;
-extern struct zint_symbol **assertionPPSymbol;
-extern const char *assertionFilename;
+extern int testAssertFailed;
+extern int testAssertNum;
+extern struct zint_symbol **testAssertPPSymbol;
+extern const char *testAssertFilename;
 
 #if defined(_MSC_VER) && _MSC_VER < 1900 /* MSVC 2015 */
 #define testStart(name) (testStartReal("", name, NULL))
 #define testStartSymbol(name, pp_symbol) (testStartReal("", name, pp_symbol))
 #else
-#define testStart(name) (testStartReal(__func__, name, NULL))
-#define testStartSymbol(name, pp_symbol) (testStartReal(__func__, name, pp_symbol))
+#define testStart(name) (ZEXT testStartReal(__func__, name, NULL))
+#define testStartSymbol(name, pp_symbol) (ZEXT testStartReal(__func__, name, pp_symbol))
 #endif
 void testStartReal(const char *func, const char *name, struct zint_symbol **pp_symbol);
 void testFinish(void);
@@ -105,7 +105,7 @@ typedef struct s_testFunction {
 void testRun(int argc, char *argv[], testFunction funcs[], int funcs_size);
 int testContinue(const testCtx *const p_ctx, const int i);
 
-#if (defined(_MSC_VER) &&_MSC_VER == 1200) || defined(ZINT_IS_C89) /* VC6 or C89 */
+#if (defined(_MSC_VER) &&_MSC_VER <= 1200) || defined(ZINT_IS_C89) /* VC6 or C89 */
 void assert_zero(int exp, const char *fmt, ...);
 void assert_nonzero(int exp, const char *fmt, ...);
 void assert_null(const void *exp, const char *fmt, ...);
@@ -115,9 +115,9 @@ void assert_equalu64(uint64_t e1, uint64_t e2, const char *fmt, ...);
 void assert_notequal(int e1, int e2, const char *fmt, ...);
 #else
 #define assert_exp(exp, ...) \
-    { assertionNum++; if (!(exp)) { assertionFailed++; printf("%s:%d ", assertionFilename, __LINE__); \
+    { testAssertNum++; if (!(exp)) { testAssertFailed++; printf("%s:%d ", testAssertFilename, __LINE__); \
       printf(__VA_ARGS__); testFinish(); \
-      if (assertionPPSymbol) { ZBarcode_Delete(*assertionPPSymbol); assertionPPSymbol = NULL; } return; } }
+      if (testAssertPPSymbol) { ZBarcode_Delete(*testAssertPPSymbol); testAssertPPSymbol = NULL; } return; } }
 
 #define assert_zero(exp, ...) assert_exp((exp) == 0, __VA_ARGS__)
 #define assert_nonzero(exp, ...) assert_exp((exp) != 0, __VA_ARGS__)
@@ -129,6 +129,7 @@ void assert_notequal(int e1, int e2, const char *fmt, ...);
 #endif
 
 #define TU(p) ((unsigned char *) (p))
+#define TCU(p) ((const unsigned char *) (p))
 
 INTERNAL void vector_free(struct zint_symbol *symbol); /* Free vector structures */
 
@@ -174,6 +175,8 @@ int testUtilRmDir(const char *dirname);
 int testUtilRename(const char *oldpath, const char *newpath);
 int testUtilCreateROFile(const char *filename);
 int testUtilRmROFile(const char *filename);
+int testUtilReadFile(const char *filename, unsigned char *buffer, int buffer_size, int *p_size);
+int testUtilWriteFile(const char *filename, const unsigned char *buffer, const int buffer_size, const char *mode);
 
 int testUtilCmpPngs(const char *file1, const char *file2);
 int testUtilCmpTxts(const char *txt1, const char *txt2);

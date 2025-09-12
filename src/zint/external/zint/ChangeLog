@@ -1,3 +1,109 @@
+Version 2.15.0 (2025-02-25)
+===========================
+
+***2.14.0 regression fix***
+---------------------------
+- CODE128: start code no longer omitted for data starting with numerics followed
+  by extended ASCII (Latin-1)
+
+**Incompatible changes**
+------------------------
+- New `text_length` field in `symbol`
+
+Changes
+-------
+- iso4217: remove 191 (HRK), 694 (SLL), 931 (CUC); add 926 (VED)
+- Add `text_length` (length of `text`) to `zint_symbol`
+- PLESSEY: add show default check characters option
+
+Bugs
+----
+- CODE128: fix 2.14.0 regression (see above), never start in mode C1
+- CODE32: ignore `option_2` (check digit options)
+- PZN: ignore `option_2` (check digit options) except for indicates PZN7 only
+- DPD: exclude DEL from ident tag also
+- out_maybe_mkdir: fix `utf8_to_wide()` return (Windows only)
+- man page: fix Code 93 `--vers=1` hide -> show default check digits
+
+
+Version 2.14.0 (2025-02-05)
+===========================
+
+**Incompatible changes**
+------------------------
+- New `memfile` & `memfile_size` fields in `symbol` for use with new output
+  option `BARCODE_MEMORY_FILE`
+- Buffer length of member `text` (HRT) in `zint_symbol` extended 200 -> 256
+  (client buffers may need checking/extending)
+- Invalid `input_mode` now returns warning
+- Aztec Code symbols that due to input length & user-requested version have less
+  than recommended 5% error correction codewords now return warning
+- New CODE128-only special extra escapes beginning `\^`
+- Add-ons for UPC-A and UPC-E now descend to be level with the main symbol guard
+  bars, and the righthand outside digit is now placed 1X less from main symbol
+  to avoid touching any add-on
+- GS1-128 symbols now warn if READER_INIT option used
+
+Changes
+-------
+- BMP: lessen heap memory usage by only `malloc()`ing a row
+- GIF: lessen heap memory usage by paging; use standard colour char map
+- Add `BARCODE_MEMORY_FILE` to `symbol->output_options` to allow outputting to
+  in-memory buffer `symbol->memfile` instead of to file `symbol->outfile`,
+  ticket #301
+- CODE16K (was for CODE128): improve encodation on A/B shifting, props Daniel
+  Gredler (Okapi)
+- CODE128: add new extra escape `\^1` for manual insertion of FNC1s, ticket
+  #324, props Jim Shank;
+  new  extra escapes `\^A`, `\^B`, `\^C` and `\^@` for manual switching of
+  Code Sets;
+  add minimal encodation algorithm, props Alex Geller (ZXing) and Bue Jensen
+  (BWIPP);
+- library: return warning on invalid `input_mode` reset
+- library/CLI: expanded error messages
+- GS1: new AIs 7250-7259 (GSCN 22-246);
+  iso4217: new ISO 4217 currency code 924;
+  new AIs 7041 (GSCN 23-272) (packagetype) and 716 (GSCN-24-157)
+- AZTEC: workaround MSVC 2022 optimizer bug in `az_populate_map()` loops,
+  ticket #317, props Andre Maute;
+  return warning if ECC < 5% (due to bit-stuffing when version given)
+- MAXICODE: zero-pad US postcodes that lack "+4" (Annex B.1.4a), from
+  OkapiBarcode, props Daniel Gredler;
+  add minimal encodation algorithm, props Bue Jensen (BWIPP)
+- GUI: use X11 (xcb) as platform instead of Wayland on Linux to avoid various
+  weird behaviours;
+  in "grpDATF.ui" use "PlainText" rather than "RichText" for tracker ratio
+  examples as height of text messing up sometimes
+- UPCA/UPCE: descend add-ons to same level as guards and adjust righthand
+  outside digit to be 4X/2X instead of 5X/3X away from main symbol so as not to
+  touch add-on TODO: revisit when standard clarified
+- manual: make explicit that AI "(00)" and "(01)" prefixes added by Zint are
+  HRT-only; clarify Codablock-F length maximum & add examples
+- add DXFILMEDGE (MR #159, props Antoine Mérino)
+
+Bugs
+----
+- raster/BMP/GIF/PCX/TIF: fix dealing with very large data (use `size_t`)
+- raster: add `raster_malloc()` to fail > 1GB (avoids very large output files;
+  also lessens to some degree chances of being victim of OOM killer on Linux)
+- GUI: printing scale dialog: set maxima on X-dim and resolution to keep scale
+  <= 200
+- BMP/EMF/PCX/TIF: fix endianness on big-endian machines (note TIF now always
+  written as little-endian - simplifies testing)
+- ITF14/DPLEIT/DPIDENT: ignore `option_2` (check digit options)
+- GUI: scalewindow: fix cropping of initial resolution and bound X-dim <= 10
+- GUI: factory reset: reset preview background colour also
+- GUI: cliwindow: `#if _WIN32` -> `#ifdef _WIN32`
+- QZint: fix legacy width and security level getters/setters, MR #158, props
+  Philip Ye
+- CODE128: fix extended char latching when exactly 3 extended chars at end
+- library: need to check for valid UTF-8 after de-escaping
+- MAXICODE: maintain current set between segments
+- MSYS2: fix stdout output on Windows under MSYS2 (mailing list, props Frank)
+- DATAMATRIX: fix mis-encodation by only doing special end-of-data processing
+  on last segment
+
+
 Version 2.13.0 (2023-12-18)
 ===========================
 
@@ -134,6 +240,9 @@ Bugs
 - QRCODE: fix out-of-bounds crash due to incorrect mode costings for GS1
   percents in `qr_in_alpha()`; fix incorrect numeric costings (out-by-1) in
   `qr_in_numeric()`; ticket #300 (#14, #15; #16), props Andre Maute
+- GS1: fix square brackets treated as FNC1 in GS1PARENS_MODE by changing
+  internal FNC1 marker '[' -> '\x1D' (GS), ticket #319, props Moli Sojet;
+  also fix non-AI square brackets -> round brackets in GS1_128 HRT
 
 
 Version 2.12.0 (2022-12-12)

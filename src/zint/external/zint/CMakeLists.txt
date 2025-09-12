@@ -1,25 +1,24 @@
 # Copyright (C) 2008 by BogDan Vatra < bogdan@licentia.eu >
-# Copyright (C) 2009-2023 Robin Stuart <rstuart114@gmail.com>
+# Copyright (C) 2009-2025 Robin Stuart <rstuart114@gmail.com>
 # vim: set ts=4 sw=4 et :
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(zint-package)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(ZINT_VERSION_MAJOR 2)
-set(ZINT_VERSION_MINOR 13)
+set(ZINT_VERSION_MINOR 15)
 set(ZINT_VERSION_RELEASE 0)
 set(ZINT_VERSION_BUILD 0) # Set to 0 before release, set to 9 after release
 set(ZINT_VERSION "${ZINT_VERSION_MAJOR}.${ZINT_VERSION_MINOR}.${ZINT_VERSION_RELEASE}.${ZINT_VERSION_BUILD}")
 
 add_definitions(-DZINT_VERSION=\"${ZINT_VERSION}\")
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-
 option(ZINT_DEBUG     "Set debug compile flags"         OFF)
 option(ZINT_NOOPT     "Set no optimize compile flags"   OFF)
-option(ZINT_SANITIZE  "Set sanitize compile/link flags" OFF)
+option(ZINT_SANITIZE  "Set sanitize address/undefined"  OFF)
+option(ZINT_SANITIZEM "Set sanitize memory (ignored if ZINT_SANITIZE)" OFF)
 option(ZINT_TEST      "Set test compile flag"           OFF)
 option(ZINT_COVERAGE  "Set code coverage flags"         OFF)
 option(ZINT_SHARED    "Build shared library"            ON)
@@ -34,38 +33,64 @@ if(NOT ZINT_SHARED AND NOT ZINT_STATIC)
     message(SEND_ERROR "Either ZINT_SHARED or ZINT_STATIC or both must be set")
 endif()
 
-include(SetPaths.cmake)
+include(GNUInstallDirs)
+# Taken from old (2008) KDE "SetPaths.cmake"
+# Set a default build type for single-configuration CMake generators if no build type is set
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE RelWithDebInfo)
+endif()
 
-include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
 include(CheckFunctionExists)
 
 if(NOT MSVC) # Use default warnings if MSVC otherwise inundated
-    check_cxx_compiler_flag("-Wall" CXX_COMPILER_FLAG_WALL)
-    if(CXX_COMPILER_FLAG_WALL)
+    check_c_compiler_flag("-Wall" C_COMPILER_FLAG_WALL)
+    if(C_COMPILER_FLAG_WALL)
         add_compile_options("-Wall")
     endif()
 
-    check_cxx_compiler_flag("-Wextra" CXX_COMPILER_FLAG_WEXTRA)
-    if(CXX_COMPILER_FLAG_WEXTRA)
+    check_c_compiler_flag("-Wextra" C_COMPILER_FLAG_WEXTRA)
+    if(C_COMPILER_FLAG_WEXTRA)
         add_compile_options("-Wextra")
     endif()
 
-    check_cxx_compiler_flag("-Wpedantic" CXX_COMPILER_FLAG_WPEDANTIC)
-    if(CXX_COMPILER_FLAG_WPEDANTIC)
+    check_c_compiler_flag("-Wpedantic" C_COMPILER_FLAG_WPEDANTIC)
+    if(C_COMPILER_FLAG_WPEDANTIC)
         add_compile_options("-Wpedantic")
+    endif()
+
+    check_c_compiler_flag("-Wcast-align" C_COMPILER_FLAG_WCASTALIGN)
+    if(C_COMPILER_FLAG_WCASTALIGN)
+        add_compile_options("-Wcast-align")
+    endif()
+    check_c_compiler_flag("-Wpointer-arith" C_COMPILER_FLAG_WPOINTERARITH)
+    if(C_COMPILER_FLAG_WPOINTERARITH)
+        add_compile_options("-Wpointer-arith")
+    endif()
+    check_c_compiler_flag("-Wshadow" C_COMPILER_FLAG_WSHADOW)
+    if(C_COMPILER_FLAG_WSHADOW)
+        add_compile_options("-Wshadow")
+    endif()
+    check_c_compiler_flag("-Wundef" C_COMPILER_FLAG_WUNDEF)
+    if(C_COMPILER_FLAG_WUNDEF)
+        add_compile_options("-Wundef")
+    endif()
+    check_c_compiler_flag("-Wwrite-strings" C_COMPILER_FLAG_WWRITESTRINGS)
+    if(C_COMPILER_FLAG_WWRITESTRINGS)
+        add_compile_options("-Wwrite-strings")
     endif()
 endif()
 
 if(ZINT_DEBUG)
-    check_cxx_compiler_flag("-g" CXX_COMPILER_FLAG_G)
-    if(CXX_COMPILER_FLAG_G)
+    check_c_compiler_flag("-g" C_COMPILER_FLAG_G)
+    if(C_COMPILER_FLAG_G)
         add_compile_options("-g")
     endif()
 endif()
 
 if(ZINT_NOOPT)
-    check_cxx_compiler_flag("-O0" CXX_COMPILER_FLAG_O0)
-    if(CXX_COMPILER_FLAG_O0)
+    check_c_compiler_flag("-O0" C_COMPILER_FLAG_O0)
+    if(C_COMPILER_FLAG_O0)
         add_compile_options("-O0")
     endif()
 endif()
@@ -79,22 +104,18 @@ if(ZINT_SANITIZE)
             message(STATUS "ZINT_SANITIZE: ignoring for MSVC < 2019")
         endif()
     else()
-        set(SANITIZERS address undefined)
+        set(SANITIZERS address undefined leak)
         foreach(sanitizer IN ITEMS ${SANITIZERS})
             set(CMAKE_REQUIRED_LIBRARIES -fsanitize=${sanitizer})
-            check_cxx_compiler_flag(-fsanitize=${sanitizer} CXX_COMPILER_FLAG_FSANITIZE_${sanitizer})
-            if(CXX_COMPILER_FLAG_FSANITIZE_${sanitizer})
+            check_c_compiler_flag(-fsanitize=${sanitizer} C_COMPILER_FLAG_FSANITIZE_${sanitizer})
+            if(C_COMPILER_FLAG_FSANITIZE_${sanitizer})
                 add_compile_options(-fsanitize=${sanitizer})
                 link_libraries(-fsanitize=${sanitizer})
             endif()
             unset(CMAKE_REQUIRED_LIBRARIES)
         endforeach()
 
-        if(NOT ZINT_DEBUG AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-            # Gives warning on MainWindow::setupUI() and retries (& takes forever) if var-tracking-assignments enabled
-            add_compile_options(-fno-var-tracking-assignments)
-        endif()
-        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang")
             # Recent clangs added deprecation warnings for `sprintf()` that are only triggered on sanitize - suppress
             add_compile_options(-Wno-deprecated-declarations)
         endif()
@@ -107,40 +128,21 @@ endif()
 
 if(ZINT_COVERAGE)
     set(CMAKE_REQUIRED_LIBRARIES -fprofile-arcs)
-    check_cxx_compiler_flag(--coverage CXX_COMPILER_FLAG_COVERAGE)
+    check_c_compiler_flag(--coverage C_COMPILER_FLAG_COVERAGE)
     unset(CMAKE_REQUIRED_LIBRARIES)
-    if(CXX_COMPILER_FLAG_COVERAGE)
+    if(C_COMPILER_FLAG_COVERAGE)
         add_compile_options(--coverage)
         link_libraries(-fprofile-arcs)
 
-        check_cxx_compiler_flag(-O0 CXX_COMPILER_FLAG_O0)
-        if(CXX_COMPILER_FLAG_O0)
+        check_c_compiler_flag(-O0 C_COMPILER_FLAG_O0)
+        if(C_COMPILER_FLAG_O0)
             add_compile_options(-O0)
         endif()
     endif()
 endif()
 
-if(APPLE)
-    if(UNIVERSAL) # TODO: make universal binary
-        if(NOT ZINT_HAS_BEEN_RUN_BEFORE)
-            if(EXISTS /Developer/SDKs/MacOSX10.5.sdk OR EXISTS /SDKs/MacOSX10.5.sdk)
-                set(CMAKE_OSX_ARCHITECTURES "ppc;i386;ppc64;x86_64" CACHE STRING "Build architectures for OSX" FORCE)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden -Wl -single_module " CACHE STRING
-                    "Flags used by the compiler during all build types." FORCE)
-            elseif(EXISTS /Developer/SDKs/MacOSX10.4u.sdk OR EXISTS /SDKs/MacOSX10.4u.sdk)
-                set(CMAKE_OSX_ARCHITECTURES "ppc;i386" CACHE STRING "Build architectures for OSX" FORCE)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden -Wl -single_module " CACHE STRING
-                    "Flags used by the compiler during all build types." FORCE)
-            endif()
-            message("Build architectures for OSX:${CMAKE_OSX_ARCHITECTURES}")
-        endif()
-    else()
-        set(CMAKE_OSX_SYSROOT "/")
-    endif()
-endif()
-
-check_function_exists(getopt HAVE_GETOPT)
-if(NOT HAVE_GETOPT)
+check_function_exists(getopt_long_only HAVE_GETOPT_LONG_ONLY)
+if(NOT HAVE_GETOPT_LONG_ONLY)
     add_subdirectory(getopt)
 endif()
 
@@ -198,20 +200,5 @@ if(ZINT_UNINSTALL)
       "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 endif()
 
-# staniek: don't install
-if(DATA_INSTALL_DIR)
-    set(CMAKE_MODULES_INSTALL_PATH ${DATA_INSTALL_DIR}/cmake/modules)
-else()
-    set(CMAKE_MODULES_INSTALL_PATH ${CMAKE_ROOT}/Modules)
-endif()
-
-install(FILES cmake/modules/FindZint.cmake DESTINATION ${CMAKE_MODULES_INSTALL_PATH} COMPONENT Devel)
 configure_file("zint-config.cmake.in" "zint-config.cmake" @ONLY)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/zint-config.cmake" DESTINATION "${SHARE_INSTALL_PREFIX}/zint")
-
-# This needs to be run very last so other parts of the scripts can take
-# advantage of this.
-if(NOT ZINT_HAS_BEEN_RUN_BEFORE)
-    set(ZINT_HAS_BEEN_RUN_BEFORE 1 CACHE INTERNAL
-        "Flag to track whether this is the first time running CMake or if CMake has been configured before")
-endif()
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/zint-config.cmake" DESTINATION "${CMAKE_INSTALL_DATADIR}/zint")

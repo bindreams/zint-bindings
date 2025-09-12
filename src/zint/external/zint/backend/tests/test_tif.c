@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -41,13 +41,13 @@ static void test_pixel_plot(const testCtx *const p_ctx) {
     struct item {
         int width;
         int height;
-        char *pattern;
+        const char *pattern;
         int repeat;
         int no_identify; /* identify fails for some valid TIFFs (eg. RGB with LZW and large rows) */
         int ret;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { 1, 1, "1", 0, 0, 0 },
         /*  1*/ { 2, 1, "11", 0, 0, 0 },
         /*  2*/ { 1, 2, "11", 0, 0, 0 },
@@ -87,18 +87,18 @@ static void test_pixel_plot(const testCtx *const p_ctx) {
         /* 36*/ { ZINT_MAX_DATA_LEN, 2, "10", 1, 1, 0 }, /* Strip Count 2, Rows Per Strip 1 */
         /* 37*/ { 2, ZINT_MAX_DATA_LEN, "10", 1, 1 /*NOTE: disabled due to failing on github CI, works locally*/, 0 }, /* Strip Count 17, Rows Per Strip 1024 */
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, ret;
     struct zint_symbol *symbol = NULL;
 
-    char *tif = "out.tif";
+    const char *tif = "out.tif";
 
     char data_buf[ZINT_MAX_DATA_LEN * 2 + 1];
 
     int have_tiffinfo = testUtilHaveTiffInfo();
     const char *const have_identify = testUtilHaveIdentify();
 
-    testStartSymbol("test_pixel_plot", &symbol);
+    testStart("test_pixel_plot");
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -172,14 +172,14 @@ static void test_print(const testCtx *const p_ctx) {
         int option_2;
         int height;
         float scale;
-        char *fgcolour;
-        char *bgcolour;
-        char *data;
-        char *composite;
-        char *expected_file;
-        char *comment;
+        const char *fgcolour;
+        const char *bgcolour;
+        const char *data;
+        const char *composite;
+        const char *expected_file;
+        const char *comment;
     };
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_CODE128, -1, -1, -1, 1, -1, -1, -1, -1, 0, 0, "112233", "EEDDCC", "A", "", "code128_fgbg.tif", "" },
         /*  1*/ { BARCODE_CODE128, -1, -1, -1, 1, -1, -1, -1, -1, 0, 0, "FFFFFF", "000000", "A", "", "code128_reverse.tif", "" },
         /*  2*/ { BARCODE_CODE128, -1, -1, CMYK_COLOUR, 1, -1, -1, -1, -1, 0, 0, "112233", "CCDDEE", "A", "", "code128_cmyk_fgbg.tif", "" },
@@ -205,7 +205,7 @@ static void test_print(const testCtx *const p_ctx) {
         /* 22*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, "", "", "9501234", "", "ean8_gss_5.2.2.2-1.tif", "" },
         /* 23*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, "", "", "9501234", "", "ean8_gss_5.2.2.2-1_gws.tif", "" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -214,7 +214,9 @@ static void test_print(const testCtx *const p_ctx) {
     char expected_file[1024];
     char escaped[1024];
     int escaped_size = 1024;
-    char *text;
+    unsigned char filebuf[32768];
+    int filebuf_size;
+    const char *text;
 
     int have_tiffinfo = testUtilHaveTiffInfo();
     const char *const have_identify = testUtilHaveIdentify();
@@ -271,7 +273,7 @@ static void test_print(const testCtx *const p_ctx) {
         }
         text_length = (int) strlen(text);
 
-        ret = ZBarcode_Encode(symbol, (unsigned char *) text, text_length);
+        ret = ZBarcode_Encode(symbol, TCU(text), text_length);
         assert_zero(ret, "i:%d %s ZBarcode_Encode ret %d != 0 %s\n", i, testUtilBarcodeName(data[i].symbology), ret, symbol->errtxt);
 
         strcpy(symbol->outfile, tif);
@@ -301,7 +303,23 @@ static void test_print(const testCtx *const p_ctx) {
 
             ret = testUtilCmpBins(symbol->outfile, expected_file);
             assert_zero(ret, "i:%d %s testUtilCmpBins(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
-            assert_zero(testUtilRemove(symbol->outfile), "i:%d testUtilRemove(%s) != 0\n", i, symbol->outfile);
+
+            ret = testUtilReadFile(symbol->outfile, filebuf, sizeof(filebuf), &filebuf_size); /* For BARCODE_MEMORY_FILE */
+            assert_zero(ret, "i:%d %s testUtilReadFile(%s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret);
+
+            if (!(debug & ZINT_DEBUG_TEST_KEEP_OUTFILE)) {
+                assert_zero(testUtilRemove(symbol->outfile), "i:%d testUtilRemove(%s) != 0\n", i, symbol->outfile);
+            }
+
+            symbol->output_options |= BARCODE_MEMORY_FILE;
+            ret = ZBarcode_Print(symbol, 0);
+            assert_zero(ret, "i:%d %s ZBarcode_Print %s ret %d != 0 (%s)\n",
+                            i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret, symbol->errtxt);
+            assert_nonnull(symbol->memfile, "i:%d %s memfile NULL\n", i, testUtilBarcodeName(data[i].symbology));
+            assert_equal(symbol->memfile_size, filebuf_size, "i:%d %s memfile_size %d != %d\n",
+                            i, testUtilBarcodeName(data[i].symbology), symbol->memfile_size, filebuf_size);
+            assert_zero(memcmp(symbol->memfile, filebuf, symbol->memfile_size), "i:%d %s memcmp(memfile, filebuf) != 0\n",
+                            i, testUtilBarcodeName(data[i].symbology));
         }
 
         ZBarcode_Delete(symbol);
@@ -329,12 +347,15 @@ static void test_outfile(const testCtx *const p_ctx) {
     skip_readonly_test = getuid() == 0; /* Skip if running as root on Unix as can't create read-only file */
 #endif
     if (!skip_readonly_test) {
+        static char expected_errtxt[] = "672: Could not open TIF output file ("; /* Excluding OS-dependent `errno` stuff */
+
         (void) testUtilRmROFile(symbol.outfile); /* In case lying around from previous fail */
         assert_nonzero(testUtilCreateROFile(symbol.outfile), "tif_pixel_plot testUtilCreateROFile(%s) fail (%d: %s)\n", symbol.outfile, errno, strerror(errno));
 
         ret = tif_pixel_plot(&symbol, data);
         assert_equal(ret, ZINT_ERROR_FILE_ACCESS, "tif_pixel_plot ret %d != ZINT_ERROR_FILE_ACCESS (%d) (%s)\n", ret, ZINT_ERROR_FILE_ACCESS, symbol.errtxt);
         assert_zero(testUtilRmROFile(symbol.outfile), "tif_pixel_plot testUtilRmROFile(%s) != 0 (%d: %s)\n", symbol.outfile, errno, strerror(errno));
+        assert_zero(strncmp(symbol.errtxt, expected_errtxt, sizeof(expected_errtxt) - 1), "strncmp(%s, %s) != 0\n", symbol.errtxt, expected_errtxt);
     }
 
     symbol.output_options |= BARCODE_STDOUT;

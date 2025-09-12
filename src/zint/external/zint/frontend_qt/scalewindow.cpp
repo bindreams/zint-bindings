@@ -1,6 +1,6 @@
 /*
     Zint Barcode Generator - the open source barcode generator
-    Copyright (C) 2022-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2022-2024 Robin Stuart <rstuart114@gmail.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
 //#include <QDebug>
-#include <QUiLoader>
 #include <QSettings>
+#include <QUiLoader>
 
 #include <math.h>
 #include "scalewindow.h"
@@ -86,6 +86,7 @@ ScaleWindow::ScaleWindow(BarcodeItem *bc, Zint::QZintXdimDpVars *vars, double or
     } else {
         spnResolution->setSingleStep(1);
     }
+    set_maxima();
 
     size_msg_ui_set();
 
@@ -97,16 +98,16 @@ ScaleWindow::ScaleWindow(BarcodeItem *bc, Zint::QZintXdimDpVars *vars, double or
     btnScaleUnset->setEnabled(m_vars.set);
     btnOK->setIcon(okIcon);
 
-    connect(btnCancel, SIGNAL(clicked( bool )), SLOT(close()));
-    connect(btnScaleUnset, SIGNAL( clicked( bool )), SLOT(unset_scale()));
-    connect(btnOK, SIGNAL(clicked( bool )), SLOT(okay()));
-    connect(spnXdim, SIGNAL(valueChanged( double )), SLOT(update_scale()));
-    connect(cmbXdimUnits, SIGNAL(currentIndexChanged( int )), SLOT(x_dim_units_change()));
-    connect(btnXdimDefault, SIGNAL(clicked( bool )), SLOT(x_dim_default()));
-    connect(spnResolution, SIGNAL(valueChanged( int )), SLOT(update_scale()));
-    connect(cmbResolutionUnits, SIGNAL(currentIndexChanged( int )), SLOT(resolution_units_change()));
-    connect(btnResolutionDefault, SIGNAL(clicked( bool )), SLOT(resolution_default()));
-    connect(cmbFileType, SIGNAL(currentIndexChanged( int )), SLOT(update_scale()));
+    connect(btnCancel, SIGNAL(clicked(bool)), SLOT(close()));
+    connect(btnScaleUnset, SIGNAL(clicked(bool)), SLOT(unset_scale()));
+    connect(btnOK, SIGNAL(clicked(bool)), SLOT(okay()));
+    connect(spnXdim, SIGNAL(valueChanged(double)), SLOT(update_scale()));
+    connect(cmbXdimUnits, SIGNAL(currentIndexChanged(int)), SLOT(x_dim_units_change()));
+    connect(btnXdimDefault, SIGNAL(clicked(bool)), SLOT(x_dim_default()));
+    connect(spnResolution, SIGNAL(valueChanged(int)), SLOT(update_scale()));
+    connect(cmbResolutionUnits, SIGNAL(currentIndexChanged(int)), SLOT(resolution_units_change()));
+    connect(btnResolutionDefault, SIGNAL(clicked(bool)), SLOT(resolution_default()));
+    connect(cmbFileType, SIGNAL(currentIndexChanged(int)), SLOT(update_scale()));
 }
 
 ScaleWindow::~ScaleWindow()
@@ -149,7 +150,7 @@ void ScaleWindow::size_msg_ui_set()
 
 void ScaleWindow::unset_scale()
 {
-    m_vars.x_dim = m_bc->bc.getXdimDpFromScale(m_originalScale, get_dpmm(), getFileType());
+    m_vars.x_dim = std::min(m_bc->bc.getXdimDpFromScale(m_originalScale, get_dpmm(), getFileType()), 10.0f);
     m_vars.set = 0;
 
     if (cmbXdimUnits->currentIndex() == 1) { // Inches
@@ -179,6 +180,7 @@ void ScaleWindow::update_scale()
         emit scaleChanged(scale);
         m_unset = false;
         btnScaleUnset->setEnabled(true);
+        set_maxima();
     }
 }
 
@@ -246,6 +248,22 @@ const char *ScaleWindow::getFileType() const
 {
     static const char *filetypes[3] = { "GIF", "SVG", "EMF" };
     return filetypes[std::max(std::min(cmbFileType->currentIndex(), 2), 0)];
+}
+
+void ScaleWindow::set_maxima()
+{
+    float maxXdim = std::min(m_bc->bc.getXdimDpFromScale(200.0f, get_dpmm(), getFileType()), 10.0f);
+    if (cmbXdimUnits->currentIndex() == 1) { // Inches
+        spnXdim->setMaximum(maxXdim / 25.4);
+    } else {
+        spnXdim->setMaximum(maxXdim);
+    }
+    float maxRes = m_bc->bc.getXdimDpFromScale(200.0f, get_x_dim_mm(), getFileType());
+    if (cmbResolutionUnits->currentIndex() == 1) { // Inches
+        spnResolution->setMaximum(maxRes * 25.4);
+    } else {
+        spnResolution->setMaximum(maxRes);
+    }
 }
 
 double ScaleWindow::update_vars()

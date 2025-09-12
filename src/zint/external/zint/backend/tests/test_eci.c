@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2022 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -79,7 +79,7 @@ static void test_bom(const testCtx *const p_ctx) {
 
     length = (int) strlen(data);
 
-    ret = ZBarcode_Encode(symbol, (unsigned char *) data, length);
+    ret = ZBarcode_Encode(symbol, TCU(data), length);
     assert_equal(ret, ZINT_WARN_USES_ECI, "ZBarcode_Encode ret %d != ZINT_WARN_USES_ECI\n", ret);
     assert_equal(symbol->eci, 21, "eci %d != 21\n", symbol->eci); /* ECI 21 == Windows-1250 */
 
@@ -109,7 +109,7 @@ static void test_iso_8859_16(const testCtx *const p_ctx) {
 
     length = (int) strlen(data);
 
-    ret = ZBarcode_Encode(symbol, (unsigned char *) data, length);
+    ret = ZBarcode_Encode(symbol, TCU(data), length);
     assert_equal(ret, ZINT_WARN_USES_ECI, "ZBarcode_Encode ret %d != ZINT_WARN_USES_ECI\n", ret);
     assert_equal(symbol->eci, 18, "eci %d != 18\n", symbol->eci); /* ECI 18 == ISO 8859-16 */
 
@@ -126,10 +126,10 @@ static void test_reduced_charset_input(const testCtx *const p_ctx) {
         int symbology;
         int input_mode;
         int eci;
-        char *data;
+        const char *data;
         int ret;
         int expected_eci;
-        char *comment;
+        const char *comment;
     };
     /*
        é U+00E9 in ISO 8859-1 plus other ISO 8859 (but not in ISO 8859-7 or ISO 8859-11), Win 1250 plus other Win, not in Shift JIS
@@ -396,7 +396,7 @@ static void test_reduced_charset_input(const testCtx *const p_ctx) {
 
         length = testUtilSetSymbol(symbol, data[i].symbology, data[i].input_mode, data[i].eci, -1 /*option_1*/, -1, -1, -1 /*output_options*/, data[i].data, -1, debug);
 
-        ret = ZBarcode_Encode(symbol, (unsigned char *) data[i].data, length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (data[i].expected_eci != -1) {
@@ -724,7 +724,7 @@ static void test_utf8_to_eci_ascii(const testCtx *const p_ctx) {
 
     struct item {
         int eci;
-        char *data;
+        const char *data;
         int length;
         int ret;
     };
@@ -758,7 +758,7 @@ static void test_utf8_to_eci_ascii(const testCtx *const p_ctx) {
     int data_size = ARRAY_SIZE(data);
     int i, length, ret;
 
-    char dest[128];
+    char dest[128] = {0}; /* Suppress clang -fsanitize=memory false positive */
 
     testStart("test_utf8_to_eci_ascii");
 
@@ -783,11 +783,11 @@ static void test_utf8_to_eci_ascii(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_utf16be(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -815,7 +815,7 @@ static void test_utf8_to_eci_utf16be(const testCtx *const p_ctx) {
 
     for (i = 0; i < data_size; i++) {
         int out_length, eci_length;
-        char dest[1024];
+        char dest[1024] = {0}; /* Suppress clang -fsanitize=memory false positive */
 
         if (testContinue(p_ctx, i)) continue;
 
@@ -848,11 +848,11 @@ static void test_utf8_to_eci_utf16be(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_utf16le(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -880,7 +880,7 @@ static void test_utf8_to_eci_utf16le(const testCtx *const p_ctx) {
 
     for (i = 0; i < data_size; i++) {
         int out_length, eci_length;
-        char dest[1024];
+        char dest[1024] = {0}; /* Suppress clang -fsanitize=memory false positive */
 
         if (testContinue(p_ctx, i)) continue;
 
@@ -913,11 +913,11 @@ static void test_utf8_to_eci_utf16le(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_utf32be(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -942,7 +942,7 @@ static void test_utf8_to_eci_utf32be(const testCtx *const p_ctx) {
 
     for (i = 0; i < data_size; i++) {
         int out_length, eci_length;
-        char dest[1024];
+        char dest[1024] = {0}; /* Suppress clang -fsanitize=memory false positive */
 
         if (testContinue(p_ctx, i)) continue;
 
@@ -977,11 +977,11 @@ static void test_utf8_to_eci_utf32be(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_utf32le(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -1006,7 +1006,7 @@ static void test_utf8_to_eci_utf32le(const testCtx *const p_ctx) {
 
     for (i = 0; i < data_size; i++) {
         int out_length, eci_length;
-        char dest[1024];
+        char dest[1024] = {0}; /* Suppress clang -fsanitize=memory false positive */
 
         if (testContinue(p_ctx, i)) continue;
 
@@ -1041,7 +1041,7 @@ static void test_utf8_to_eci_utf32le(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_sjis(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
@@ -1097,7 +1097,7 @@ static void test_utf8_to_eci_sjis(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_big5(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
@@ -1143,7 +1143,7 @@ static void test_utf8_to_eci_big5(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_gb2312(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
@@ -1189,7 +1189,7 @@ static void test_utf8_to_eci_gb2312(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_euc_kr(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
@@ -1235,7 +1235,7 @@ static void test_utf8_to_eci_euc_kr(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_gbk(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
@@ -1281,7 +1281,7 @@ static void test_utf8_to_eci_gbk(const testCtx *const p_ctx) {
 static void test_utf8_to_eci_gb18030(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int expected_length;
@@ -1381,14 +1381,12 @@ static void test_get_best_eci(const testCtx *const p_ctx) {
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
-        /*  0*/ { "\300\301", -1, 0 },
-        /*  1*/ { "ÀÁ", -1, 3 },
-        /*  2*/ { "Ђ", -1, 7 },
-        /*  3*/ { "Ѐ", -1, 26 }, /* Cyrillic U+0400 not in single-byte code pages */
-        /*  4*/ { "β", -1, 9 },
-        /*  5*/ { "˜", -1, 23 },
-        /*  6*/ { "βЂ", -1, 26 },
-        /*  7*/ { "AB\200", -1, 0 },
+        /*  0*/ { "ÀÁ", -1, 3 },
+        /*  1*/ { "Ђ", -1, 7 },
+        /*  2*/ { "Ѐ", -1, 26 }, /* Cyrillic U+0400 not in single-byte code pages */
+        /*  3*/ { "β", -1, 9 },
+        /*  4*/ { "˜", -1, 23 },
+        /*  5*/ { "βЂ", -1, 26 },
     };
     int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -1417,16 +1415,15 @@ static void test_get_best_eci_segs(const testCtx *const p_ctx) {
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
-        /*  0*/ { { { TU("\300\301"), -1, 0 }, { TU(""), -1, 0 }, { TU(""), 0, 0 } }, 0, 0 },
-        /*  1*/ { { { TU("A"), -1, 0 }, { TU("\300\301"), -1, 0 }, { TU(""), 0, 0 } }, 0, 0 },
-        /*  2*/ { { { TU("A"), -1, 0 }, { TU("ÀÁ"), -1, 0 }, { TU(""), 0, 0 } }, 0, 0 }, /* As 1st seg default ECI, 3 not returned */
-        /*  3*/ { { { TU("A"), -1, 4 }, { TU("ÀÁ"), -1, 0 }, { TU(""), 0, 0 } }, 3, 0 },
-        /*  4*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 0 }, { TU(""), 0, 0 } }, 7, 0 },
-        /*  5*/ { { { TU("A"), -1, 4 }, { TU("Ђ"), -1, 0 }, { TU(""), 0, 0 } }, 7, 0 },
-        /*  6*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 7 }, { TU("Ѐ"), -1, 0 } }, 26, 0 }, /* Cyrillic U+0400 not in single-byte code pages */
-        /*  7*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 0 }, { TU("β"), -1, 0 } }, 7, 0 },
-        /*  8*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 7 }, { TU("β"), -1, 0 } }, 9, 0 },
-        /*  9*/ { { { TU("˜"), -1, 0 }, { TU("Ђ"), -1, 7 }, { TU(""), 0, 0 } }, 23, 23 },
+        /*  0*/ { { { TU("A"), -1, 0 }, { TU(""), -1, 0 }, { TU(""), 0, 0 } }, 0, 0 },
+        /*  1*/ { { { TU("A"), -1, 0 }, { TU("ÀÁ"), -1, 0 }, { TU(""), 0, 0 } }, 0, 0 }, /* As 1st seg default ECI, 3 not returned */
+        /*  2*/ { { { TU("A"), -1, 4 }, { TU("ÀÁ"), -1, 0 }, { TU(""), 0, 0 } }, 3, 0 },
+        /*  3*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 0 }, { TU(""), 0, 0 } }, 7, 0 },
+        /*  4*/ { { { TU("A"), -1, 4 }, { TU("Ђ"), -1, 0 }, { TU(""), 0, 0 } }, 7, 0 },
+        /*  5*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 7 }, { TU("Ѐ"), -1, 0 } }, 26, 0 }, /* Cyrillic U+0400 not in single-byte code pages */
+        /*  6*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 0 }, { TU("β"), -1, 0 } }, 7, 0 },
+        /*  7*/ { { { TU("A"), -1, 0 }, { TU("Ђ"), -1, 7 }, { TU("β"), -1, 0 } }, 9, 0 },
+        /*  8*/ { { { TU("˜"), -1, 0 }, { TU("Ђ"), -1, 7 }, { TU(""), 0, 0 } }, 23, 23 },
     };
     int data_size = ARRAY_SIZE(data);
     int i, j, seg_count, ret;

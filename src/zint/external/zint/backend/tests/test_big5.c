@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2021-2022 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2021-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -43,7 +43,7 @@ INTERNAL int u_big5_test(const unsigned int u, unsigned char *dest);
 
 /* Version of `u_big5()` taking unsigned int destination for backward-compatible testing */
 static int u_big5_int(unsigned int u, unsigned int *d) {
-    unsigned char dest[2];
+    unsigned char dest[2] = {0}; /* Suppress clang -fsanitize=memory false positive */
     int ret = u_big5_test(u, dest);
     if (ret) {
         *d = ret == 1 ? dest[0] : ((dest[0] << 8) | dest[1]);
@@ -157,6 +157,8 @@ static int big5_utf8(struct zint_symbol *symbol, const unsigned char source[], i
     unsigned int i, length;
     unsigned int *utfdata = (unsigned int *) z_alloca(sizeof(unsigned int) * (*p_length + 1));
 
+    memset(utfdata, 0, sizeof(unsigned int) * (*p_length + 1)); /* Suppress clang -fsanitize=memory false positive */
+
     error_number = utf8_to_unicode(symbol, source, utfdata, p_length, 0 /*disallow_4byte*/);
     if (error_number != 0) {
         return error_number;
@@ -175,12 +177,12 @@ static int big5_utf8(struct zint_symbol *symbol, const unsigned char source[], i
 static void test_big5_utf8(const testCtx *const p_ctx) {
 
     struct item {
-        char *data;
+        const char *data;
         int length;
         int ret;
         int ret_length;
         unsigned int expected_b5data[20];
-        char *comment;
+        const char *comment;
     };
     /*
        ＿ U+FF3F fullwidth low line, not in ISO/Win, in Big5 0xA1C4, UTF-8 EFBCBF
@@ -207,7 +209,7 @@ static void test_big5_utf8(const testCtx *const p_ctx) {
         length = data[i].length == -1 ? (int) strlen(data[i].data) : data[i].length;
         ret_length = length;
 
-        ret = big5_utf8(&symbol, (unsigned char *) data[i].data, &ret_length, b5data);
+        ret = big5_utf8(&symbol, TCU(data[i].data), &ret_length, b5data);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d (%s)\n", i, ret, data[i].ret, symbol.errtxt);
         if (ret == 0) {
             int j;

@@ -1,7 +1,7 @@
 /* zint_tcl.c TCL binding for zint */
 /*
     zint - the open source tcl binding to the zint barcode library
-    Copyright (C) 2014-2023 Harald Oehlmann <oehhar@users.sourceforge.net>
+    Copyright (C) 2014-2025 Harald Oehlmann <oehhar@users.sourceforge.net>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -172,6 +172,16 @@
 - Added -guardwhitespace option
 2023-10-30 GL
 - Added -dmiso144 option
+2024-12-09 HaO
+- TCL 9 compatibility
+- support TCL buildinfo
+- remove the zint command on dll unload
+2024-12-23 GL
+- Added DXFILMEDGE
+2025-01-29 GL
+- MSVC: suppress warning 4996 (_CRT_SECURE_NO_WARNINGS)
+2025-02-15 GL
+- strcpy() -> memcpy(); sizeof(primary); tabs -> spaces
 */
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
@@ -187,6 +197,11 @@
 #ifdef ERROR_INVALID_DATA
 #undef ERROR_INVALID_DATA
 #endif
+
+#if defined(_MSC_VER) && _MSC_VER > 1200 /* VC6 */
+#pragma warning(disable: 4996) /* function or variable may be unsafe */
+#endif
+
 #endif
 
 #include <zint.h>
@@ -230,13 +245,13 @@ typedef int Tcl_Size;
 
 /*----------------------------------------------------------------------------*/
 /* >>>> External Prototypes (exports) */
-EXPORT int Zint_Init (Tcl_Interp *interp);
-EXPORT int Zint_Unload (Tcl_Interp *Interp, int Flags);
+DLLEXPORT int Zint_Init (Tcl_Interp *interp);
+DLLEXPORT int Zint_Unload (Tcl_Interp *Interp, int Flags);
 /*----------------------------------------------------------------------------*/
 /* >>>> local prototypes */
 static void InterpCleanupProc(ClientData clientData, Tcl_Interp *interp);
 static int CheckForTk(Tcl_Interp *interp, int *tkFlagPtr);
-static int Zint(ClientData unused, Tcl_Interp *interp, int objc,
+static int ZintCmd(ClientData unused, Tcl_Interp *interp, int objc,
     Tcl_Obj *CONST objv[]);
 static int Encode(Tcl_Interp *interp, int objc,
     Tcl_Obj *CONST objv[]);
@@ -326,6 +341,7 @@ static const char *s_code_list[] = {
     "MailMark-2D",
     "UPU-S10",
     "MailMark-4S",
+    "DXFilmEdge",
     "AztecRunes",
     "Code32",
     "EAN-CC",
@@ -428,6 +444,7 @@ static const int s_code_number[] = {
     BARCODE_MAILMARK_2D,
     BARCODE_UPU_S10,
     BARCODE_MAILMARK_4S,
+    BARCODE_DXFILMEDGE,
     BARCODE_AZRUNE,
     BARCODE_CODE32,
     BARCODE_EANX_CC,
@@ -593,17 +610,72 @@ EXPORT BOOL WINAPI DllEntryPoint (HINSTANCE hInstance,
 #endif
 /*----------------------------------------------------------------------------*/
 /* Initialisation Procedures */
-EXPORT int Zint_Init (Tcl_Interp *interp)
+DLLEXPORT int Zint_Init (Tcl_Interp *interp)
 {
-    int * tkFlagPtr;
+    int *tkFlagPtr;
+    Tcl_CmdInfo info;
     /*------------------------------------------------------------------------*/
-#ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "8.5-", 0) == NULL)
-#else
-    if (Tcl_PkgRequire(interp, "Tcl", "8.5-", 0) == NULL)
-#endif
-    {
+    /* If TCL_STUB is not defined, the following only does a version check    */
+    if (Tcl_InitStubs(interp, "8.5-", 0) == NULL) {
         return TCL_ERROR;
+    }
+    /*------------------------------------------------------------------------*/
+    /* Add build info                                                         */
+    if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
+    Tcl_CreateObjCommand(interp, "::zint::build-info",
+        info.objProc, (void *)(
+            PACKAGE_VERSION "+" STRINGIFY(SAMPLE_VERSION_UUID)
+#if defined(__clang__) && defined(__clang_major__)
+                ".clang-" STRINGIFY(__clang_major__)
+#if __clang_minor__ < 10
+                "0"
+#endif
+                STRINGIFY(__clang_minor__)
+#endif
+#if defined(__cplusplus) && !defined(__OBJC__)
+                ".cplusplus"
+#endif
+#ifndef NDEBUG
+                ".debug"
+#endif
+#if !defined(__clang__) && !defined(__INTEL_COMPILER) && defined(__GNUC__)
+                ".gcc-" STRINGIFY(__GNUC__)
+#if __GNUC_MINOR__ < 10
+                "0"
+#endif
+                STRINGIFY(__GNUC_MINOR__)
+#endif
+#ifdef __INTEL_COMPILER
+                ".icc-" STRINGIFY(__INTEL_COMPILER)
+#endif
+#ifdef TCL_MEM_DEBUG
+                ".memdebug"
+#endif
+#if defined(_MSC_VER)
+                ".msvc-" STRINGIFY(_MSC_VER)
+#endif
+#ifdef USE_NMAKE
+                ".nmake"
+#endif
+#ifndef TCL_CFG_OPTIMIZED
+                ".no-optimize"
+#endif
+#ifdef __OBJC__
+                ".objective-c"
+#if defined(__cplusplus)
+                "plusplus"
+#endif
+#endif
+#ifdef TCL_CFG_PROFILED
+                ".profile"
+#endif
+#ifdef PURIFY
+                ".purify"
+#endif
+#ifdef STATIC_BUILD
+                ".static"
+#endif
+        ), NULL);
     }
     /*------------------------------------------------------------------------*/
     /* This procedure is called once per thread and any thread local data     */
@@ -614,7 +686,9 @@ EXPORT int Zint_Init (Tcl_Interp *interp)
     *tkFlagPtr = 0;
     Tcl_CallWhenDeleted(interp, InterpCleanupProc, (ClientData)tkFlagPtr);
     /*------------------------------------------------------------------------*/
-    Tcl_CreateObjCommand(interp, "zint", Zint, (ClientData)tkFlagPtr,
+    /* FIXME: to unload even on command rename, capture the token, put it in  */
+    /* the client data and use it to delete the command.                      */
+    Tcl_CreateObjCommand(interp, "zint", ZintCmd, (ClientData)tkFlagPtr,
             (Tcl_CmdDeleteProc *)NULL);
     Tcl_PkgProvide (interp, "zint", version_string);
     /*------------------------------------------------------------------------*/
@@ -631,8 +705,11 @@ static void InterpCleanupProc(ClientData clientData, Tcl_Interp *interp)
 /*----------------------------------------------------------------------------*/
 /* >>>> Unload Procedures */
 /*----------------------------------------------------------------------------*/
-EXPORT int Zint_Unload (Tcl_Interp *Interp, int Flags)
+DLLEXPORT int Zint_Unload (Tcl_Interp *Interp, int Flags)
 {
+    /* Remove created commands */
+    Tcl_DeleteCommand(Interp, "::zint::build-info");
+    Tcl_DeleteCommand(Interp, "zint");
     // Allow unload
     return TCL_OK;
 }
@@ -640,7 +717,7 @@ EXPORT int Zint_Unload (Tcl_Interp *Interp, int Flags)
 /* >>>>> Called routine */
 /*----------------------------------------------------------------------------*/
 /* Decode tcl commands */
-static int Zint(ClientData tkFlagPtr, Tcl_Interp *interp, int objc,
+static int ZintCmd(ClientData tkFlagPtr, Tcl_Interp *interp, int objc,
     Tcl_Obj *CONST objv[])
 {
     /* Option list and indexes */
@@ -725,13 +802,13 @@ static int CheckForTk(Tcl_Interp *interp, int *tkFlagPtr)
         return TCL_OK;
     }
     if (*tkFlagPtr == 0) {
-        if ( ! Tcl_PkgPresent(interp, "Tk", "8.5", 0) ) {
+        if ( ! Tcl_PkgPresent(interp, "Tk", "8.5-", 0) ) {
             Tcl_SetResult(interp, "package Tk not loaded", TCL_STATIC);
             return TCL_ERROR;
         }
     }
 #ifdef USE_TK_STUBS
-    if (*tkFlagPtr < 0 || Tk_InitStubs(interp, "8.5", 0) == NULL) {
+    if (*tkFlagPtr < 0 || Tk_InitStubs(interp, "8.5-", 0) == NULL) {
         *tkFlagPtr = -1;
         Tcl_SetResult(interp, "error initializing Tk", TCL_STATIC);
         return TCL_ERROR;
@@ -769,8 +846,8 @@ static int Encode(Tcl_Interp *interp, int objc,
     int seg_count = 0;
     int seg_no;
     Tcl_Obj *pSegDataObjs[10] = {0};
-    Tcl_DString segInputs[10];
-    struct zint_seg segs[10];
+    Tcl_DString segInputs[10] = {{0}};
+    struct zint_seg segs[10] = {{0}};
     double xdim = 0.0;
     double resolution = 0.0;
     /*------------------------------------------------------------------------*/
@@ -912,12 +989,11 @@ static int Encode(Tcl_Interp *interp, int objc,
             }
             break;
         case iPrimary:
-            /* > Primary String up to 90 characters */
-            /* > Output filename up to 250 characters */
+            /* > Primary String up to 127 characters */
             Tcl_DStringInit(& dString);
             pStr = Tcl_GetStringFromObj(objv[optionPos+1], &lStr);
             Tcl_UtfToExternalDString( hZINTEncoding, pStr, lStr, &dString);
-            if (Tcl_DStringLength(&dString) > (optionIndex==iPrimary?90:250)) {
+            if (Tcl_DStringLength(&dString) >= (int) sizeof(my_symbol->primary)) {
                 Tcl_DStringFree(&dString);
                 Tcl_SetObjResult(interp,Tcl_NewStringObj("String too long", -1));
                 fError = 1;
@@ -1106,8 +1182,8 @@ static int Encode(Tcl_Interp *interp, int objc,
             break;
         case iReverse:
             if (intValue) {
-                strcpy(my_symbol->fgcolour, "ffffff");
-                strcpy(my_symbol->bgcolour, "000000");
+                memcpy(my_symbol->fgcolour, "ffffff", 7); /* Include terminating NUL */
+                memcpy(my_symbol->bgcolour, "000000", 7);
             }
             break;
         case iWError:
@@ -1125,7 +1201,7 @@ static int Encode(Tcl_Interp *interp, int objc,
             break;
         case iNoBackground:
             if (intValue) {
-                strcpy(my_symbol->bgcolour, "ffffff00");
+                memcpy(my_symbol->bgcolour, "ffffff00", 9); /* Include terminating NUL */
             }
             break;
         case iNoQuietZones:
@@ -1297,7 +1373,8 @@ static int Encode(Tcl_Interp *interp, int objc,
             }
             break;
         case iPrimary:
-            strcpy(my_symbol->primary, Tcl_DStringValue( &dString ) );
+            /* Include terminating NUL */
+            memcpy(my_symbol->primary, Tcl_DStringValue(&dString), Tcl_DStringLength(&dString) + 1);
             Tcl_DStringFree(&dString);
             break;
         case iRotate:
@@ -1575,8 +1652,8 @@ static int Encode(Tcl_Interp *interp, int objc,
                 Tcl_NewStringObj("Unknown photo image", -1));
             fError = 1;
         } else {
-            Tk_PhotoImageBlock sImageBlock;
-            char * pImageRGBA = NULL;
+            Tk_PhotoImageBlock sImageBlock = {0};
+            char *pImageRGBA = NULL;
             if (my_symbol->alphamap == NULL) {
                 sImageBlock.pixelPtr = (unsigned char *) my_symbol->bitmap;
                 sImageBlock.width = my_symbol->bitmap_width;

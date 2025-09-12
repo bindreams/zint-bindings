@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -30,6 +30,9 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 
 #include "testcommon.h"
+#ifndef ZINT_NO_PNG
+#include <zlib.h> /* For ZLIBNG_VERSION define (if any) */
+#endif
 #include <sys/stat.h>
 
 #define TEST_PRINT_OVERWRITE_EXPECTED   "bmp,emf,eps,gif,pcx,png,svg,tif,txt"
@@ -42,8 +45,8 @@ static void test_print(const testCtx *const p_ctx) {
         int option_1;
         int option_2;
         float scale;
-        char *data;
-        char *expected_file;
+        const char *data;
+        const char *expected_file;
     };
     struct item data[] = {
         /*  0*/ { BARCODE_CODE128, -1, -1, -1, "AIM", "code128_aim" },
@@ -57,7 +60,7 @@ static void test_print(const testCtx *const p_ctx) {
     struct zint_symbol *symbol = NULL;
     int j;
 
-    char *exts[] = { "bmp", "emf", "eps", "gif", "pcx", "png", "svg", "tif", "txt" };
+    const char *exts[] = { "bmp", "emf", "eps", "gif", "pcx", "png", "svg", "tif", "txt" };
     int exts_size = ARRAY_SIZE(exts);
 
     char data_dir[1024];
@@ -131,7 +134,7 @@ static void test_print(const testCtx *const p_ctx) {
                 symbol->scale = data[i].scale;
             }
 
-            ret = ZBarcode_Encode(symbol, (unsigned char *) data[i].data, length);
+            ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
             assert_zero(ret, "i:%d %s ZBarcode_Encode ret %d != 0 %s\n", i, testUtilBarcodeName(data[i].symbology), ret, symbol->errtxt);
 
             strcpy(symbol->outfile, "out.");
@@ -191,8 +194,10 @@ static void test_print(const testCtx *const p_ctx) {
                 } else if (strcmp(exts[j], "png") == 0) {
                     ret = testUtilCmpPngs(symbol->outfile, expected_file);
                     assert_zero(ret, "i:%d %s testUtilCmpPngs(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
+                    #ifndef ZLIBNG_VERSION /* zlib-ng (used by e.g. Fedora 40) may produce non-binary compat output */
                     ret = testUtilCmpBins(symbol->outfile, expected_file);
                     assert_zero(ret, "i:%d %s testUtilCmpBins(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
+                    #endif
                 } else if (strcmp(exts[j], "svg") == 0) {
                     ret = testUtilCmpSvgs(symbol->outfile, expected_file);
                     assert_zero(ret, "i:%d %s testUtilCmpSvgs(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);

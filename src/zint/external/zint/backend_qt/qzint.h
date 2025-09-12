@@ -1,7 +1,7 @@
 /***************************************************************************
  *   Copyright (C) 2008 by BogDan Vatra                                    *
  *   bogdan@licentia.eu                                                    *
- *   Copyright (C) 2010-2023 Robin Stuart                                  *
+ *   Copyright (C) 2010-2025 Robin Stuart                                  *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -107,7 +107,7 @@ public:
 
     /* Dotty mode */
     bool dotty() const; // `symbol->input_mode | BARCODE_DOTTY_MODE`
-    void setDotty(bool botty);
+    void setDotty(bool dotty);
 
     /* Size of dots used in BARCODE_DOTTY_MODE */
     float dotSize() const; // `symbol->dot_size`
@@ -238,9 +238,9 @@ public:
 
 
     /* Legacy property getters/setters */
-    void setWidth(int width); /* `symbol->option_1` */
+    void setWidth(int width); /* `symbol->option_2` */
     int width() const;
-    void setSecurityLevel(int securityLevel); /* `symbol->option_2` */
+    void setSecurityLevel(int securityLevel); /* `symbol->option_1` */
     int securityLevel() const;
     void setPdf417CodeWords(int pdf417CodeWords); /* No-op */
     int pdf417CodeWords() const;

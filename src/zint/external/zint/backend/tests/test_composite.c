@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -36,15 +36,15 @@ static void test_eanx_leading_zeroes(const testCtx *const p_ctx) {
 
     struct item {
         int symbology;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { BARCODE_EANX_CC, "1", "[21]A12345678", 0, 8, 72 }, /* EAN-8 */
         /* 1*/ { BARCODE_EANX_CC, "12", "[21]A12345678", 0, 8, 72 },
         /* 2*/ { BARCODE_EANX_CC, "123", "[21]A12345678", 0, 8, 72 },
@@ -73,7 +73,7 @@ static void test_eanx_leading_zeroes(const testCtx *const p_ctx) {
         /*25*/ { BARCODE_EANX_CC, "1234567890128+12", "[21]A12345678", 0, 7, 125 }, /* EAN-13 + CHK + EAN-2 */
         /*26*/ { BARCODE_EANX_CC, "1234567890128+12345", "[21]A12345678", 0, 7, 152 }, /* EAN-13 + CHK + EAN-5 */
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -92,13 +92,11 @@ static void test_eanx_leading_zeroes(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
-        if (ret < ZINT_ERROR) {
-            assert_equal(symbol->rows, data[i].expected_rows, "i:%d symbol->rows %d != %d\n", i, symbol->rows, data[i].expected_rows);
-            assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n", i, symbol->width, data[i].expected_width);
-        }
+        assert_equal(symbol->rows, data[i].expected_rows, "i:%d symbol->rows %d != %d\n", i, symbol->rows, data[i].expected_rows);
+        assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n", i, symbol->width, data[i].expected_width);
 
         ZBarcode_Delete(symbol);
     }
@@ -106,7 +104,8 @@ static void test_eanx_leading_zeroes(const testCtx *const p_ctx) {
     testFinish();
 }
 
-static void test_helper_generate(const struct zint_symbol *symbol, int ret, int i, char *data, char *composite, int option_1, char *comment, int bwipp_cmp) {
+static void test_helper_generate(const struct zint_symbol *symbol, int ret, int i, const char *data,
+                const char *composite, int option_1, const char *comment, int bwipp_cmp) {
     char esc_data[1024];
     char esc_composite[4096];
 
@@ -142,18 +141,18 @@ static void test_examples(const testCtx *const p_ctx) {
         int symbology;
         int input_mode;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
         int bwipp_cmp;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified manually against GS1 General Specifications 21.0.1 (GGS) and ISO/IEC 24723:2010, with noted exceptions, and verified via bwipp_dump.ps against BWIPP */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_DBAR_OMNSTK_CC, -1, 1, "0401234567890", "[17]050101[10]ABC123", 0, 11, 56, 1, "GSS Figure 5.1-5. GS1 DataBar Stacked Omnidirectional barcode with a Composite Component",
                     "01101100110101110001001100001000000110100111011110101001"
                     "01101101110110001100010100001100001000010110011100101001"
@@ -1424,7 +1423,14 @@ static void test_examples(const testCtx *const p_ctx) {
                     "00000000010110001100001010001001000010010100110001101110100111000111010010011110101100100001001010011000110111010011100011101001001111010110010000100101001100011011101001110001110100100111101011010000100010010000100100111000101000000000000"
                     "00000001101001110011110101110110111101101011001110010001011000111000101101100001010011011110110101100111001000101100011100010110110000101001101111011010110011100100010110001110001011011000010100101111011101101111011011000111010110000000000"
                 },
-        /* 70*/ { BARCODE_EANX_CC, -1, 1, "123456789012+12", "[91]123456789012345678901", 0, 8, 125, 1, "Example of EAN-13 with 2-digit addon, CC-A 4 cols, 4 rows",
+        /* 70*/ { BARCODE_GS1_128_CC, -1, 3, "[01]12345678901231[90]123", "[20]12", 0, 5, 205, 1, "Example with 8 cols, left/right padding of linear (BWIPP)",
+                    "1111111101010100011101010111000000111010110011110001110111110111010010000010000100010111010011011110001001100111101110010000110111001100111000101101111001000101110111000011101010001110000111111101000101001"
+                    "1111111101010100011110101000010000111010111011000001111110111001010011111001000100110111000000100110101100100111000001011111010001101110110101110001000001111010100001000011111010101100000111111101000101001"
+                    "1111111101010100011101010001111110100010100011110001111101011100001011000011001011110100101001111000001011111011010000011101111110010100110111100010001101011001001110000010101000011110000111111101000101001"
+                    "0000000001011000110000101000100110010011010011000110111010011100011101001001111010110010000100101001100011001001110010010000100101001100011010000100010011010001100010100001001000100010011100010100000000000"
+                    "0000000110100111001111010111011001101100101100111001000101100011100010110110000101001101111011010110011100110110001101101111011010110011100101111011101100101110011101011110110111011101100011101011000000000"
+                },
+        /* 71*/ { BARCODE_EANX_CC, -1, 1, "123456789012+12", "[91]123456789012345678901", 0, 8, 125, 1, "Example of EAN-13 with 2-digit addon, CC-A 4 cols, 4 rows",
                     "11010010001111001101001110010111011100010000100100011010111011100100000110000010011011101110110010100000000000000000000000000"
                     "11010110001110101100100000011001111010111110100100001011001011110110000110010011100000101100110010100000000000000000000000000"
                     "11010111001110101111101000011111100110111010101100001011111010111100110100110100111000001101110010100000000000000000000000000"
@@ -1434,7 +1440,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "00010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000"
                     "00010100100110111101001110101100010000101001000101010100100011101001110010110011011011001001000101000000010110011001010010011"
                 },
-        /* 71*/ { BARCODE_EANX_CC, -1, 1, "123456789012+54321", "[91]1234567890", 0, 7, 152, 1, "Example of EAN-13 with 5-digit addon, CC-B 4 cols, 3 rows",
+        /* 72*/ { BARCODE_EANX_CC, -1, 1, "123456789012+54321", "[91]1234567890", 0, 7, 152, 1, "Example of EAN-13 with 5-digit addon, CC-B 4 cols, 3 rows",
                     "11011011101111001101001110010111011100010000100111010010111011100100000110000010011011101101100010100000000000000000000000000000000000000000000000000000"
                     "11011011001111110101001110011111000100100110100110010011010001110001000100101111110011101100100010100000000000000000000000000000000000000000000000000000"
                     "11011010001010000010111100011100111100101110100110011011001111101001000100111110110100001110100010100000000000000000000000000000000000000000000000000000"
@@ -1443,7 +1449,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "00010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000"
                     "00010100100110111101001110101100010000101001000101010100100011101001110010110011011011001001000101000000010110111001010100011010100001010010011010011001"
                 },
-        /* 72*/ { BARCODE_UPCA_CC, -1, 1, "12345678901+12", "[91]123456789", 0, 7, 127, 1, "Example of UPC-A with 2-digit addon, CC-A 4 cols, 3 rows",
+        /* 73*/ { BARCODE_UPCA_CC, -1, 1, "12345678901+12", "[91]123456789", 0, 7, 127, 1, "Example of UPC-A with 2-digit addon, CC-A 4 cols, 3 rows",
                     "1101101110111100110100111001011101110001000010011101001011101110010000011000001001101110110110001010000000000000000000000000000"
                     "1101101100111001110011110101100001000111001010011001001110101100100000010010111111001110110010001010000000000000000000000000000"
                     "1101101000100001111001000101011110100000010010011001101000111000010110011011100010001110111010001010000000000000000000000000000"
@@ -1452,7 +1458,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "0001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000"
                     "0001010011001001001101111010100011011000101011110101010001001001000111010011100101100110110110010100000000010110011001010010011"
                 },
-        /* 73*/ { BARCODE_UPCA_CC, -1, 2, "12345678901+12121", "[91]1234567890123", 0, 8, 154, 1, "Example of UPC-A with 5-digit addon, CC-B 4 cols, 4 rows",
+        /* 74*/ { BARCODE_UPCA_CC, -1, 2, "12345678901+12121", "[91]1234567890123", 0, 8, 154, 1, "Example of UPC-A with 5-digit addon, CC-B 4 cols, 4 rows",
                     "1101001110100011111010011101101111110101110010011101101101000011110110011001011100001000110100100010000000000000000000000000000000000000000000000000000000"
                     "1101001100101100100111000001011111011000001010011101001101111110011010011101001111100100110101100010000000000000000000000000000000000000000000000000000000"
                     "1101000100111001101000011001100100000101100010011001001001111011110100011100011101000100110101110010000000000000000000000000000000000000000000000000000000"
@@ -1462,7 +1468,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "0001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000"
                     "0001010011001001001101111010100011011000101011110101010001001001000111010011100101100110110110010100000000010110011001010010011010110011010011011010011001"
                 },
-        /* 74*/ { BARCODE_UPCE_CC, -1, 1, "0654321+89", "[91]1", 0, 9, 81, 1, "Example of UPC-E with 2-digit addon, CC-A 2 cols, 5 rows",
+        /* 75*/ { BARCODE_UPCE_CC, -1, 1, "0654321+89", "[91]1", 0, 9, 81, 1, "Example of UPC-E with 2-digit addon, CC-A 2 cols, 5 rows",
                     "110110011011110111010111110101000100011110001111010100100000000000000000000000000"
                     "110110111011101100001000110111001010111000001110010100100000000000000000000000000"
                     "110110110011000101111101110111101000010010001110110100100000000000000000000000000"
@@ -1473,7 +1479,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "000100000000000000000000000000000000000000000000000001000000000000000000000000000"
                     "000101000010101100010011101011110100110110011001010101000000010110110111010010111"
                 },
-        /* 75*/ { BARCODE_UPCE_CC, -1, 2, "1876543+56789", "[91]12345", 0, 12, 108, 1, "Example of UPC-E with 5-digit addon, CC-B 2 cols, 8 rows",
+        /* 76*/ { BARCODE_UPCE_CC, -1, 2, "1876543+56789", "[91]12345", 0, 12, 108, 1, "Example of UPC-E with 5-digit addon, CC-B 2 cols, 8 rows",
                     "110010001011101111101110100100000100001000101100100010100000000000000000000000000000000000000000000000000000"
                     "111010001011010000111101100110010111000010001110100010100000000000000000000000000000000000000000000000000000"
                     "111011001011101100100111110100011110010000101110110010100000000000000000000000000000000000000000000000000000"
@@ -1487,7 +1493,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "000100000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000"
                     "000101011011100100010000101011000101000110100001010101000000010110110001010101111010010001010110111010010111"
                 },
-        /* 76*/ { BARCODE_EANX_CC, -1, 1, "9876543+65", "[91]1234567", 0, 8, 98, 1, "Example of EAN-8 with 2-digit addon, CC-A 3 cols, 4 rows",
+        /* 77*/ { BARCODE_EANX_CC, -1, 1, "9876543+65", "[91]1234567", 0, 8, 98, 1, "Example of EAN-8 with 2-digit addon, CC-A 3 cols, 4 rows",
                     "10010001111100110101001100011100010111001100110001011101000001110100110100000000000000000000000000"
                     "11011111100110100101011100011011110010110000111100010011110101110101110100000000000000000000000000"
                     "10000101100000110101011000010101111101111100111010010000111001110101100100000000000000000000000000"
@@ -1497,7 +1503,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "00001000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000"
                     "00001010001011011011101110110101111010101001110101110010000101110010101000000010110101111010111001"
                 },
-        /* 77*/ { BARCODE_EANX_CC, -1, 2, "9876543+74083", "[91]123456789012345678", 0, 12, 135, 1, "Example of EAN-8 with 5-digit addon, CC-B 3 cols, 8 rows",
+        /* 78*/ { BARCODE_EANX_CC, -1, 2, "9876543+74083", "[91]123456789012345678", 0, 12, 135, 1, "Example of EAN-8 with 5-digit addon, CC-B 3 cols, 8 rows",
                     "110011101011101111101110100100001011010000010000100010111110110100111101100111010100000000000000000000000000000000000000000000000000000"
                     "111011101011001011100001000100001001011100101100100000111000110111010001110111010100000000000000000000000000000000000000000000000000000"
                     "111001101011011111100110100100001101010100010111100000110010011011111101110011010100000000000000000000000000000000000000000000000000000"
@@ -1511,7 +1517,7 @@ static void test_examples(const testCtx *const p_ctx) {
                     "000000000000001000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000"
                     "000000000000001010001011011011101110110101111010101001110101110010000101110010101000000010110111011010011101010001101010110111010100001"
                 },
-        /* 78*/ { BARCODE_EANX_CC, -1, 1, "1234567890128+65", "[91]1234567", 0, 7, 125, 1, "Example of EAN-13 + CHK with 2-digit addon, CC-A 3 cols, 4 rows",
+        /* 79*/ { BARCODE_EANX_CC, -1, 1, "1234567890128+65", "[91]1234567", 0, 7, 125, 1, "Example of EAN-13 + CHK with 2-digit addon, CC-A 3 cols, 4 rows",
                     "11011011101111001101001110010111011100010000100111010010111011100100000110000110010100001101100010100000000000000000000000000"
                     "11011011001001100101111110011111011001000010100110010011111101110010100110101110001000001100100010100000000000000000000000000"
                     "11011010001101011111100100011011101000011100100110011010001001001111000101000011011111001110100010100000000000000000000000000"
@@ -1521,14 +1527,14 @@ static void test_examples(const testCtx *const p_ctx) {
                     "00010100100110111101001110101100010000101001000101010100100011101001110010110011011011001001000101000000010110101111010111001"
                 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
     char escaped[1024];
     char esc_composite[4096];
 
-    char bwipp_buf[32768];
+    char bwipp_buf[32768] = {0}; /* Suppress clang -fsanitize=memory false positive */
     char bwipp_msg[1024];
 
     int do_bwipp = (debug & ZINT_DEBUG_TEST_BWIPP) && testUtilHaveGhostscript(); /* Only do BWIPP test if asked, too slow otherwise */
@@ -1548,7 +1554,7 @@ static void test_examples(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -1593,17 +1599,17 @@ static void test_odd_numbered_numeric(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified via bwipp_dump.ps against BWIPP, and manually against tec-it.com */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { BARCODE_UPCE_CC, 1, "1234567", "[91]1234567890123", 0, 9, 55, "Test odd-numbered numeric, 1st fit, 9-bit remainder, 7-bit final, 2-bit alphanumeric latch, no padding",
                     "1101100110111011101011110001001111100110010011110101001"
                     "1101101110110001100001000101100010000100110011100101001"
@@ -1697,7 +1703,7 @@ static void test_odd_numbered_numeric(const testCtx *const p_ctx) {
                     "0001010010011011110101000110111001000010100100010101010"
                },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -1721,7 +1727,7 @@ static void test_odd_numbered_numeric(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -1757,25 +1763,25 @@ static void test_ean128_cc_shift(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
         int bwipp_cmp;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified via bwipp_dump.ps against BWIPP except where noted, when shift verified manually (tec-it.com seems to be off by 2 for top shifts > 1) */
-    struct item data[] = {
-        /* 0*/ { BARCODE_GS1_128_CC, -1, "[91]1", "[21]A1B2C3D4E5F6G7H8", 0, 6, 100, 0, "CC-A alignment, bottom shift 10, **NOT SAME** as BWIPP, Start B whereas BWIPP uses Start C, codeword count the same",
+    static const struct item data[] = {
+        /* 0*/ { BARCODE_GS1_128_CC, -1, "[91]1", "[21]A1B2C3D4E5F6G7H8", 0, 6, 100, 1, "CC-A alignment, bottom shift 10",
                     "1101001000110100001000001101101011110111110010010001101010000010010000011101110100010000111011001010"
                     "1101011000110101111001100001111010001101100010010000101111000011001101011100101100001000110011001010"
                     "1101011100100011001100111101011000101110000010110000101001100110011110011011110011001110110111001010"
                     "1101011110111000111011011001110010001011100010111000101011000011100110010000100000100010110111101010"
-                    "0000000000001011011110000101000100011010011011000110010110001100101000100001010001110010011100010100"
-                    "0000000000110100100001111010111011100101100100111001101001110011010111011110101110001101100011101011"
+                    "0000000000001011000110000101000100001001001010000100010110001100101000100001011000100110011100010100"
+                    "0000000000110100111001111010111011110110110101111011101001110011010111011110100111011001100011101011"
                },
         /* 1*/ { BARCODE_GS1_128_CC, -1, "[91]12", "[21]A1B2C3D4E5F6G7H8", 0, 6, 99, 1, "CC-A alignment, bottom shift 12",
                     "110100100011010000100000110110101111011111001001000110101000001001000001110111010001000011101100101"
@@ -1826,11 +1832,11 @@ static void test_ean128_cc_shift(const testCtx *const p_ctx) {
                     "1101001110011110101110111101101101011001110010001011000111000101101100001010011011110110101111011101001110011010111011110100110100001100011101011"
                },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
-    char bwipp_buf[8192];
+    char bwipp_buf[8192] = {0}; /* Suppress clang -fsanitize=memory false positive */
     char bwipp_msg[1024];
 
     int do_bwipp = (debug & ZINT_DEBUG_TEST_BWIPP) && testUtilHaveGhostscript(); /* Only do BWIPP test if asked, too slow otherwise */
@@ -1850,7 +1856,7 @@ static void test_ean128_cc_shift(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -1888,16 +1894,16 @@ static void test_ean128_cc_width(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
     struct item {
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
+        const char *comment;
     };
     /* Verified manually with BWIPP (except very large tests) */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { "[91]1", "[02]13012345678909", 0, 11, 103, "" },
         /* 1*/ { "[91]12", "[02]13012345678909", 0, 20, 86, "" },
         /* 2*/ { "[91]123", "[02]13012345678909", 0, 11, 108, "" },
@@ -1912,7 +1918,7 @@ static void test_ean128_cc_width(const testCtx *const p_ctx) {
         /*11*/ { "[00]123456789012345675", "[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345" "675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[91]1234567890", 0, 32, 579, "With composite 2372 digits == max" },
         /*12*/ { "[00]123456789012345675", "[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345" "675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[91]12345678901", ZINT_ERROR_TOO_LONG, 0, 0, "With composite 2373 digits > max" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -1931,7 +1937,7 @@ static void test_ean128_cc_width(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -1955,17 +1961,17 @@ static void test_encodation_0(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified via bwipp_dump.ps against BWIPP and manually against tec-it.com (with noted exception) */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { BARCODE_UPCE_CC, 1, "1234567", "[91]1", 0, 9, 55, "Single numeric",
                     "1101100110111101110101111101010001000111100011110101001"
                     "1101101110111011000010001101110010101110000011100101001"
@@ -2374,11 +2380,11 @@ static void test_encodation_0(const testCtx *const p_ctx) {
                     "0001010010011011110101000110111001000010100100010101010"
                },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
-    char bwipp_buf[8192];
+    char bwipp_buf[8192] = {0}; /* Suppress clang -fsanitize=memory false positive */
     char bwipp_msg[1024];
 
     int do_bwipp = (debug & ZINT_DEBUG_TEST_BWIPP) && testUtilHaveGhostscript(); /* Only do BWIPP test if asked, too slow otherwise */
@@ -2398,7 +2404,7 @@ static void test_encodation_0(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -2434,17 +2440,17 @@ static void test_encodation_10(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified via bwipp_dump.ps against BWIPP, and manually, with noted exceptions, against tec-it.com */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { BARCODE_UPCE_CC, 1, "1234567", "[11]201001[10]AB1234", 0, 9, 55, "Mode '10' date + even-numbered numeric lot, 1st fit, alphanumeric latch and padding",
                     "1101100110101110000100011001001000100111100011110101001"
                     "1101101110110010100011000001100110010000001011100101001"
@@ -2512,11 +2518,11 @@ static void test_encodation_10(const testCtx *const p_ctx) {
                     "0001010010011011110101000110111001000010100100010101010"
                },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
-    char bwipp_buf[8192];
+    char bwipp_buf[8192] = {0}; /* Suppress clang -fsanitize=memory false positive */
     char bwipp_msg[1024];
 
     int do_bwipp = (debug & ZINT_DEBUG_TEST_BWIPP) && testUtilHaveGhostscript(); /* Only do BWIPP test if asked, too slow otherwise */
@@ -2536,7 +2542,7 @@ static void test_encodation_10(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -2572,17 +2578,17 @@ static void test_encodation_11(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified via bwipp_dump.ps against BWIPP, and manually against tec-it.com (with noted exception) */
-    struct item data[] = {
+    static const struct item data[] = {
         /* 0*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A", 0, 9, 55, "Mode '11', letter prefix only",
                     "1101100110100111100000101001110110010011111011110101001"
                     "1101101110110001000101100001100011010010000011100101001"
@@ -2715,8 +2721,8 @@ static void test_encodation_11(const testCtx *const p_ctx) {
                     "0001000000000000000000000000000000000000000000000000010"
                     "0001010010011011110101000110111001000010100100010101010"
                },
-        /*12*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]1AB#D", ZINT_ERROR_INVALID_DATA, 0, 0, "Mode '11', invalid char [90]", "" },
-        /*13*/ { BARCODE_UPCE_CC, 2, "1234567", "[90]1AB#D", ZINT_ERROR_INVALID_DATA, 0, 0, "Mode '11', invalid char [90]", "" },
+        /*12*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]1AB#D", ZINT_ERROR_INVALID_DATA, 0, 0, "Mode '11', invalid char [90]", "Error 441: Invalid character in input (2D component)" },
+        /*13*/ { BARCODE_UPCE_CC, 2, "1234567", "[90]1AB#D", ZINT_ERROR_INVALID_DATA, 0, 0, "Mode '11', invalid char [90]", "Error 441: Invalid character in input (2D component)" },
         /*14*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A12345[21]AB", 0, 10, 55, "Mode '11', numeric [90], with [21]",
                     "1100100010111000111011011001001100011000010011100101101"
                     "1110100010101000001111001001111100110100010011000101101"
@@ -2778,45 +2784,45 @@ static void test_encodation_11(const testCtx *const p_ctx) {
                     "0001000000000000000000000000000000000000000000000000010"
                     "0001010010011011110101000110111001000010100100010101010"
                },
-        /*19*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A12[8004]12", 0, 9, 55, "Mode '11', numeric [90], with [8004]",
+        /*19*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A12[8004]1234", 0, 9, 55, "Mode '11', numeric [90], with [8004]",
                     "1101100110110001111010011001000001101101111011110101001"
                     "1101101110110100100000110001011100111101100011100101001"
-                    "1101101100110100000111010001100100001110001011101101001"
-                    "1101101000101110001001100001101111001011000011101001001"
-                    "1101001000100100110000110001101000010000110011101001101"
+                    "1101101100111101000010000101000100011111011011101101001"
+                    "1101101000100001100010011101011010001110000011101001001"
+                    "1101001000101010000001000001101001000011000011101001101"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0010000000000000000000000000000000000000000000000000001"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0001010010011011110101000110111001000010100100010101010"
                },
-        /*20*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]AB[8004]12", 0, 9, 55, "Mode '11', alpha [90], with [8004]",
+        /*20*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]AB[8004]1234", 0, 9, 55, "Mode '11', alpha [90], with [8004]",
                     "1101100110100111110011001001100101111110010011110101001"
                     "1101101110101000100000100001011000111001100011100101001"
-                    "1101101100100111110100011101111000100001001011101101001"
-                    "1101101000101000110011111001010001110111111011101001001"
-                    "1101001000110011101100001001111011100001011011101001101"
+                    "1101101100100111111010110001011111011001111011101101001"
+                    "1101101000101100110111100001101001001111100011101001001"
+                    "1101001000110110010001000001111001111001001011101001101"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0010000000000000000000000000000000000000000000000000001"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0001010010011011110101000110111001000010100100010101010"
                },
-        /*21*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A.[8004]12", 0, 9, 55, "Mode '11', alphanumeric [90], with [8004]",
+        /*21*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A.[8004]1234", 0, 9, 55, "Mode '11', alphanumeric [90], with [8004]",
                     "1101100110110111110011001101111110100110001011110101001"
                     "1101101110100010001001000001100101100011100011100101001"
-                    "1101101100100001011110001001100001100111101011101101001"
-                    "1101101000100111100100001001011110001110111011101001001"
-                    "1101001000101101111100111101100011010100000011101001101"
+                    "1101101100111000010011101101111010000100100011101101001"
+                    "1101101000101001011110000001110011011111101011101001001"
+                    "1101001000110010000100110001101010000011000011101001101"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0010000000000000000000000000000000000000000000000000001"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0001010010011011110101000110111001000010100100010101010"
                },
-        /*22*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A+[8004]12", 0, 9, 55, "Mode '11', ISO-646 [90], with [8004]",
+        /*22*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]A+[8004]1234", 0, 9, 55, "Mode '11', ISO-646 [90], with [8004]",
                     "1101100110110111110011001101111110100110001011110101001"
                     "1101101110111100110010111001001110001110100011100101001"
-                    "1101101100111001011100011001101001110000010011101101001"
-                    "1101101000101100000110111101000110001001110011101001001"
-                    "1101001000100011000110000101111100110101111011101001101"
+                    "1101101100111001011100011001111001001010000011101101001"
+                    "1101101000110111101100111001011110100010000011101001001"
+                    "1101001000111001101011000001101100010001000011101001101"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0010000000000000000000000000000000000000000000000000001"
                     "0001000000000000000000000000000000000000000000000000010"
@@ -2882,13 +2888,13 @@ static void test_encodation_11(const testCtx *const p_ctx) {
                     "0001000000000000000000000000000000000000000000000000010"
                     "0001010010011011110101000110111001000010100100010101010"
                },
-        /*28*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]AB[8004]12[10]12", 0, 10, 55, "Mode '11', alpha [90], with [8004], other data",
+        /*28*/ { BARCODE_UPCE_CC, 1, "1234567", "[90]AB[8004]1234[10]12", 0, 10, 55, "Mode '11', alpha [90], with [8004], other data",
                     "1100100010110000110000101001101111011101000011100101101"
                     "1110100010110100011110001101001110001011111011000101101"
-                    "1110110010100011100110111001011101101110000011000101001"
-                    "1100110010100000100010001001010000010000100011001101001"
-                    "1101110010111010000110000101101011100010000011011101001"
-                    "1101111010110011110010001101000111101100110011011001001"
+                    "1110110010100001101101111001100011110010110011000101001"
+                    "1100110010100001100111001101111010101111000011001101001"
+                    "1101110010111110100010001101001101011111100011011101001"
+                    "1101111010100111110110010001001011101111110011011001001"
                     "0001000000000000000000000000000000000000000000000000010"
                     "0010000000000000000000000000000000000000000000000000001"
                     "0001000000000000000000000000000000000000000000000000010"
@@ -2928,11 +2934,11 @@ static void test_encodation_11(const testCtx *const p_ctx) {
                     "0001010010011011110101000110111001000010100100010101010"
                },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
-    char bwipp_buf[8192];
+    char bwipp_buf[8192] = {0}; /* Suppress clang -fsanitize=memory false positive */
     char bwipp_msg[1024];
 
     int do_bwipp = (debug & ZINT_DEBUG_TEST_BWIPP) && testUtilHaveGhostscript(); /* Only do BWIPP test if asked, too slow otherwise */
@@ -2952,7 +2958,7 @@ static void test_encodation_11(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -2990,16 +2996,16 @@ static void test_addongap(const testCtx *const p_ctx) {
         int symbology;
         int option_1;
         int option_2;
-        char *data;
+        const char *data;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
-        char *expected;
+        const char *comment;
+        const char *expected;
     };
     /* Verified via bwipp_dump.ps against BWIPP */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_EANX_CC, 1, -1, "1234567+12", 0, 8, 98, "EAN-8 default 7 gap",
                     "10010001111100110101001100011110001011001100110110011110000101110100110100000000000000000000000000"
                     "10000011100101100101011100010111100010001000100000100101111001110101110100000000000000000000000000"
@@ -3079,14 +3085,14 @@ static void test_addongap(const testCtx *const p_ctx) {
                     "00010100100110111101010001101110010000101001000101010100000000000010110011001010010011"
                 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
-    char bwipp_buf[8192];
+    char bwipp_buf[8192] = {0}; /* Suppress clang -fsanitize=memory false positive */
     char bwipp_msg[1024];
 
-    char *composite = "[91]12";
+    const char *composite = "[91]12";
 
     int do_bwipp = (debug & ZINT_DEBUG_TEST_BWIPP) && testUtilHaveGhostscript(); /* Only do BWIPP test if asked, too slow otherwise */
 
@@ -3105,7 +3111,7 @@ static void test_addongap(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
@@ -3145,15 +3151,15 @@ static void test_gs1parens(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int input_mode;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_EANX_CC, -1, "1234567", "[21]A12345678", 0, 8, 72 }, /* EAN-8 */
         /*  1*/ { BARCODE_EANX_CC, GS1PARENS_MODE, "1234567", "(21)A12345678", 0, 8, 72 }, /* EAN-8 */
         /*  2*/ { BARCODE_EANX_CC, -1, "123456789012", "[21]A12345678", 0, 7, 99 }, /* EAN-13 */
@@ -3177,7 +3183,7 @@ static void test_gs1parens(const testCtx *const p_ctx) {
         /* 20*/ { BARCODE_DBAR_EXPSTK_CC, -1, "[01]12345678901231[3103]001234", "[21]A12345678", 0, 9, 102 },
         /* 21*/ { BARCODE_DBAR_EXPSTK_CC, GS1PARENS_MODE, "(01)12345678901231(3103)001234", "(21)A12345678", 0, 9, 102 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -3196,13 +3202,11 @@ static void test_gs1parens(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
-        if (ret < ZINT_ERROR) {
-            assert_equal(symbol->rows, data[i].expected_rows, "i:%d symbol->rows %d != %d\n", i, symbol->rows, data[i].expected_rows);
-            assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n", i, symbol->width, data[i].expected_width);
-        }
+        assert_equal(symbol->rows, data[i].expected_rows, "i:%d symbol->rows %d != %d\n", i, symbol->rows, data[i].expected_rows);
+        assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n", i, symbol->width, data[i].expected_width);
 
         ZBarcode_Delete(symbol);
     }
@@ -3216,53 +3220,69 @@ static void test_hrt(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int input_mode;
-        char *data;
-        char *composite;
+        int output_options;
+        const char *data;
+        const char *composite;
 
         int ret;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
-        /*  0*/ { BARCODE_EANX_CC, -1, "1234567", "[20]12", 0, "12345670" }, /* EAN-8 */
-        /*  1*/ { BARCODE_EANX_CC, -1, "123456789012", "[20]12", 0, "1234567890128" }, /* EAN-13 */
-        /*  2*/ { BARCODE_EANX_CC, -1, "1234567890128", "[20]12", 0, "1234567890128" },
-        /*  3*/ { BARCODE_EANX_CC, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
-        /*  4*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
-        /*  5*/ { BARCODE_EANX_CC, -1, "1234567890128", "[20]1A", ZINT_WARN_NONCOMPLIANT, "1234567890128" }, /* AI (20) should be 2 nos. */
-        /*  6*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, "1234567890128", "[20]1A", 0, "1234567890128" },
-        /*  7*/ { BARCODE_DBAR_OMN_CC, -1, "1234567890123", "[20]12", 0, "(01)12345678901231" },
-        /*  8*/ { BARCODE_DBAR_OMN_CC, -1, "12345678901231", "[20]12", 0, "(01)12345678901231" },
-        /*  9*/ { BARCODE_DBAR_OMN_CC, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
-        /* 10*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
-        /* 11*/ { BARCODE_DBAR_OMN_CC, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, "(01)12345678901231" }, /* AI (20) should be 2 nos. */
-        /* 12*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, "12345678901231", "[20]1A", 0, "(01)12345678901231" },
-        /* 13*/ { BARCODE_DBAR_LTD_CC, -1, "1234567890123", "[20]12", 0, "(01)12345678901231" },
-        /* 14*/ { BARCODE_DBAR_LTD_CC, -1, "12345678901231", "[20]12", 0, "(01)12345678901231" },
-        /* 15*/ { BARCODE_DBAR_LTD_CC, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
-        /* 16*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
-        /* 17*/ { BARCODE_DBAR_LTD_CC, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, "(01)12345678901231" }, /* AI (20) should be 2 nos. */
-        /* 18*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, "12345678901231", "[20]1A", 0, "(01)12345678901231" },
-        /* 19*/ { BARCODE_UPCA_CC, -1, "12345678901", "[20]12", 0, "123456789012" },
-        /* 20*/ { BARCODE_UPCA_CC, -1, "123456789012", "[20]12", 0, "123456789012" },
-        /* 21*/ { BARCODE_UPCA_CC, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
-        /* 22*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
-        /* 23*/ { BARCODE_UPCA_CC, -1, "123456789012", "[20]1A", ZINT_WARN_NONCOMPLIANT, "123456789012" }, /* AI (20) should be 2 nos. */
-        /* 24*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, "123456789012", "[20]1A", 0, "123456789012" },
-        /* 25*/ { BARCODE_UPCE_CC, -1, "123456", "[20]12", 0, "01234565" },
-        /* 26*/ { BARCODE_UPCE_CC, -1, "1234567", "[20]12", 0, "12345670" },
-        /* 27*/ { BARCODE_UPCE_CC, -1, "12345670", "[20]12", 0, "12345670" },
-        /* 28*/ { BARCODE_UPCE_CC, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
-        /* 29*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
-        /* 30*/ { BARCODE_UPCE_CC, -1, "12345670", "[20]12", 0, "12345670" }, /* Check digit can now be given for UPCE_CC, like UPCA_CC */
-        /* 31*/ { BARCODE_UPCE_CC, -1, "1234567", "[20]1A", ZINT_WARN_NONCOMPLIANT, "12345670" }, /* AI (20) should be 2 nos. */
-        /* 32*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, "1234567", "[20]1A", 0, "12345670" },
-        /* 33*/ { BARCODE_DBAR_STK_CC, -1, "12345678901231", "[20]12", 0, "" }, /* No HRT for stacked symbologies */
-        /* 34*/ { BARCODE_DBAR_OMNSTK_CC, -1, "12345678901231", "[20]12", 0, "" },
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_EANX_CC, -1, -1, "1234567", "[20]12", 0, "12345670" }, /* EAN-8 */
+        /*  1*/ { BARCODE_EANX_CC, -1, BARCODE_RAW_TEXT, "1234567", "[20]12", 0, "12345670" }, /* EAN-8 */
+        /*  2*/ { BARCODE_EANX_CC, -1, -1, "123456789012", "[20]12", 0, "1234567890128" }, /* EAN-13 */
+        /*  3*/ { BARCODE_EANX_CC, -1, BARCODE_RAW_TEXT, "123456789012", "[20]12", 0, "1234567890128" }, /* EAN-13 */
+        /*  4*/ { BARCODE_EANX_CC, -1, -1, "1234567890128", "[20]12", 0, "1234567890128" },
+        /*  5*/ { BARCODE_EANX_CC, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
+        /*  6*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
+        /*  7*/ { BARCODE_EANX_CC, -1, -1, "1234567890128", "[20]1A", ZINT_WARN_NONCOMPLIANT, "1234567890128" }, /* AI (20) should be 2 nos. */
+        /*  8*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, "1234567890128", "[20]1A", 0, "1234567890128" },
+        /*  9*/ { BARCODE_EANX_CC, -1, -1, "1234567890128+12", "[20]12", 0, "1234567890128+12" },
+        /* 10*/ { BARCODE_EANX_CC, -1, BARCODE_RAW_TEXT, "1234567890128+12", "[20]12", 0, "1234567890128+12" },
+        /* 11*/ { BARCODE_DBAR_OMN_CC, -1, -1, "1234567890123", "[20]12", 0, "(01)12345678901231" },
+        /* 12*/ { BARCODE_DBAR_OMN_CC, -1, BARCODE_RAW_TEXT, "1234567890123", "[20]12", 0, "0112345678901231" },
+        /* 13*/ { BARCODE_DBAR_OMN_CC, -1, -1, "12345678901231", "[20]12", 0, "(01)12345678901231" },
+        /* 14*/ { BARCODE_DBAR_OMN_CC, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
+        /* 15*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
+        /* 16*/ { BARCODE_DBAR_OMN_CC, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, "(01)12345678901231" }, /* AI (20) should be 2 nos. */
+        /* 17*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, "12345678901231", "[20]1A", 0, "(01)12345678901231" },
+        /* 18*/ { BARCODE_DBAR_LTD_CC, -1, -1, "1234567890123", "[20]12", 0, "(01)12345678901231" },
+        /* 19*/ { BARCODE_DBAR_LTD_CC, -1, BARCODE_RAW_TEXT, "1234567890123", "[20]12", 0, "0112345678901231" },
+        /* 20*/ { BARCODE_DBAR_LTD_CC, -1, -1, "12345678901231", "[20]12", 0, "(01)12345678901231" },
+        /* 21*/ { BARCODE_DBAR_LTD_CC, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
+        /* 22*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
+        /* 23*/ { BARCODE_DBAR_LTD_CC, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, "(01)12345678901231" }, /* AI (20) should be 2 nos. */
+        /* 24*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, "12345678901231", "[20]1A", 0, "(01)12345678901231" },
+        /* 25*/ { BARCODE_UPCA_CC, -1, -1, "12345678901", "[20]12", 0, "123456789012" },
+        /* 26*/ { BARCODE_UPCA_CC, -1, BARCODE_RAW_TEXT, "12345678901", "[20]12", 0, "123456789012" },
+        /* 27*/ { BARCODE_UPCA_CC, -1, -1, "123456789012", "[20]12", 0, "123456789012" },
+        /* 28*/ { BARCODE_UPCA_CC, -1, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
+        /* 29*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
+        /* 30*/ { BARCODE_UPCA_CC, -1, -1, "123456789012", "[20]1A", ZINT_WARN_NONCOMPLIANT, "123456789012" }, /* AI (20) should be 2 nos. */
+        /* 31*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, "123456789012", "[20]1A", 0, "123456789012" },
+        /* 32*/ { BARCODE_UPCA_CC, -1, -1, "123456789012+123", "[20]12", 0, "123456789012+00123" },
+        /* 33*/ { BARCODE_UPCA_CC, -1, BARCODE_RAW_TEXT, "123456789012+123", "[20]12", 0, "123456789012+00123" },
+        /* 34*/ { BARCODE_UPCE_CC, -1, -1, "123456", "[20]12", 0, "01234565" },
+        /* 35*/ { BARCODE_UPCE_CC, -1, BARCODE_RAW_TEXT, "123456", "[20]12", 0, "01234565" },
+        /* 36*/ { BARCODE_UPCE_CC, -1, -1, "1234567", "[20]12", 0, "12345670" },
+        /* 37*/ { BARCODE_UPCE_CC, -1, -1, "12345670", "[20]12", 0, "12345670" },
+        /* 38*/ { BARCODE_UPCE_CC, -1, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, "" },
+        /* 39*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, "" }, /* Still checked */
+        /* 40*/ { BARCODE_UPCE_CC, -1, -1, "12345670", "[20]12", 0, "12345670" }, /* Check digit can now be given for UPCE_CC, like UPCA_CC */
+        /* 41*/ { BARCODE_UPCE_CC, -1, -1, "1234567", "[20]1A", ZINT_WARN_NONCOMPLIANT, "12345670" }, /* AI (20) should be 2 nos. */
+        /* 42*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, "1234567", "[20]1A", 0, "12345670" },
+        /* 43*/ { BARCODE_UPCE_CC, -1, -1, "1234567+2", "[20]12", 0, "12345670+02" },
+        /* 44*/ { BARCODE_UPCE_CC, -1, BARCODE_RAW_TEXT, "1234567+2", "[20]12", 0, "12345670+02" },
+        /* 45*/ { BARCODE_DBAR_STK_CC, -1, -1, "12345678901231", "[20]12", 0, "" }, /* No HRT for stacked symbologies */
+        /* 46*/ { BARCODE_DBAR_STK_CC, -1, BARCODE_RAW_TEXT, "12345678901231", "[20]12", 0, "" },
+        /* 47*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, "12345678901231", "[20]12", 0, "" },
+        /* 48*/ { BARCODE_DBAR_OMNSTK_CC, -1, BARCODE_RAW_TEXT, "12345678901231", "[20]12", 0, "" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
+    int expected_length;
 
     testStartSymbol("test_hrt", &symbol);
 
@@ -3270,18 +3290,26 @@ static void test_hrt(const testCtx *const p_ctx) {
 
         if (testContinue(p_ctx, i)) continue;
 
+        if (data[i].output_options == BARCODE_RAW_TEXT) continue; /* BARCODE_RAW_TEXT temporarily disabled */
+
         symbol = ZBarcode_Create();
         assert_nonnull(symbol, "Symbol not created\n");
 
-        length = testUtilSetSymbol(symbol, data[i].symbology, data[i].input_mode, -1 /*eci*/, -1 /*option_1*/, -1, -1, -1 /*output_options*/, data[i].data, -1, debug);
+        length = testUtilSetSymbol(symbol, data[i].symbology, data[i].input_mode, -1 /*eci*/,
+                    -1 /*option_1*/, -1 /*option_2*/, -1 /*option_3*/, data[i].output_options,
+                    data[i].data, -1, debug);
         assert_zero(length >= 128, "i:%d length %d >= 128\n", i, length);
         strcpy(symbol->primary, data[i].data);
 
+        expected_length = (int) strlen(data[i].expected);
+
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, data[i].ret, ret, symbol->errtxt);
 
+        assert_equal(symbol->text_length, expected_length, "i:%d text_length %d != expected_length %d\n",
+                    i, symbol->text_length, expected_length);
         assert_zero(strcmp((const char *) symbol->text, data[i].expected), "i:%d strcmp(%s, %s) != 0\n", i, symbol->text, data[i].expected);
 
         ZBarcode_Delete(symbol);
@@ -3300,129 +3328,131 @@ static void test_input(const testCtx *const p_ctx) {
         int option_1;
         int option_2;
         int option_3;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
 
         int ret;
         int expected_rows;
         int expected_width;
-        char *expected_errtxt;
+        const char *expected_errtxt;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567", "[20]12", 0, 8, 72, "" }, /* EAN-8 */
-        /*  1*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" }, /* EAN-8 */
-        /*  2*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" }, /* Linear component still checked */
-        /*  3*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567", "[20]1A", ZINT_WARN_NONCOMPLIANT, 8, 72, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" },
+        /*  1*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 7 in input (digits and \"+\" only) (linear component)" }, /* EAN-8 */
+        /*  2*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 7 in input (digits and \"+\" only) (linear component)" }, /* Linear component still checked */
+        /*  3*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567", "[20]1A", ZINT_WARN_NONCOMPLIANT, 8, 72, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" },
         /*  4*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567", "[20]1A", 0, 8, 72, "" },
-        /*  5*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 8, 72, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /*  5*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 8, 72, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /*  6*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567", "[02]12345678901234", 0, 8, 72, "" },
         /*  7*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "12345671", "[20]12", 0, 7, 99, "" }, /* EAN-13 for EANX_CC as length 8 only EAN-8 for EANX_CHK */
         /*  8*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456789012", "[20]12", 0, 7, 99, "" }, /* EAN-13 */
         /*  9*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[20]12", 0, 7, 99, "" }, /* EAN-13 */
-        /* 10*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 275: Invalid check digit '3', expecting '8' in linear component" },
-        /* 11*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 275: Invalid check digit '3', expecting '8' in linear component" }, /* Linear component still checked */
-        /* 12*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "12345678901234", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 448: Input too long (13 character maximum) in linear component" },
-        /* 13*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901234", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 448: Input too long (13 character maximum) in linear component" },
-        /* 14*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456789012A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" },
-        /* 15*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" },
-        /* 16*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[20]1A", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 10*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 275: Invalid check digit '3', expecting '8' (linear component)" },
+        /* 11*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 275: Invalid check digit '3', expecting '8' (linear component)" }, /* Linear component still checked */
+        /* 12*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "12345678901234", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 294: Input length 14 too long (maximum 13) (linear component)" },
+        /* 13*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901234", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 294: Input length 14 too long (maximum 13) (linear component)" },
+        /* 14*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456789012A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 13 in input (digits and \"+\" only) (linear component)" },
+        /* 15*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 13 in input (digits and \"+\" only) (linear component)" },
+        /* 16*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[20]1A", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 17*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890128", "[20]1A", 0, 7, 99, "" },
-        /* 18*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 18*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 19*/ { BARCODE_EANX_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890128", "[02]12345678901234", 0, 7, 99, "" },
         /* 20*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567", 0, 48, 99, "" }, /* Max CC-B for EAN-13 */
-        /* 21*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]1234567890123456789012345678901234567890123456789012345678", ZINT_ERROR_TOO_LONG, -1, -1, "Error 444: Input too long for selected 2D component" },
+        /* 21*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "1234567890128", "[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]1234567890123456789012345678901234567890123456789012345678", ZINT_ERROR_TOO_LONG, -1, -1, "Error 444: Input too long (2D component)" },
         /* 22*/ { BARCODE_EANX_CC, -1, 3, -1, -1, "1234567890128", "[20]12", ZINT_ERROR_INVALID_OPTION, -1, -1, "Error 447: Invalid mode (CC-C only valid with GS1-128 linear component)" },
-        /* 23*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456789012345678901", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 449: Input wrong length in linear component" },
+        /* 23*/ { BARCODE_EANX_CC, -1, -1, -1, -1, "123456789012345678901", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 449: Input length 21 wrong (linear component)" },
         /* 24*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "1234567890123", "[20]12", 0, 5, 100, "" },
         /* 25*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901231", "[20]12", 0, 5, 100, "" },
-        /* 26*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' in linear component" },
-        /* 27*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' in linear component" }, /* Linear component still checked */
-        /* 28*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input too long (14 character maximum) in linear component" },
-        /* 29*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input too long (14 character maximum) in linear component" },
-        /* 30*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character in data (digits only) in linear component" },
-        /* 31*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character in data (digits only) in linear component" },
-        /* 32*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 5, 100, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 26*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' (linear component)" },
+        /* 27*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' (linear component)" }, /* Linear component still checked */
+        /* 28*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input length 15 too long (maximum 14) (linear component)" },
+        /* 29*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input length 15 too long (maximum 14) (linear component)" },
+        /* 30*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character at position 14 in input (digits only) (linear component)" },
+        /* 31*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character at position 14 in input (digits only) (linear component)" },
+        /* 32*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 5, 100, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 33*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[20]1A", 0, 5, 100, "" },
-        /* 34*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 5, 100, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 34*/ { BARCODE_DBAR_OMN_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 5, 100, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 35*/ { BARCODE_DBAR_OMN_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[02]12345678901234", 0, 5, 100, "" },
         /* 36*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "1234567890123", "[20]12", 0, 6, 79, "" },
         /* 37*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901231", "[20]12", 0, 6, 79, "" },
-        /* 38*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 389: Invalid check digit '2', expecting '1' in linear component" },
-        /* 39*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 389: Invalid check digit '2', expecting '1' in linear component" }, /* Linear component still checked */
-        /* 40*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "123456789012345", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 382: Input too long (14 character maximum) in linear component" },
-        /* 41*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012345", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 382: Input too long (14 character maximum) in linear component" },
-        /* 42*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "A1234567890123", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 383: Invalid character in data (digits only) in linear component" },
-        /* 43*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "A1234567890123", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 383: Invalid character in data (digits only) in linear component" },
-        /* 44*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 6, 79, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 38*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 389: Invalid check digit '2', expecting '1' (linear component)" },
+        /* 39*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 389: Invalid check digit '2', expecting '1' (linear component)" }, /* Linear component still checked */
+        /* 40*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "123456789012345", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 382: Input length 15 too long (maximum 14) (linear component)" },
+        /* 41*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012345", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 382: Input length 15 too long (maximum 14) (linear component)" },
+        /* 42*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "A1234567890123", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 383: Invalid character at position 1 in input (digits only) (linear component)" },
+        /* 43*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "A1234567890123", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 383: Invalid character at position 1 in input (digits only) (linear component)" },
+        /* 44*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 6, 79, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 45*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[20]1A", 0, 6, 79, "" },
-        /* 46*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 6, 79, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 46*/ { BARCODE_DBAR_LTD_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 6, 79, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 47*/ { BARCODE_DBAR_LTD_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[02]12345678901234", 0, 6, 79, "" },
         /* 48*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "12345678901", "[20]12", 0, 7, 99, "" },
         /* 49*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789012", "[20]12", 0, 7, 99, "" },
-        /* 50*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 270: Invalid check digit '3', expecting '2' in linear component" },
-        /* 51*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 270: Invalid check digit '3', expecting '2' in linear component" }, /* Linear component still checked */
-        /* 52*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 289: Input wrong length (12 character maximum) in linear component" },
-        /* 53*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 289: Input wrong length (12 character maximum) in linear component" },
-        /* 54*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "12345678901A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" },
-        /* 55*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" },
-        /* 56*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789012", "[20]1A", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 50*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 270: Invalid check digit '3', expecting '2' (linear component)" },
+        /* 51*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789013", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 270: Invalid check digit '3', expecting '2' (linear component)" }, /* Linear component still checked */
+        /* 52*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 289: Input length 13 wrong (11 or 12 characters required) (linear component)" },
+        /* 53*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 289: Input length 13 wrong (11 or 12 characters required) (linear component)" },
+        /* 54*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "12345678901A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 12 in input (digits and \"+\" only) (linear component)" },
+        /* 55*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 12 in input (digits and \"+\" only) (linear component)" },
+        /* 56*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789012", "[20]1A", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 57*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012", "[20]1A", 0, 7, 99, "" },
-        /* 58*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789012", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 58*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, "123456789012", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 7, 99, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 59*/ { BARCODE_UPCA_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012", "[02]12345678901234", 0, 7, 99, "" },
         /* 60*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "123456", "[20]12", 0, 9, 55, "" },
         /* 61*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567", "[20]12", 0, 9, 55, "" },
         /* 62*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "12345670", "[20]12", 0, 9, 55, "" }, /* Check digit can now be given for UPCE_CC, like UPCA_CC */
-        /* 63*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 274: Invalid check digit '1', expecting '0' in linear component" },
-        /* 64*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 274: Invalid check digit '1', expecting '0' in linear component" }, /* Linear component still checked */
-        /* 65*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "123456712", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 291: Input wrong length (8 character maximum) in linear component" },
-        /* 66*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456712", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 291: Input wrong length (8 character maximum) in linear component" },
-        /* 67*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" },
-        /* 68*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character in data (digits and \"+\" only) in linear component" },
-        /* 69*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567", "[20]1A", ZINT_WARN_NONCOMPLIANT, 9, 55, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 63*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 274: Invalid check digit '1', expecting '0' (linear component)" },
+        /* 64*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345671", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 274: Invalid check digit '1', expecting '0' (linear component)" }, /* Linear component still checked */
+        /* 65*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "123456712", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 291: Input length 9 wrong (6, 7 or 8 characters required) (linear component)" },
+        /* 66*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456712", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 291: Input length 9 wrong (6, 7 or 8 characters required) (linear component)" },
+        /* 67*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 8 in input (digits and \"+\" only) (linear component)" },
+        /* 68*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 284: Invalid character at position 8 in input (digits and \"+\" only) (linear component)" },
+        /* 69*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567", "[20]1A", ZINT_WARN_NONCOMPLIANT, 9, 55, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 70*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567", "[20]1A", 0, 9, 55, "" },
-        /* 71*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 9, 55, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 71*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, "1234567", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 9, 55, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 72*/ { BARCODE_UPCE_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567", "[02]12345678901234", 0, 9, 55, "" },
         /* 73*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "1234567890123", "[20]12", 0, 9, 56, "" },
         /* 74*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901231", "[20]12", 0, 9, 56, "" },
-        /* 75*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' in linear component" },
-        /* 76*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' in linear component" }, /* Linear component still checked */
-        /* 77*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "123456789012323", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input too long (14 character maximum) in linear component" },
-        /* 78*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012323", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input too long (14 character maximum) in linear component" },
-        /* 79*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character in data (digits only) in linear component" },
-        /* 80*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character in data (digits only) in linear component" },
-        /* 81*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 9, 56, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 75*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' (linear component)" },
+        /* 76*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' (linear component)" }, /* Linear component still checked */
+        /* 77*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "123456789012323", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input length 15 too long (maximum 14) (linear component)" },
+        /* 78*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012323", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input length 15 too long (maximum 14) (linear component)" },
+        /* 79*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character at position 14 in input (digits only) (linear component)" },
+        /* 80*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character at position 14 in input (digits only) (linear component)" },
+        /* 81*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 9, 56, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 82*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[20]1A", 0, 9, 56, "" },
-        /* 83*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 9, 56, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 83*/ { BARCODE_DBAR_STK_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 9, 56, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 84*/ { BARCODE_DBAR_STK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[02]12345678901234", 0, 9, 56, "" },
         /* 85*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "1234567890123", "[20]12", 0, 11, 56, "" },
         /* 86*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901231", "[20]12", 0, 11, 56, "" },
-        /* 87*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' in linear component" },
-        /* 88*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' in linear component" }, /* Linear component still checked */
-        /* 89*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input too long (14 character maximum) in linear component" },
-        /* 90*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input too long (14 character maximum) in linear component" },
-        /* 91*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character in data (digits only) in linear component" },
-        /* 92*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character in data (digits only) in linear component" },
-        /* 93*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 11, 56, "Warning 261: AI (20) position 2: Non-numeric character 'A' in 2D component" }, /* AI (20) should be 2 nos. */
+        /* 87*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' (linear component)" },
+        /* 88*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901232", "[20]12", ZINT_ERROR_INVALID_CHECK, -1, -1, "Error 388: Invalid check digit '2', expecting '1' (linear component)" }, /* Linear component still checked */
+        /* 89*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input length 15 too long (maximum 14) (linear component)" },
+        /* 90*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "123456789012312", "[20]12", ZINT_ERROR_TOO_LONG, -1, -1, "Error 380: Input length 15 too long (maximum 14) (linear component)" },
+        /* 91*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character at position 14 in input (digits only) (linear component)" },
+        /* 92*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "1234567890123A", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 381: Invalid character at position 14 in input (digits only) (linear component)" },
+        /* 93*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901231", "[20]1A", ZINT_WARN_NONCOMPLIANT, 11, 56, "Warning 261: AI (20) position 2: Non-numeric character 'A' (2D component)" }, /* AI (20) should be 2 nos. */
         /* 94*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[20]1A", 0, 11, 56, "" },
-        /* 95*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 11, 56, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' in 2D component" },
+        /* 95*/ { BARCODE_DBAR_OMNSTK_CC, -1, -1, -1, -1, "12345678901231", "[02]12345678901234", ZINT_WARN_NONCOMPLIANT, 11, 56, "Warning 261: AI (02) position 14: Bad checksum '4', expected '1' (2D component)" },
         /* 96*/ { BARCODE_DBAR_OMNSTK_CC, GS1NOCHECK_MODE, -1, -1, -1, "12345678901231", "[02]12345678901234", 0, 11, 56, "" },
         /* 97*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "", "[20]12", ZINT_ERROR_INVALID_OPTION, -1, -1, "Error 445: No primary (linear) message" },
         /* 98*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[01]12345678901231", "[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[95]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[96]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[97]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[98]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[99]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", 0, 31, 273, "" }, /* Tries CC-A then CC-B then CC-C - ensure errtxt empty */
-        /* 99*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[01]12345678901231[90]123456789012345678901234567890[91]1234567890123456789012345678901234567890123456789012345678901234", "[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[95]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[96]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[97]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[98]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[99]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[95]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[96]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[97]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[98]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[99]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123", ZINT_WARN_NONCOMPLIANT, 29, 702, "Warning 843: GS1-128 input too long (48 character maximum) in linear component" }, /* Overlarge linear and CC-C input */
-        /*100*/ { BARCODE_GS1_128_CC, -1, -1,  -1, -1,"[01]12345678901231[90]123456789012345678901234567890[91]1234567890123456789012345678901234567890123456789012345678901234", "[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[97]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[98]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[99]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL", ZINT_ERROR_TOO_LONG, -1, -1, "Error 442: Input too long for selected 2D component" }, /* Overlarge linear and oversized CC-C input */
-        /*101*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[01]12345678901231", "[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[97]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[98]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[99]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHI" "JKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLM", ZINT_ERROR_TOO_LONG, -1, -1, "Error 446: 2D component input data too long" }, /* Reduced length 2291 */
+        /* 99*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[01]12345678901231[90]123456789012345678901234567890[91]1234567890123456789012345678901234567890123456789012345678901234", "[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[95]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[96]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[97]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[98]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[99]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[95]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[96]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[97]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[98]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[99]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[91]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[92]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[93]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890[94]123456789012345678901234567890123456789012345678901234567890123", ZINT_WARN_NONCOMPLIANT, 29, 702, "Warning 843: Input too long, requires 115 characters (maximum 48) (linear component)" }, /* Overlarge linear and CC-C input */
+        /*100*/ { BARCODE_GS1_128_CC, -1, -1,  -1, -1, "[01]12345678901231[90]123456789012345678901234567890[91]1234567890123456789012345678901234567890123456789012345678901234", "[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[97]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[98]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[99]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL", ZINT_ERROR_TOO_LONG, -1, -1, "Error 442: Input too long (2D component)" }, /* Overlarge linear and oversized CC-C input */
+        /*101*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[01]12345678901231", "[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[97]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[98]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[99]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[94]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[95]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[96]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[91]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[92]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHI" "JKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKL[93]ABCDEFGHIJKLM", ZINT_ERROR_TOO_LONG, -1, -1, "Error 446: 2D component input too long, requires 2991 characters (maximum 2990)" }, /* Reduced length 2291 */
         /*102*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[01]12345678901231", "[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012" "345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[00]123456789012345675[11]121212[20]12", 0, 32, 579, "" }, /* Reduced length 2372 digits (no FNC1s) with not recommended ECC 4 > 2361 digit limit given in ISO/IEC 24723:2010 4.1 (d)(2)(iii) */
-        /*103*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
-        /*104*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 1, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
-        /*105*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 2, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
-        /*106*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 3, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 9, 151, "" },
-        /*107*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 4, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 9, 200, "" },
-        /*108*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, 2, "[91]1234567890123456789012345678901234", "[20]12", 0, 9, 151, "" },
-        /*109*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, 3, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
-        /*110*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, 4, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
+        /*103*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[90]ABCDEFGHIJKLMNOPQRSTUVWXYXABCD[91]ABCDEFGHIJKLMNOPQRSTUVWXYABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLM", "[20]12", ZINT_WARN_NONCOMPLIANT, 5, 1146, "Warning 843: Input too long, requires 99 characters (maximum 48) (linear component)" },
+        /*104*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, "[90]ABCDEFGHIJKLMNOPQRSTUVWXYXABCD[91]ABCDEFGHIJKLMNOPQRSTUVWXYABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN", "[20]12", ZINT_ERROR_INVALID_DATA, -1, -1, "Error 344: Input too long, requires 103 symbol characters (maximum 102) (linear component)" },
+        /*105*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
+        /*106*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 1, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
+        /*107*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 2, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
+        /*108*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 3, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 9, 151, "" },
+        /*109*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, 4, -1, "[91]1234567890123456789012345678901234", "[20]12", 0, 9, 200, "" },
+        /*110*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, 2, "[91]1234567890123456789012345678901234", "[20]12", 0, 9, 151, "" },
+        /*111*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, 3, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
+        /*112*/ { BARCODE_DBAR_EXPSTK_CC, -1, -1, -1, 4, "[91]1234567890123456789012345678901234", "[20]12", 0, 13, 102, "" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -3441,7 +3471,7 @@ static void test_input(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, data[i].ret, ret, symbol->errtxt);
 
         assert_zero(strcmp(symbol->errtxt, data[i].expected_errtxt), "i:%d strcmp(%s, %s) != 0\n", i, symbol->errtxt, data[i].expected_errtxt);
@@ -3465,28 +3495,29 @@ static void test_fuzz(const testCtx *const p_ctx) {
         int symbology;
         int input_mode;
         int option_1;
-        char *data;
+        const char *data;
         int length;
-        char *composite;
+        const char *composite;
         int ret;
         int bwipp_cmp;
-        char *comment;
+        const char *expected_errtxt;
+        const char *comment;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
-        /* 0*/ { BARCODE_EANX_CC, -1, -1, "+123456789012345678", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "" },
-        /* 1*/ { BARCODE_UPCA_CC, -1, -1, "+123456789012345678", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "" },
-        /* 2*/ { BARCODE_UPCE_CC, -1, -1, "+123456789012345678", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "" },
-        /* 3*/ { BARCODE_EANX_CC, -1, -1, "+12345", -1, "[21]A12345678", 0 , 0, "BWIPP checks for proper EAN data" },
-        /* 4*/ { BARCODE_EANX_CC, -1, -1, "+123456", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "" },
-        /* 5*/ { BARCODE_EANX_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "kks", -1, "()111%", ZINT_ERROR_INVALID_DATA, 1, "" }, /* #300 (#5), Andre Maute (`dbar_date()` not checking length + other non-checks) */
-        /* 6*/ { BARCODE_UPCA_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\225\215\153\153\153\153\153\153\263\153\153\153\153\153\153\153\153\153\153\163", -1, "()90", ZINT_ERROR_TOO_LONG, 1, "" }, /* #300 (#6), Andre Maute (`dbar_date()` not checking length + other non-checks) */
-        /* 7*/ { BARCODE_UPCA_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\225\215\153\153\153\153\153\153\263\153\153\377\002\000\000\153\153\153\153\163\000\000\000\153\153\153\153\153\153\153\060\047\047\043\047\057\153\153\153\153\153\000\000\000\000\153\153\153\161\153\153\153\153\153\153\153\153\153\153\153\153\153\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\001\100\000\000\000\000\000\000\000\167\167\167\167\167\167\167\167\167\167\167\167\167\167", 127, "()904OOOOO)CK0336680OOOOOOOOOOOOOO29[0kkkk%%%%(", ZINT_ERROR_TOO_LONG, 1, "" }, /* #300 (#11), Andre Maute (`gs1_verify()` not checking length on resolve AI data loop) */
-        /* 8*/ { BARCODE_EANX_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\225\215\153\153\153\153\153\153\263\153\153\377\002\000\000\153\153\153\153\163\000\000\000\153\153\153\153\153\153\153\060\047\047\043\047\057\153\153\153\153\153\000\000\000\000\153\153\153\161\153\153\153\153\153\153\153\153\153\153\153\153\153\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\001\100\000\000\000\000\000\000\000\167\167\167\167\167\167\167\167\167\167\167\167\167\167", 127, "()904OOOOO)CK0336680OOOOOOOOOOOOOO29[0kkkk%%%%(", ZINT_ERROR_TOO_LONG, 1, "" }, /* #300 (#11 with EANX_CC) */
-        /* 9*/ { BARCODE_GS1_128_CC, GS1NOCHECK_MODE, 3, "[]28", -1, "[]RRR___________________KKKRRR0000", 0, 1, "" }, /* #300 (#13), Andre Maute (`calc_padding_ccc()` dividing by zero when linear width == 68) */
-        /*10*/ { BARCODE_GS1_128_CC, GS1NOCHECK_MODE, 3, "[]2", -1, "[]RRR___________________KKKRRR0000", 0, 1, "" }, /* #300 (#13 shortened to min linear input (but same linear width 68)) */
+    static const struct item data[] = {
+        /* 0*/ { BARCODE_EANX_CC, -1, -1, "+123456789012345678", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "Error 297: Input add-on length 18 too long (maximum 5) (linear component)", "" },
+        /* 1*/ { BARCODE_UPCA_CC, -1, -1, "+123456789012345678", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "Error 297: Input add-on length 18 too long (maximum 5) (linear component)", "" },
+        /* 2*/ { BARCODE_UPCE_CC, -1, -1, "+123456789012345678", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "Error 297: Input add-on length 18 too long (maximum 5) (linear component)", "" },
+        /* 3*/ { BARCODE_EANX_CC, -1, -1, "+12345", -1, "[21]A12345678", 0 , 0, "", "BWIPP checks for proper EAN data" },
+        /* 4*/ { BARCODE_EANX_CC, -1, -1, "+123456", -1, "[21]A12345678", ZINT_ERROR_TOO_LONG, 1, "Error 297: Input add-on length 6 too long (maximum 5) (linear component)", "" },
+        /* 5*/ { BARCODE_EANX_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "kks", -1, "()111%", ZINT_ERROR_INVALID_DATA, 1, "Error 284: Invalid character at position 1 in input (digits and \"+\" only) (linear component)", "" }, /* #300 (#5), Andre Maute (`dbar_date()` not checking length + other non-checks) */
+        /* 6*/ { BARCODE_UPCA_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\225\215\153\153\153\153\153\153\263\153\153\153\153\153\153\153\153\153\153\163", -1, "()90", ZINT_ERROR_TOO_LONG, 1, "Error 283: Input length 46 too long (maximum 19) (linear component)", "" }, /* #300 (#6), Andre Maute (`dbar_date()` not checking length + other non-checks) */
+        /* 7*/ { BARCODE_UPCA_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\225\215\153\153\153\153\153\153\263\153\153\377\002\000\000\153\153\153\153\163\000\000\000\153\153\153\153\153\153\153\060\047\047\043\047\057\153\153\153\153\153\000\000\000\000\153\153\153\161\153\153\153\153\153\153\153\153\153\153\153\153\153\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\001\100\000\000\000\000\000\000\000\167\167\167\167\167\167\167\167\167\167\167\167\167\167", 127, "()904OOOOO)CK0336680OOOOOOOOOOOOOO29[0kkkk%%%%(", ZINT_ERROR_INVALID_DATA, 1, "Error 253: Malformed AI in input (brackets don't match) (2D component)", "" }, /* #300 (#11), Andre Maute (`gs1_verify()` not checking length on resolve AI data loop) */
+        /* 8*/ { BARCODE_EANX_CC, GS1PARENS_MODE | GS1NOCHECK_MODE, -1, "\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\153\225\215\153\153\153\153\153\153\263\153\153\377\002\000\000\153\153\153\153\163\000\000\000\153\153\153\153\153\153\153\060\047\047\043\047\057\153\153\153\153\153\000\000\000\000\153\153\153\161\153\153\153\153\153\153\153\153\153\153\153\153\153\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\167\001\100\000\000\000\000\000\000\000\167\167\167\167\167\167\167\167\167\167\167\167\167\167", 127, "()904OOOOO)CK0336680OOOOOOOOOOOOOO29[0kkkk%%%%(", ZINT_ERROR_INVALID_DATA, 1, "Error 253: Malformed AI in input (brackets don't match) (2D component)", "" }, /* #300 (#11 with EANX_CC) */
+        /* 9*/ { BARCODE_GS1_128_CC, GS1NOCHECK_MODE, 3, "[]28", -1, "[]RRR___________________KKKRRR0000", 0, 1, "", "" }, /* #300 (#13), Andre Maute (`calc_padding_ccc()` dividing by zero when linear width == 68) */
+        /*10*/ { BARCODE_GS1_128_CC, GS1NOCHECK_MODE, 3, "[]2", -1, "[]RRR___________________KKKRRR0000", 0, 1, "", "" }, /* #300 (#13 shortened to min linear input (but same linear width 68)) */
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -3510,8 +3541,10 @@ static void test_fuzz(const testCtx *const p_ctx) {
 
         composite_length = (int) strlen(data[i].composite);
 
-        ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+        ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
+        assert_zero(strcmp(symbol->errtxt, data[i].expected_errtxt), "i:%d strcmp(%s, %s) != 0\n",
+                        i, symbol->errtxt, data[i].expected_errtxt);
 
         if (ret < ZINT_ERROR) {
             if (do_bwipp && testUtilCanBwipp(i, symbol, data[i].option_1, -1, -1, debug)) {
@@ -3547,15 +3580,15 @@ static void test_perf(const testCtx *const p_ctx) {
     struct item {
         int symbology;
         int option_1;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
 
         int expected_rows;
         int expected_width;
-        char *comment;
+        const char *comment;
     };
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { BARCODE_EANX_CC, 1, "123456789012",
                     "[91]123456789012345678901234567890123456789012345678901234",
                     0, 11, 99, "58 chars CC-A" },
@@ -3574,7 +3607,7 @@ static void test_perf(const testCtx *const p_ctx) {
                     "[96]123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
                     0, 32, 205, "564 chars CC-C" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, composite_length, ret;
 
     clock_t start, total_encode = 0, total_buffer = 0, diff_encode, diff_buffer;
@@ -3601,7 +3634,7 @@ static void test_perf(const testCtx *const p_ctx) {
             composite_length = (int) strlen(data[i].composite);
 
             start = clock();
-            ret = ZBarcode_Encode(symbol, (const unsigned char *) data[i].composite, composite_length);
+            ret = ZBarcode_Encode(symbol, TCU(data[i].composite), composite_length);
             diff_encode += clock() - start;
             assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 

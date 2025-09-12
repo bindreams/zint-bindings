@@ -1,7 +1,7 @@
 /***************************************************************************
  *   Copyright (C) 2008 by BogDan Vatra                                    *
  *   bogdan@licentia.eu                                                    *
- *   Copyright (C) 2010-2023 Robin Stuart                                  *
+ *   Copyright (C) 2010-2025 Robin Stuart                                  *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -23,27 +23,32 @@
 #endif
 
 //#include <QDebug>
-#include "qzint.h"
-#include <math.h>
-#include <stdio.h>
 #include <QFontDatabase>
 #include <QFontMetrics>
 /* The following include is necessary to compile with Qt 5.15 on Windows; Qt 5.7 did not require it */
 #include <QPainterPath>
 #include <QRegularExpression>
+
+#include <math.h>
+#include <stdio.h>
+#include "qzint.h"
 #include "../backend/fonts/normal_ttf.h" /* Arimo */
 #include "../backend/fonts/upcean_ttf.h" /* OCR-B subset (digits, "<", ">") */
 
+#define ARRAY_SIZE(x) ((int) (sizeof(x) / sizeof((x)[0])))
+
 // Shorthand
-#define QSL QStringLiteral
+#define QSL     QStringLiteral
+#define QSEmpty QLatin1String("")
 
 namespace Zint {
     static const int maxSegs = 256;
     static const int maxCLISegs = 10; /* CLI restricted to 10 segments (including main data) */
 
     /* Matches RGB(A) hex string or CMYK decimal "C,M,Y,K" percentage string */
-    static const QRegularExpression colorRE(
+    static const QString colorREstr(
                                 QSL("^([0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?)|(((100|[0-9]{0,2}),){3}(100|[0-9]{0,2}))$"));
+    Q_GLOBAL_STATIC_WITH_ARGS(QRegularExpression, colorRE, (colorREstr))
 
     static const QString normalFontFamily = QSL("Arimo"); /* Sans-serif metrically compatible with Arial */
     static const QString upceanFontFamily = QSL("OCRB"); /* Monospace OCR-B */
@@ -70,6 +75,12 @@ namespace Zint {
 
         upceanFontID = QFontDatabase::addApplicationFontFromData(upceanFontArray);
         return upceanFontID;
+    }
+
+    /* Helper to copy byte array up to max `max` into `buf` which must be NUL filled & at least `max` size */
+    static void cpy_bytearray_left(char *buf, const QByteArray &ba, const int max) {
+        QByteArray left = ba.left(max);
+        memcpy(buf, left, left.size());
     }
 
     /* Helper to convert QColor to RGB(A) hex string */
@@ -250,9 +261,9 @@ namespace Zint {
         if (m_embed_vector_font) {
             m_zintSymbol->output_options |= EMBED_VECTOR_FONT;
         }
-        strcpy(m_zintSymbol->fgcolour, m_fgStr.toLatin1().left(15));
-        strcpy(m_zintSymbol->bgcolour, m_bgStr.toLatin1().left(15));
-        strcpy(m_zintSymbol->primary, m_primaryMessage.toLatin1().left(127));
+        cpy_bytearray_left(m_zintSymbol->fgcolour, m_fgStr.toLatin1(), ARRAY_SIZE(m_zintSymbol->fgcolour) - 1);
+        cpy_bytearray_left(m_zintSymbol->bgcolour, m_bgStr.toLatin1(), ARRAY_SIZE(m_zintSymbol->fgcolour) - 1);
+        cpy_bytearray_left(m_zintSymbol->primary, m_primaryMessage.toLatin1(), ARRAY_SIZE(m_zintSymbol->primary) - 1);
         m_zintSymbol->option_1 = m_option_1;
         m_zintSymbol->option_2 = m_option_2;
         m_zintSymbol->option_3 = m_option_3;
@@ -463,15 +474,8 @@ namespace Zint {
             m_structapp.index = index;
             memset(m_structapp.id, 0, sizeof(m_structapp.id));
             if (!id.isEmpty()) {
-                QByteArray idArr = id.toLatin1();
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-#endif
-                strncpy(m_structapp.id, idArr, sizeof(m_structapp.id));
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
+                /* Note may not have NUL terminator */
+                cpy_bytearray_left(m_structapp.id, id.toLatin1(), ARRAY_SIZE(m_structapp.id));
             }
         } else {
             clearStructApp();
@@ -488,7 +492,7 @@ namespace Zint {
     }
 
     bool QZint::setFgStr(const QString& fgStr) {
-        if (fgStr.indexOf(colorRE) == 0) {
+        if (fgStr.indexOf(*colorRE) == 0) {
             m_fgStr = fgStr;
             return true;
         }
@@ -510,7 +514,7 @@ namespace Zint {
     }
 
     bool QZint::setBgStr(const QString& bgStr) {
-        if (bgStr.indexOf(colorRE) == 0) {
+        if (bgStr.indexOf(*colorRE) == 0) {
             m_bgStr = bgStr;
             return true;
         }
@@ -795,10 +799,10 @@ namespace Zint {
     }
 
     /* Legacy property getters/setters */
-    void QZint::setWidth(int width) { setOption1(width); }
-    int QZint::width() const { return m_option_1; }
-    void QZint::setSecurityLevel(int securityLevel) { setOption2(securityLevel); }
-    int QZint::securityLevel() const { return m_option_2; }
+    void QZint::setWidth(int width) { setOption2(width); }
+    int QZint::width() const { return m_option_2; }
+    void QZint::setSecurityLevel(int securityLevel) { setOption1(securityLevel); }
+    int QZint::securityLevel() const { return m_option_1; }
     void QZint::setPdf417CodeWords(int /*pdf417CodeWords*/) {}
     int QZint::pdf417CodeWords() const { return 0; }
     void QZint::setHideText(bool hide) { setShowText(!hide); }
@@ -903,7 +907,7 @@ namespace Zint {
 
     bool QZint::save_to_file(const QString& filename) {
         if (resetSymbol()) {
-            strcpy(m_zintSymbol->outfile, filename.toUtf8().left(255));
+            cpy_bytearray_left(m_zintSymbol->outfile, filename.toUtf8(), ARRAY_SIZE(m_zintSymbol->outfile) - 1);
             if (m_segs.empty()) {
                 QByteArray bstr = m_text.toUtf8();
                 m_error = ZBarcode_Encode_and_Print(m_zintSymbol, (unsigned char *) bstr.data(), bstr.length(),
@@ -1195,7 +1199,7 @@ namespace Zint {
         if (ZBarcode_BarcodeName(symbology, buf) == 0) {
             return QString(buf);
         }
-        return QSL("");
+        return QSEmpty;
     }
 
     /* Whether Zint library "libzint" built with PNG support or not */

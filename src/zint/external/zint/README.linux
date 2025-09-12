@@ -1,4 +1,6 @@
-% Tested on Ubuntu 20.04.4 LTS, Ubuntu 22.04 LTS and Fedora Linux 38 (Workstation Edition)
+% README.linux 2025-02-19
+% Tested on Ubuntu 20.04.4 LTS, Ubuntu 22.04 LTS, Ubuntu 24.04 LTS and
+% Fedora Linux 41 (Workstation Edition)
 
 1. Prerequisites for building zint
 ==================================
@@ -21,10 +23,10 @@ or Fedora
 
 Then either download the source code tarball
 
-    wget -O zint-2.13.0-src.tar.gz \
-        https://sourceforge.net/projects/zint/files/zint/2.13.0/zint-2.13.0-src.tar.gz/download
-    tar xf zint-2.13.0-src.tar.gz
-    cd zint-2.13.0-src
+    wget -O zint-2.15.0-src.tar.gz \
+        https://sourceforge.net/projects/zint/files/zint/2.15.0/zint-2.15.0-src.tar.gz/download
+    tar xf zint-2.15.0-src.tar.gz
+    cd zint-2.15.0-src
 
 or clone the latest source
 
@@ -44,6 +46,9 @@ or Fedora
 
     sudo dnf install mesa-libGL mesa-libGL-devel
 
+zint-qt has issues running on Wayland so sets X11 as the Qt platform (via the environment variable
+"QT_QPA_PLATFORM=xcb") on startup unless already set.
+
 2.1. Using Qt packages
 ----------------------
 
@@ -52,7 +57,7 @@ what their ever-changing names and contents are isn't. A complication is that zi
 components beyond the basic setup: Qt UI Tools (for dynamically loading the symbology-specific
 tabs), and Qt SVG (for rendering icons).
 
-E.g. on Ubuntu 22.04
+E.g. on Ubuntu 22.04 or 24.04
 
     sudo apt install qtbase5-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev
 
@@ -60,7 +65,7 @@ or Ubuntu 20.04
 
     sudo apt install qt5-default qt5-uitools
 
-or Fedora 38 (not recommended)
+or Fedora (not recommended)
 
      sudo dnf install qt5-qtbase-devel qt5-qttools-devel qt5-qttools-static qt5-qtsvg-devel
 
@@ -83,7 +88,7 @@ On Ubuntu/Debian you may need to install xinerama to run the tool:
     sudo apt install libxcb-xinerama0
 
 Launch the tool and install the "Desktop gcc 64-bit" component for either Qt 5.15.2 (preferred)
-or Qt 6 (>= 6.1, 6.2.4 preferably, and not >= 6.3 which are incompatible).
+or Qt 6 (>= 6.1).
 
 Once Qt is installed you may need to tell CMake where it is:
 
@@ -104,25 +109,39 @@ The rest is standard CMake
     make
     sudo make install
 
+4. Run
+======
 
-4. CMake options
+On Fedora you may have to set LD_LIBRARY_PATH for zint ("libzint.so") and zint-qt (Qt libraries):
+
+    export LD_LIBRARY_PATH=/usr/local/lib64:<qt-version-dir>/gcc_64/lib
+
+
+5. CMake options
 ================
 
 A number of options are available:
 
-ZINT_COVERAGE:BOOL=OFF # Set code coverage flags
-ZINT_DEBUG:BOOL=OFF    # Set debug compile flags
-ZINT_NOOPT:BOOL=OFF    # Set no optimize compile flags
-ZINT_SANITIZE:BOOL=OFF # Set sanitize compile/link flags
-ZINT_SHARED:BOOL=ON    # Build shared library
-ZINT_STATIC:BOOL=OFF   # Build static library
-ZINT_TEST:BOOL=OFF     # Set test compile flag
-ZINT_USE_PNG:BOOL=ON   # Build with PNG support
-ZINT_USE_QT:BOOL=ON    # Build with Qt support
-ZINT_QT6:BOOL=OFF      # If ZINT_USE_QT, use Qt6
+ZINT_COVERAGE:BOOL=OFF  # Set code coverage flags
+ZINT_DEBUG:BOOL=OFF     # Set debug compile flags
+ZINT_FRONTEND:BOOL=ON   # Build frontend
+ZINT_NOOPT:BOOL=OFF     # Set no optimize compile flags
+ZINT_SANITIZE:BOOL=OFF  # Set sanitize compile/link flags
+ZINT_SANITIZE:BOOL=OFF  # Set sanitize address/undefined
+ZINT_SANITIZEM:BOOL=OFF # Set sanitize memory (ignored if ZINT_SANITIZE)
+ZINT_SHARED:BOOL=ON     # Build shared library
+ZINT_STATIC:BOOL=OFF    # Build static library
+ZINT_TEST:BOOL=OFF      # Set test compile flag
+ZINT_UNINSTALL:BOOL=ON  # Add uninstall target
+ZINT_USE_PNG:BOOL=ON    # Build with PNG support
+ZINT_USE_QT:BOOL=ON     # Build with Qt support
+ZINT_QT6:BOOL=OFF       # If ZINT_USE_QT, use Qt6
 
 which can be set by doing e.g.
 
     cmake -DZINT_SANITIZE=ON ..
+
+Note that ZINT_SANITIZEM (Clang only) is incompatible with ZINT_SANITIZE, and also with
+ZINT_USE_PNG, unless libpng has also been instrumented with -fsanitize=memory.
 
 For details on ZINT_TEST and building the zint test suite, see "backend/tests/README".

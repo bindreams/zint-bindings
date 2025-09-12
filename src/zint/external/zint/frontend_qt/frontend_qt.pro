@@ -52,6 +52,7 @@ FORMS += extCLI.ui \
          grpMQR.ui \
          grpMSICheck.ui \
          grpPDF417.ui \
+         grpPlessey.ui \
          grpPZN.ui \
          grpQR.ui \
          grpRMQR.ui \
@@ -85,7 +86,7 @@ CONFIG += warn_on thread qt
 LIBS += -lQtZint
 QMAKE_LIBDIR += ../backend_qt/release
 LIBS += -lQt5Core
-QMAKE_LIBDIR += C:/qt/5.15.2static/lib
+QMAKE_LIBDIR += C:/qt/5.15.16static/lib
 
 !contains(DEFINES, ZINT_NO_PNG) {
 # Win

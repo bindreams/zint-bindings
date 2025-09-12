@@ -1,6 +1,6 @@
-% ZINT(1) Version 2.13.0
+% ZINT(1) Version 2.15.0
 %
-% December 2023
+% February 2025
 
 # NAME
 
@@ -71,7 +71,7 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 
 `--bold`
 
-:   Use bold text for the Human Readable Text (HRT).
+:   Use a bold font for the Human Readable Text (HRT).
 
 `--border=INTEGER`
 
@@ -174,8 +174,10 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 
 `--extraesc`
 
-:   Process the special escape sequences `\^A`, `\^B` and `\^C` that allow manual switching of Code Sets (Code 128
-    only). The sequence `\^^` can be used to encode data that contains special escape sequences.
+:   For Code 128 only, as well as processing the normal escape sequences above, process the special escape sequences
+    `\^A`, `\^B`, `\^C` and `\^@` that allow manual switching of Code Sets, and the special escape sequence `\^1` that
+    inserts an `FNC1` character. The sequence `\@` turns off manual switching. The sequence `\^^` can be used to
+    encode data that contains special escape sequences.
 
 `--fast`
 
@@ -321,6 +323,7 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
     For MaxiCode, the scale is multiplied by 10 for raster output, by 40 for EMF output, and by 2 otherwise.
 
     Increments of 0.5 (half-integers) are recommended for non-MaxiCode raster output (BMP, GIF, PCX, PNG and TIF).
+	Human Readable Text (HRT) for raster output will not be shown for scales less than 1.
 
     See also `--scalexdimdp` below.
 
@@ -364,7 +367,7 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 
 `--small`
 
-:   Use small text for Human Readable Text (HRT).
+:   Use a smaller font for Human Readable Text (HRT).
 
 `--square`
 
@@ -406,12 +409,12 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
                 11  45x45     23  95x95     35  147x147
                 12  49x49     24  101x101   36  151x151
 
-        Code One        1 to 10 (9 and 10 variable width) (WxH)
+        Code One        1 to 10 (9 and 10 variable width) (HxW)
                 1   16x18     6   70x76
                 2   22x22     7   104x98
-                3   28x28     8   148x134
-                4   40x42     9   Wx8
-                5   52x54     10  Wx16
+                3   28x32     8   148x134
+                4   40x42     9   8xW
+                5   52x54     10  16xW
 
         Data Matrix     1 to 48 (31 to 48 DMRE) (HxW)
                 1   10x10     17  72x72     33  8x80
@@ -517,9 +520,10 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
                         1      (1 visible check digit)
                         2      (no check digits)
         Code 39         1 or 2 (add visible or hidden check digit)
-        Code 93         1      (hide the default check characters)
+        Code 93         1      (show the default check characters)
         EXCODE39        1 or 2 (add visible or hidden check digit)
         LOGMARS         1 or 2 (add visible or hidden check digit)
+        UK Plessey      1      (show the default check characters)
         MSI Plessey     0 to 6 (none to various visible options)
                         1, 2   (mod-10, mod-10 + mod-10)
                         3, 4   (mod-11 IBM, mod-11 IBM + mod-10)
@@ -558,6 +562,9 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 `0`
 :   Success (including when given informational options `-h` | `--help`, `-e` | `--ecinos`, `-t` | `--types`, `-v` |
     `--version`).
+
+`-1`
+:    Human Readable Text was outputted as raw text (`ZINT_WARN_HRT_RAW_TEXT`)
 
 `1`
 :    Human Readable Text was truncated (maximum 199 bytes) (`ZINT_WARN_HRT_TRUNCATED`)
@@ -604,6 +611,9 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 `15`
 :    Error counterpart of warning if `--werror` given (`ZINT_ERROR_HRT_TRUNCATED`)
 
+`16`
+:    Error counterpart of warning if `--werror` given (`ZINT_ERROR_HRT_RAW_TEXT`)
+
 # EXAMPLES
 
 Create "out.png" (or "out.gif" if zint built without PNG support) in the current directory, as a Code 128 symbol.
@@ -618,8 +628,9 @@ Create "qr.svg" in the current directory, as a QR Code symbol.
 zint -b QRCode -d 'This Text' -o 'qr.svg'
 ```
 
-Use batch mode to read from an input file "ean13nos.txt" containing 13-digit GTINs, to create a series of EAN-13
-barcodes, formatting the output filenames to "ean001.gif", "ean002.gif" etc. using the special character "~".
+Use batch mode to read from an input file "ean13nos.txt" containing a list of 13-digit GTINs, each on a separate line,
+to create a series of EAN-13 barcodes, formatting the output filenames to "ean001.gif", "ean002.gif" etc. using the
+special character "~".
 
 ```bash
 zint -b EANX --batch -i 'ean13nos.txt' -o 'ean~~~.gif'
@@ -643,18 +654,18 @@ and at
 
 Zint is designed to be compliant with a number of international standards, including:
 
-ISO/IEC 24778:2008, ANSI/AIM BC12-1998, EN 798:1996,
+ISO/IEC 24778:2024, ANSI/AIM BC12-1998, EN 798:1996,
 AIM ISS-X-24 (1995), ISO/IEC 15417:2007, EN 12323:2005,
-ISO/IEC 16388:2007, ANSI/AIM BC6-2000, ANSI/AIM BC5-1995,
-AIM USS Code One (1994), ISO/IEC 16022:2006, ISO/IEC 21471:2019,
+ISO/IEC 16388:2023, ANSI/AIM BC6-2000, ANSI/AIM BC5-1995,
+AIM USS Code One (1994), ISO/IEC 16022:2024, ISO/IEC 21471:2019,
 ISO/IEC 15420:2009, AIMD014 (v 1.63) (2008), ISO/IEC 24723:2010,
 ISO/IEC 24724:2011, ISO/IEC 20830:2021, ISO/IEC 16390:2007,
 ISO/IEC 16023:2000, ISO/IEC 24728:2006, ISO/IEC 15438:2015,
-ISO/IEC 18004:2015, ISO/IEC 23941:2022, AIM ITS/04-023 (2022)
+ISO/IEC 18004:2024, ISO/IEC 23941:2022, AIM ITS/04-023 (2022)
 
 # COPYRIGHT
 
-Copyright © 2023 Robin Stuart. Released under GNU GPL 3.0 or later.
+Copyright © 2025 Robin Stuart. Released under GNU GPL 3.0 or later.
 
 # AUTHOR
 

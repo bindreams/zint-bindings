@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -45,7 +45,6 @@ static int utf8_to_wchar(const char *str, wchar_t *out) {
             decode_utf8(&state, &codepoint, *str++);
         } while (*str && state != 0 && state != 12);
         if (state != 0) {
-            fprintf(stderr, "utf8_to_wchar: warning: invalid UTF-8\n");
             return 0;
         }
         *out++ = codepoint;
@@ -282,10 +281,10 @@ static void test_dump_args(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
-        char *data2;
-        char *input;
-        char *input2;
+        const char *data;
+        const char *data2;
+        const char *input;
+        const char *input2;
         int input_mode;
         int output_options;
         int batch;
@@ -295,27 +294,27 @@ static void test_dump_args(const testCtx *const p_ctx) {
         int fullmultibyte;
         int mask;
         int mode;
-        char *primary;
+        const char *primary;
         int rows;
         int secure;
         int square;
         int vers;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
-        /*  0*/ {              -1, "123", NULL, NULL, NULL,       -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 13 9B 39 65 C8 C9 8E B" },
-        /*  1*/ { BARCODE_CODE128, "123", NULL, NULL, NULL,       -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 13 9B 39 65 C8 C9 8E B" },
-        /*  2*/ { BARCODE_CODE128, "123", "456", NULL, NULL,      -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 13 9B 39 65 C8 C9 8E B\nD2 19 3B 72 67 4E 4D 8E B" },
-        /*  3*/ { BARCODE_CODE128, "123", NULL, NULL, NULL,       -1, -1, 1, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "Warning 141: Can't use batch mode if data given, ignoring\nD2 13 9B 39 65 C8 C9 8E B" },
-        /*  4*/ { BARCODE_CODE128, NULL, NULL, "123\n45\n", NULL, -1, -1, 1, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 13 9B 39 65 C8 C9 8E B\nD3 97 62 3B 63 AC" },
-        /*  5*/ { BARCODE_CODE128, NULL, NULL, "123\n45\n", "7\n",-1, -1, 1, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "Warning 144: Processing first input file 'test_dump_args1.txt' only\nD2 13 9B 39 65 C8 C9 8E B\nD3 97 62 3B 63 AC" },
+        /*  0*/ {              -1, "123", NULL, NULL, NULL,       -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D3 96 72 F7 65 C9 61 8E B" },
+        /*  1*/ { BARCODE_CODE128, "123", NULL, NULL, NULL,       -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D3 96 72 F7 65 C9 61 8E B" },
+        /*  2*/ { BARCODE_CODE128, "123", "456", NULL, NULL,      -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D3 96 72 F7 65 C9 61 8E B\nD3 97 62 F7 67 49 19 8E B" },
+        /*  3*/ { BARCODE_CODE128, "123", NULL, NULL, NULL,       -1, -1, 1, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "Warning 141: Can't use batch mode if data given, ignoring\nD3 96 72 F7 65 C9 61 8E B" },
+        /*  4*/ { BARCODE_CODE128, NULL, NULL, "123\n45\n", NULL, -1, -1, 1, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D3 96 72 F7 65 C9 61 8E B\nD3 97 62 3B 63 AC" },
+        /*  5*/ { BARCODE_CODE128, NULL, NULL, "123\n45\n", "7\n",-1, -1, 1, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "Warning 144: Processing first input file 'test_dump_args1.txt' only\nD3 96 72 F7 65 C9 61 8E B\nD3 97 62 3B 63 AC" },
         /*  6*/ { BARCODE_CODE128, "\t", NULL, NULL, NULL,        -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D0 90 D2 1A 63 AC" },
         /*  7*/ { BARCODE_CODE128, "\\t", NULL, NULL, NULL, ESCAPE_MODE, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D0 90 D2 1A 63 AC" },
-        /*  8*/ { BARCODE_CODE128, "\\^Ab\011", NULL, NULL, NULL, EXTRA_ESCAPE_MODE, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 12 1B AF 43 4C A1 8E B" },
-        /*  9*/ { BARCODE_CODE128, "\\^Ab\\t", NULL, NULL, NULL, ESCAPE_MODE | EXTRA_ESCAPE_MODE, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 12 1B AF 43 4C A1 8E B" },
-        /* 10*/ { BARCODE_CODE128, "123", NULL, NULL, NULL, -1, BARCODE_BIND | BARCODE_BOX | BARCODE_BIND_TOP | SMALL_TEXT | BOLD_TEXT | CMYK_COLOUR, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D2 13 9B 39 65 C8 C9 8E B" },
+        /*  8*/ { BARCODE_CODE128, "\\^Ab\011", NULL, NULL, NULL, EXTRA_ESCAPE_MODE, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D0 9E 8A 43 43 48 D1 8E B" },
+        /*  9*/ { BARCODE_CODE128, "\\^Ab\\t", NULL, NULL, NULL, ESCAPE_MODE | EXTRA_ESCAPE_MODE, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D0 9E 8A 43 43 48 D1 8E B" },
+        /* 10*/ { BARCODE_CODE128, "123", NULL, NULL, NULL, -1, BARCODE_BIND | BARCODE_BOX | BARCODE_BIND_TOP | SMALL_TEXT | BOLD_TEXT | CMYK_COLOUR, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D3 96 72 F7 65 C9 61 8E B" },
         /* 11*/ { BARCODE_CODE128, "123", NULL, NULL, NULL, -1, BARCODE_DOTTY_MODE, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "Error 224: Selected symbology cannot be rendered as dots" },
         /* 12*/ { BARCODE_CODABLOCKF, "ABCDEF", NULL, NULL, NULL, -1, -1, 0, -1, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D0 97 BA 86 51 88 B1 11 AC 46 D8 C7 58\nD0 97 BB 12 46 88 C5 1A 3C 55 CC C7 58" },
         /* 13*/ { BARCODE_CODABLOCKF, "ABCDEF", NULL, NULL, NULL, -1, -1, 0, 10, 0, -1, 0, -1, -1, NULL, -1, -1, 0, -1, "D0 97 BA 86 51 88 B1 11 AC 44 68 BC 98 EB\nD0 97 BB 12 46 2B BD 7B A3 47 8A 8D 18 EB" },
@@ -356,8 +355,8 @@ static void test_dump_args(const testCtx *const p_ctx) {
     char cmd[4096];
     char buf[4096];
 
-    char *input1_filename = "test_dump_args1.txt";
-    char *input2_filename = "test_dump_args2.txt";
+    const char *input1_filename = "test_dump_args1.txt";
+    const char *input2_filename = "test_dump_args2.txt";
     int have_input1;
     int have_input2;
 
@@ -414,21 +413,21 @@ static void test_dump_segs(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
-        char *data_seg1;
-        char *data_seg2;
+        const char *data;
+        const char *data_seg1;
+        const char *data_seg2;
         int eci;
         int eci_seg1;
         int eci_seg2;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
-        /*  0*/ {              -1, "123", NULL, NULL, -1, -1, -1, "D2 13 9B 39 65 C8 C9 8E B" },
+        /*  0*/ {              -1, "123", NULL, NULL, -1, -1, -1, "D3 96 72 F7 65 C9 61 8E B" },
         /*  1*/ {              -1, "123", NULL, NULL, -1, 3, -1, "Error 166: Invalid segment argument, expect \"ECI,DATA\"" },
         /*  2*/ {              -1, "123", "456", NULL, -1, -1, -1, "Error 167: Invalid segment ECI (digits only)" },
-        /*  3*/ {              -1, "123", "456", NULL, -1, 1000000, -1, "Error 168: Segment ECI code out of range (0 to 999999)" },
+        /*  3*/ {              -1, "123", "456", NULL, -1, 1000000, -1, "Error 168: Segment ECI code '1000000' out of range (0 to 999999)" },
         /*  4*/ {              -1, "123", "456", NULL, -1, 3, -1, "Error 775: Symbology does not support multiple segments" },
         /*  5*/ {   BARCODE_AZTEC, "123", "456", NULL, -1, 3, -1, "2B 7A\nC7 02\nF0 6E\n3F FE\n70 1C\nB7 D6\nB4 58\n15 54\n94 56\nB7 DC\n30 1A\n1F FC\n4C 66\n22 DA\n1E C6" },
         /*  6*/ {   BARCODE_AZTEC, "123", NULL, "789", -1, -1, 3, "Error 172: Segments must be consecutive - segment 1 missing" },
@@ -499,13 +498,13 @@ static void test_input(const testCtx *const p_ctx) {
         int batch;
         int input_mode;
         int mirror;
-        char *filetype;
-        char *input_filename;
-        char *input;
-        char *outfile;
+        const char *filetype;
+        const char *input_filename;
+        const char *input;
+        const char *outfile;
 
         int num_expected;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -545,13 +544,14 @@ static void test_input(const testCtx *const p_ctx) {
     char cmd[4096];
     char buf[4096];
 
-    char *input_filename;
-    char *outfile;
+    const char *input_filename;
+    const char *outfile;
 
     testStart("test_input");
 
     for (i = 0; i < data_size; i++) {
         int j;
+        const char *slash;
 
         if (testContinue(p_ctx, i)) continue;
 #ifdef _WIN32
@@ -591,8 +591,14 @@ static void test_input(const testCtx *const p_ctx) {
         }
 
         assert_zero(testUtilRemove(input_filename), "i:%d testUtilRemove(%s) != 0 (%d: %s)\n", i, input_filename, errno, strerror(errno));
-        if (data[i].batch && data[i].mirror && data[i].outfile && data[i].outfile[0] && strcmp(data[i].outfile, TEST_MIRRORED_DIR_TOO_LONG) != 0) {
-            assert_zero(testUtilRmDir(data[i].outfile), "i:%d testUtilRmDir(%s) != 0 (%d: %s)\n", i, data[i].outfile, errno, strerror(errno));
+
+        /* Remove directory if any */
+        if (data[i].outfile && (slash = strrchr(data[i].outfile, '/')) != NULL && strcmp(data[i].outfile, TEST_MIRRORED_DIR_TOO_LONG) != 0) {
+            char dirpath[256];
+            assert_nonzero((size_t) (slash - data[i].outfile) < sizeof(dirpath), "i: %d output directory too long\n", i);
+            strncpy(dirpath, data[i].outfile, slash - data[i].outfile);
+            dirpath[slash - data[i].outfile] = '\0';
+            assert_zero(testUtilRmDir(dirpath), "i:%d testUtilRmDir(%s) != 0 (%d: %s)\n", i, dirpath, errno, strerror(errno));
         }
     }
 
@@ -604,9 +610,9 @@ static void test_stdin_input(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
-        char *input;
-        char *outfile;
+        const char *data;
+        const char *input;
+        const char *outfile;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -618,7 +624,7 @@ static void test_stdin_input(const testCtx *const p_ctx) {
     char cmd[4096];
     char buf[4096];
 
-    char *input_filename = "-";
+    const char *input_filename = "-";
 
     testStart("test_stdin_input");
 
@@ -650,17 +656,17 @@ static void test_batch_input(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
-        char *input;
-        char *input2;
+        const char *data;
+        const char *input;
+        const char *input2;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
         /*  0*/ { BARCODE_CODE128, "123", NULL, NULL, "Warning 122: Can't define data in batch mode, ignoring '123'\nWarning 124: No data received, no symbol generated" },
-        /*  1*/ { BARCODE_CODE128, "123", "123\n456\n", NULL, "Warning 122: Can't define data in batch mode, ignoring '123'\nD2 13 9B 39 65 C8 C9 8E B\nD2 19 3B 72 67 4E 4D 8E B" },
-        /*  3*/ { BARCODE_CODE128, NULL, "123\n456\n", "789\n", "Warning 143: Can only define one input file in batch mode, ignoring 'test_batch_input2.txt'\nD2 13 9B 39 65 C8 C9 8E B\nD2 19 3B 72 67 4E 4D 8E B" },
+        /*  1*/ { BARCODE_CODE128, "123", "123\n456\n", NULL, "Warning 122: Can't define data in batch mode, ignoring '123'\nD3 96 72 F7 65 C9 61 8E B\nD3 97 62 F7 67 49 19 8E B" },
+        /*  2*/ { BARCODE_CODE128, NULL, "123\n456\n", "789\n", "Warning 143: Can only define one input file in batch mode, ignoring 'test_batch_input2.txt'\nD3 96 72 F7 65 C9 61 8E B\nD3 97 62 F7 67 49 19 8E B" },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -668,8 +674,8 @@ static void test_batch_input(const testCtx *const p_ctx) {
     char cmd[4096];
     char buf[4096];
 
-    char *input1_filename = "test_batch_input1.txt";
-    char *input2_filename = "test_batch_input2.txt";
+    const char *input1_filename = "test_batch_input1.txt";
+    const char *input2_filename = "test_batch_input2.txt";
     int have_input1;
     int have_input2;
 
@@ -711,10 +717,10 @@ static void test_batch_large(const testCtx *const p_ctx) {
     struct item {
         int b;
         int mirror;
-        char *pattern;
+        const char *pattern;
         int length;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
@@ -729,7 +735,7 @@ static void test_batch_large(const testCtx *const p_ctx) {
     char data_buf[8192];
     char buf[16384];
 
-    char *input_filename = "test_batch_large.txt";
+    const char *input_filename = "test_batch_large.txt";
     int have_input;
 
     testStart("test_batch_large");
@@ -784,7 +790,7 @@ static void test_checks(const testCtx *const p_ctx) {
         double dotsize;
         double textgap;
         int eci;
-        char *filetype;
+        const char *filetype;
         double height;
         double guard_descent;
         int mask;
@@ -799,23 +805,23 @@ static void test_checks(const testCtx *const p_ctx) {
         int vwhitesp;
         int w;
 
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {
         /*  0*/ { -2, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 139: Invalid add-on gap value (digits only)" },
-        /*  1*/ {  6, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 140: Add-on gap out of range (7 to 12), ignoring" },
-        /*  2*/ { 13, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 140: Add-on gap out of range (7 to 12), ignoring" },
+        /*  1*/ {  6, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 140: Add-on gap '6' out of range (7 to 12), ignoring" },
+        /*  2*/ { 13, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 140: Add-on gap '13' out of range (7 to 12), ignoring" },
         /*  3*/ { -1, -2,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 107: Invalid border width value (digits only)" },
-        /*  4*/ { -1, 1001, -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 108: Border width out of range (0 to 1000), ignoring" },
+        /*  4*/ { -1, 1001, -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 108: Border width '1001' out of range (0 to 1000), ignoring" },
         /*  5*/ { -1, -1,   -1, -1, -5.1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 195: Text gap '-5.1' out of range (-5 to 10), ignoring" },
         /*  6*/ { -1, -1,   -1, -1, 10.01,   -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 195: Text gap '10.01' out of range (-5 to 10), ignoring" },
         /*  7*/ { -1, -1,   -1, 12345678,  -1, -1,    NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 181: Invalid dot radius floating point (integer part must be 7 digits maximum)" },
         /*  8*/ { -1, -1,   -1, 0.009, -1,   -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 106: Invalid dot radius value (less than 0.01), ignoring" },
         /*  9*/ { -1, -1,   -2, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 131: Invalid columns value (digits only)" },
-        /* 10*/ { -1, -1,  201, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 111: Number of columns out of range (1 to 200), ignoring" },
-        /* 11*/ { -1, -1,   -1, -1,   -1,    -2,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 138: Invalid ECI value (digits only)" },
-        /* 12*/ { -1, -1,   -1, -1,   -1,    1000000, NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 118: ECI code out of range (0 to 999999), ignoring" },
+        /* 10*/ { -1, -1,  201, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 111: Number of columns '201' out of range (1 to 200), ignoring" },
+        /* 11*/ { -1, -1,   -1, -1,   -1,    -2,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 138: Invalid ECI code (digits only)" },
+        /* 12*/ { -1, -1,   -1, -1,   -1,    1000000, NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 118: ECI code '1000000' out of range (0 to 999999), ignoring" },
         /* 13*/ { -1, -1,   -1, -1,   -1,    -1,      "jpg", -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 142: File type 'jpg' not supported, ignoring" },
         /* 14*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -2,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 183: Invalid symbol height floating point (negative value not permitted)" },
         /* 15*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,   0,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 110: Symbol height '0' out of range (0.5 to 2000), ignoring" },
@@ -823,26 +829,26 @@ static void test_checks(const testCtx *const p_ctx) {
         /* 17*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -2, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 182: Invalid guard bar descent floating point (negative value not permitted)" },
         /* 18*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1, 50.1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 135: Guard bar descent '50.1' out of range (0 to 50), ignoring" },
         /* 19*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -2, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 148: Invalid mask value (digits only)" },
-        /* 20*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1,  8, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 147: Mask value out of range (0 to 7), ignoring" },
-        /* 21*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1,  7, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 116: Mode value out of range (0 to 6), ignoring" },
+        /* 20*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1,  8, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 147: Mask value '8' out of range (0 to 7), ignoring" },
+        /* 21*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1,  7, -1, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 116: Mode value '7' out of range (0 to 6), ignoring" },
         /* 22*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -2, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Error 117: Invalid rotation value (digits only)" },
-        /* 23*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, 45, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 137: Invalid rotation parameter (0, 90, 180 or 270 only), ignoring" },
+        /* 23*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, 45, -1, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 137: Rotation value '45' out of range (0, 90, 180 or 270 only), ignoring" },
         /* 24*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -2, -1,   -1, -1, -1, -1,   -1,   -1, "Error 132: Invalid rows value (digits only)" },
-        /* 25*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, 91, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 112: Number of rows out of range (1 to 90), ignoring" },
+        /* 25*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, 91, -1,   -1, -1, -1, -1,   -1,   -1, "Warning 112: Number of rows '91' out of range (1 to 90), ignoring" },
         /* 26*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -2,   -1, -1, -1, -1,   -1,   -1, "Error 184: Invalid scale floating point (negative value not permitted)" },
         /* 27*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, 0.49, -1, -1, -1, -1,   -1,   -1, "Warning 146: Scaling less than 0.5 will be set to 0.5 for 'gif' output" },
         /* 28*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -2, -1, -1, -1,   -1,   -1, "Error 149: Invalid Structured Carrier Message version value (digits only)" },
-        /* 29*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,  100, -1, -1, -1,   -1,   -1, "Warning 150: Structured Carrier Message version out of range (0 to 99), ignoring" },
+        /* 29*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,  100, -1, -1, -1,   -1,   -1, "Warning 150: Structured Carrier Message version '100' out of range (0 to 99), ignoring" },
         /* 30*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -2, -1, -1,   -1,   -1, "Error 134: Invalid ECC value (digits only)" },
-        /* 31*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1,  9, -1, -1,   -1,   -1, "Warning 114: ECC level out of range (0 to 8), ignoring" },
+        /* 31*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1,  9, -1, -1,   -1,   -1, "Warning 114: ECC level '9' out of range (0 to 8), ignoring" },
         /* 32*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -2, -1,   -1,   -1, "Error 128: Invalid separator value (digits only)" },
-        /* 33*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1,  5, -1,   -1,   -1, "Warning 127: Separator value out of range (0 to 4), ignoring" },
+        /* 33*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1,  5, -1,   -1,   -1, "Warning 127: Separator value '5' out of range (0 to 4), ignoring" },
         /* 34*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -2,   -1,   -1, "Error 133: Invalid version value (digits only)" },
-        /* 35*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, 1000, -1,   -1, "Warning 113: Version value out of range (1 to 999), ignoring" },
+        /* 35*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, 1000, -1,   -1, "Warning 113: Version value '1000' out of range (1 to 999), ignoring" },
         /* 36*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -2,   -1, "Error 153: Invalid vertical whitespace value '-2' (digits only)" },
-        /* 37*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1, 1001,   -1, "Warning 154: Vertical whitespace value out of range (0 to 1000), ignoring" },
+        /* 37*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1, 1001,   -1, "Warning 154: Vertical whitespace value '1001' out of range (0 to 1000), ignoring" },
         /* 38*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1,   -2, "Error 120: Invalid horizontal whitespace value '-2' (digits only)" },
-        /* 39*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1, 1001, "Warning 121: Horizontal whitespace value out of range (0 to 1000), ignoring" },
+        /* 39*/ { -1, -1,   -1, -1,   -1,    -1,      NULL,  -1,   -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1, 1001, "Warning 121: Horizontal whitespace value '1001' out of range (0 to 1000), ignoring" },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -1157,12 +1163,12 @@ static void test_other_opts(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
+        const char *data;
         int input_mode;
-        char *opt;
-        char *opt_data;
+        const char *opt;
+        const char *opt_data;
 
-        char *expected;
+        const char *expected;
         int strstr_cmp;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
@@ -1206,13 +1212,13 @@ static void test_other_opts(const testCtx *const p_ctx) {
         /* 36*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "123456789,123456789,", "Error 158: Structured Append ID too short", 0 },
         /* 37*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "123456789,1234567890,", "Error 157: Structured Append count too long", 0 },
         /* 38*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "123456789,123456789,123456789012345678901234567890123", "Error 158: Structured Append ID too long", 0 },
-        /* 39*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "123456789,123456789,12345678901234567890123456789012", "Error 701: Structured Append count out of range (2-26)", 0 },
+        /* 39*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "123456789,123456789,12345678901234567890123456789012", "Error 701: Structured Append count '123456789' out of range (2 to 26)", 0 },
         /* 40*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "26,26,12345678901234567890123456789012", "", 0 },
         /* 41*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "A,26,12345678901234567890123456789012", "Error 160: Invalid Structured Append index (digits only)", 0 },
         /* 42*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "26,A,12345678901234567890123456789012", "Error 161: Invalid Structured Append count (digits only)", 0 },
-        /* 43*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "26,1,12345678901234567890123456789012", "Error 162: Invalid Structured Append count, must be >= 2", 0 },
-        /* 44*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "0,2,12345678901234567890123456789012", "Error 163: Structured Append index out of range (1-2)", 0 },
-        /* 45*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "3,2,12345678901234567890123456789012", "Error 163: Structured Append index out of range (1-2)", 0 },
+        /* 43*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "26,1,12345678901234567890123456789012", "Error 162: Invalid Structured Append count '1', must be greater than or equal to 2", 0 },
+        /* 44*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "0,2,12345678901234567890123456789012", "Error 163: Structured Append index '0' out of range (1 to count '2')", 0 },
+        /* 45*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "3,2,12345678901234567890123456789012", "Error 163: Structured Append index '3' out of range (1 to count '2')", 0 },
         /* 46*/ { BARCODE_AZTEC, "1", -1, " --structapp=", "2,3,12345678901234567890123456789012", "", 0 },
         /* 47*/ { BARCODE_PDF417, "1", -1, " --heightperrow", "", "", 0 },
         /* 48*/ { -1, NULL, -1, " -v", NULL, "Zint version ", 1 },
@@ -1230,8 +1236,8 @@ static void test_other_opts(const testCtx *const p_ctx) {
         /* 60*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "1234x", "Error 178: scalexdimdp X-dim invalid floating point (integer part must be digits only)", 0 },
         /* 61*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12.34in,123x", "Error 180: scalexdimdp resolution invalid floating point (integer part must be digits only)", 0 },
         /* 62*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12,123.45678", "Error 180: scalexdimdp resolution invalid floating point (7 significant digits maximum)", 0 },
-        /* 63*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "10.1,1000", "Warning 185: scalexdimdp X-dim (10.1) out of range (> 10), ignoring", 0 },
-        /* 64*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "10,1000.1", "Warning 186: scalexdimdp resolution (1000.1) out of range (> 1000), ignoring", 0 },
+        /* 63*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "10.1,1000", "Warning 185: scalexdimdp X-dim '10.1' out of range (greater than 10), ignoring", 0 },
+        /* 64*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "10,1000.1", "Warning 186: scalexdimdp resolution '1000.1' out of range (greater than 1000), ignoring", 0 },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -1278,11 +1284,11 @@ static void test_combos(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
-        char *opts;
+        const char *data;
+        const char *opts;
 
-        char *expected;
-        char *outfilename;
+        const char *expected;
+        const char *outfilename;
         int strstr_cmp;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
@@ -1328,10 +1334,10 @@ static void test_exit_status(const testCtx *const p_ctx) {
 
     struct item {
         int b;
-        char *data;
+        const char *data;
         int input_mode;
-        char *opt;
-        char *opt_data;
+        const char *opt;
+        const char *opt_data;
 
         int expected;
     };

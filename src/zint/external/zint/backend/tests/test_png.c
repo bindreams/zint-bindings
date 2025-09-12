@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -31,6 +31,7 @@
 
 #include "testcommon.h"
 #include <errno.h>
+#include <zlib.h> /* For ZLIBNG_VERSION define (if any) */
 #include <sys/stat.h>
 
 INTERNAL int png_pixel_plot(struct zint_symbol *symbol, unsigned char *pixelbuf);
@@ -41,12 +42,12 @@ static void test_pixel_plot(const testCtx *const p_ctx) {
     struct item {
         int width;
         int height;
-        char *pattern;
+        const char *pattern;
         int repeat;
         int ret;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
-    struct item data[] = {
+    static const struct item data[] = {
         /*  0*/ { 1, 1, "1", 0, 0 },
         /*  1*/ { 2, 1, "11", 0, 0 },
         /*  2*/ { 2, 2, "10", 1, 0 },
@@ -55,17 +56,17 @@ static void test_pixel_plot(const testCtx *const p_ctx) {
         /*  5*/ { 3, 3, "101010101", 0, 0 },
         /*  6*/ { 8, 2, "CBMWKRYGGYRKWMBC", 0, 0 },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, ret;
     struct zint_symbol *symbol = NULL;
 
-    char *png = "out.png";
+    const char *png = "out.png";
 
     char data_buf[8 * 2 + 1];
 
     const char *const have_identify = testUtilHaveIdentify();
 
-    testStartSymbol("test_pixel_plot", &symbol);
+    testStart("test_pixel_plot");
 
     for (i = 0; i < data_size; i++) {
         int size;
@@ -134,103 +135,110 @@ static void test_print(const testCtx *const p_ctx) {
         float height;
         float scale;
         struct zint_structapp structapp;
-        char *fgcolour;
-        char *bgcolour;
+        const char *fgcolour;
+        const char *bgcolour;
         float text_gap;
-        char *data;
-        char *composite;
+        const char *data;
+        const char *composite;
         int ret;
-        char *expected_file;
-        char *comment;
+        const char *expected_file;
+        const char *comment;
     };
-    struct item data[] = {
-        /*  0*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave_bold.png", "" },
-        /*  1*/ { BARCODE_CODE128, UNICODE_MODE, 3, BOLD_TEXT | BARCODE_BOX, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave_bold_box3.png", "" },
-        /*  2*/ { BARCODE_CODE128, UNICODE_MODE, 2, BOLD_TEXT | BARCODE_BOX, 2, 2, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave_bold_hvwsp2_box2.png", "" },
-        /*  3*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, -1, -1, 3, -1, 0, 0, { 0, 0, "" }, "", "", 1, "[00]030123456789012340", "[02]13012345678909[37]24[10]1234567ABCDEFG", 0, "gs1_128_cc_fig12.png", "" },
-        /*  4*/ { BARCODE_CODABLOCKF, -1, 3, -1, -1, -1, -1, 3, -1, 0, 0, { 0, 0, "" }, "", "", 1, "AAAAAAAAA", "", 0, "codablockf_3rows.png", "" },
-        /*  5*/ { BARCODE_CODABLOCKF, -1, -1, -1, 2, 2, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "AAAAAAAAA", "", 0, "codablockf_hvwsp2.png", "" },
-        /*  6*/ { BARCODE_CODABLOCKF, -1, 2, BARCODE_BOX, 2, 2, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "AAAAAAAAA", "", 0, "codablockf_hvwsp2_box2.png", "" },
-        /*  7*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017", "", 0, "ean13_ggs_5.2.2.1-1.png", "" },
-        /*  8*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017", "", 0, "ean13_ggs_5.2.2.1-1_gws.png", "" },
-        /*  9*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017+12", "", 0, "ean13_2addon_ggs_5.2.2.5.1-2.png", "" },
-        /* 10*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017+12", "", 0, "ean13_2addon_ggs_5.2.2.5.1-2_gws.png", "" },
-        /* 11*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9780877799306+54321", "", 0, "ean13_5addon_ggs_5.2.2.5.2-2.png", "" },
-        /* 12*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9780877799306+54321", "", 0, "ean13_5addon_ggs_5.2.2.5.2-2_gws.png", "" },
-        /* 13*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012", "[91]12345678901234567890123456789", 0, "ean13_cc_cca_5x4.png", "" },
-        /* 14*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012", "[91]12345678901234567890123456789", 0, "ean13_cc_cca_5x4_gws.png", "" },
-        /* 15*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+12", "[91]123456789012345678901", 0, "ean13_cc_2addon_cca_4x4.png", "" },
-        /* 16*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+12", "[91]123456789012345678901", 0, "ean13_cc_2addon_cca_4x4_gws.png", "" },
-        /* 17*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+54321", "[91]1234567890", 0, "ean13_cc_5addon_ccb_3x4.png", "" },
-        /* 18*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+54321", "[91]1234567890", 0, "ean13_cc_5addon_ccb_3x4_gws.png", "" },
-        /* 19*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, 0, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+54321", "[91]1234567890", 0, "ean13_cc_5addon_ccb_3x4_notext.png", "" },
-        /* 20*/ { BARCODE_UPCA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "012345678905+24", "", 0, "upca_2addon_ggs_5.2.6.6-5.png", "" },
-        /* 21*/ { BARCODE_UPCA, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "012345678905+24", "", 0, "upca_2addon_ggs_5.2.6.6-5_gws.png", "" },
-        /* 22*/ { BARCODE_UPCA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon.png", "" },
-        /* 23*/ { BARCODE_UPCA, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon_gws.png", "" },
-        /* 24*/ { BARCODE_UPCA, -1, -1, -1, -1, -1, 0, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon_notext.png", "" },
-        /* 25*/ { BARCODE_UPCA, -1, 3, BARCODE_BIND, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon_bind3.png", "" },
-        /* 26*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12", "[91]123456789", 0, "upca_cc_2addon_cca_3x4.png", "" },
-        /* 27*/ { BARCODE_UPCA_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12", "[91]123456789", 0, "upca_cc_2addon_cca_3x4_gws.png", "" },
-        /* 28*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12121", "[91]1234567890123", 0, "upca_cc_5addon_ccb_4x4.png", "" },
-        /* 29*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, -1, 0, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12121", "[91]1234567890123", 0, "upca_cc_5addon_ccb_4x4_notext.png", "" },
-        /* 30*/ { BARCODE_UPCA_CC, -1, 3, BARCODE_BIND, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12121", "[91]1234567890123", 0, "upca_cc_5addon_ccb_4x4_bind3.png", "" },
-        /* 31*/ { BARCODE_UPCE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "upce_2addon.png", "" },
-        /* 32*/ { BARCODE_UPCE, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "upce_2addon_gws.png", "" },
-        /* 33*/ { BARCODE_UPCE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "upce_5addon.png", "" },
-        /* 34*/ { BARCODE_UPCE, -1, -1, SMALL_TEXT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "upce_5addon_small.png", "" },
-        /* 35*/ { BARCODE_UPCE, -1, -1, SMALL_TEXT | EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "upce_5addon_small_gws.png", "" },
-        /* 36*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "0654321+89", "[91]1", 0, "upce_cc_2addon_cca_5x2.png", "" },
-        /* 37*/ { BARCODE_UPCE_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "0654321+89", "[91]1", 0, "upce_cc_2addon_cca_5x2_gws.png", "" },
-        /* 38*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1876543+56789", "[91]12345", 0, "upce_cc_5addon_ccb_8x2.png", "" },
-        /* 39*/ { BARCODE_UPCE_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1876543+56789", "[91]12345", 0, "upce_cc_5addon_ccb_8x2_gws.png", "" },
-        /* 40*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, -1, 0, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1876543+56789", "[91]12345", 0, "upce_cc_5addon_ccb_8x2_notext.png", "" },
-        /* 41*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567", "", 0, "ean8_gss_5.2.2.2-1.png", "" },
-        /* 42*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567", "", 0, "ean8_gss_5.2.2.2-1_gws.png", "" },
-        /* 43*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "ean8_2addon.png", "" },
-        /* 44*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "ean8_2addon_gws.png", "" },
-        /* 45*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "ean8_5addon.png", "" },
-        /* 46*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "ean8_5addon_gws.png", "" },
-        /* 47*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+65", "[91]1234567", 0, "ean8_cc_2addon_cca_4x3.png", "" },
-        /* 48*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+65", "[91]1234567", 0, "ean8_cc_2addon_cca_4x3_gws.png", "" },
-        /* 49*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+74083", "[91]123456789012345678", 0, "ean8_cc_5addon_ccb_8x3.png", "" },
-        /* 50*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+74083", "[91]123456789012345678", 0, "ean8_cc_5addon_ccb_8x3_gws.png", "" },
-        /* 51*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ean5.png", "" },
-        /* 52*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ean5_gws.png", "" },
-        /* 53*/ { BARCODE_EANX, -1, 2, BARCODE_BIND, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ean5_bind2.png", "" },
-        /* 54*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12", "", 0, "ean2.png", "" },
-        /* 55*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12", "", 0, "ean2_gws.png", "" },
-        /* 56*/ { BARCODE_EANX, -1, 1, BARCODE_BOX, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12", "", 0, "ean2_box1.png", "" },
-        /* 57*/ { BARCODE_CODE39, -1, -1, SMALL_TEXT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123", "", 0, "code39_small.png", "" },
-        /* 58*/ { BARCODE_POSTNET, -1, -1, -1, -1, -1, -1, -1, -1, 0, 3.5, { 0, 0, "" }, "", "", 1, "12345", "", 0, "postnet_zip.png", "300 dpi, using 1/43in X, 300 / 43 / 2 = ~3.5 scale" },
-        /* 59*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "CFCECDCC", 1, "12345", "", 0, "pdf417_bgalpha.png", "" },
-        /* 60*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "30313233", "", 1, "12345", "", 0, "pdf417_fgalpha.png", "" },
-        /* 61*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "20212244", "CFCECDCC", 1, "12345", "", 0, "pdf417_bgfgalpha.png", "" },
-        /* 62*/ { BARCODE_ULTRA, -1, -1, -1, 2, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "0000007F", "FF000033", 1, "12345", "", 0, "ultra_bgfgalpha.png", "" },
-        /* 63*/ { BARCODE_ULTRA, -1, -1, -1, 2, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "FF000033", 1, "12345", "", 0, "ultra_bgalpha.png", "" },
-        /* 64*/ { BARCODE_ULTRA, -1, -1, -1, 2, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "0000007F", "FF0000", 1, "12345", "", 0, "ultra_fgalpha.png", "" },
-        /* 65*/ { BARCODE_ULTRA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "0000007F", "", 1, "12345", "", 0, "ultra_fgalpha_nobg.png", "" },
-        /* 66*/ { BARCODE_ULTRA, -1, 1, BARCODE_BOX, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ultra_hvwsp1_box1.png", "" },
-        /* 67*/ { BARCODE_ULTRA, -1, 1, BARCODE_BOX, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "00FF007F", "BABDB6", 1, "12345", "", 0, "ultra_fgalpha_hvwsp1_box1.png", "" },
-        /* 68*/ { BARCODE_ULTRA, -1, 1, BARCODE_BIND_TOP, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "00FF007F", "BABDB6", 1, "12345", "", 0, "ultra_fgalpha_hvwsp1_bindtop1.png", "" },
-        /* 69*/ { BARCODE_ULTRA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0.5, { 0, 0, "" }, "", "", 1, "1", "", 0, "ultra_odd.png", "" },
-        /* 70*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0.5, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_0.5.png", "6 dpmm, 150 dpi" },
-        /* 71*/ { BARCODE_MAXICODE, -1, 1, BARCODE_BOX, 3, -1, -1, -1, -1, 0, 0.7, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_0.7_wsp3_box1.png", "8 dpmm, 200 dpi" },
-        /* 72*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1.4, { 0, 0, "" }, "1111117F", "EEEEEEEE", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_1.4_bgfgalpha.png", "16 dpmm, 400 dpi" },
-        /* 73*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 2.1, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_2.1.png", "24 dpmm, 600 dpi" },
-        /* 74*/ { BARCODE_MAXICODE, -1, 2, BARCODE_BOX, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_hvwsp1_box2.png", "" },
-        /* 75*/ { BARCODE_MAXICODE, -1, 1, BARCODE_BIND, -1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_vwsp1_bind1.png", "" },
-        /* 76*/ { BARCODE_DATAMATRIX, -1, 1, BARCODE_BIND | BARCODE_DOTTY_MODE, -1, -1, -1, -1, -1, 0, 2.0, { 0, 0, "" }, "", "", 1, "1234", "", 0, "datamatrix_2.0_bind1_dotty.png", "" },
-        /* 77*/ { BARCODE_DATAMATRIX, -1, 1, BARCODE_BIND | BARCODE_DOTTY_MODE, 1, 1, -1, -1, -1, 0, 2.0, { 0, 0, "" }, "", "", 1, "1234", "", 0, "datamatrix_2.0_hvwsp1_bind1_dotty.png", "" },
-        /* 78*/ { BARCODE_DBAR_LTD, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678909", "", 0, "dbar_ltd.png", "" },
-        /* 79*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 5.0, 0, { 0, 0, "" }, "", "", 1, "Your Data Here!", "", ZINT_WARN_NONCOMPLIANT, "pdf417_height5.png", "" },
-        /* 80*/ { BARCODE_USPS_IMAIL, -1, -1, -1, -1, -1, -1, -1, -1, 7.75, 0, { 0, 0, "" }, "", "", 1, "12345678901234567890", "", 0, "imail_height7.75.png", "" },
-        /* 81*/ { BARCODE_AZTEC, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 4, 7, "Z1.txt" }, "", "", 1, "3456", "", 0, "aztec_z1_seq4of7.png", "" },
-        /* 82*/ { BARCODE_PDF417, -1, -1, BARCODE_NO_QUIET_ZONES, -1, -1, -1, 5, 8, 16, 1.5, { 0, 0, "" }, "", "", 1, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "", ZINT_WARN_NONCOMPLIANT, "pdf417_#204.png", "Ticket #204 Blank line in PDF417" },
-        /* 83*/ { BARCODE_DPD, -1, -1, BARCODE_QUIET_ZONES | COMPLIANT_HEIGHT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "008182709980000020028101276", "", 0, "dpd_compliant.png", "Now with bind top 3X default" },
-        /* 84*/ { BARCODE_CHANNEL, -1, -1, CMYK_COLOUR | COMPLIANT_HEIGHT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "100,85,0,20", "FFFFFF00", 1, "123", "", 0, "channel_cmyk_nobg.png", "" },
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_CODE128, UNICODE_MODE, -1, -1, -1, -1, -1, -1, -1, 10.0, 0, { 0, 0, "" }, "", "", 1, "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", "", 0, "code128_latin1_1.png", "" },
+        /*  1*/ { BARCODE_CODE128, UNICODE_MODE, -1, -1, -1, -1, -1, -1, -1, 10.0, 0, { 0, 0, "" }, "", "", 1, "¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ", "", 0, "code128_latin1_2.png", "" },
+        /*  2*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, -1, 10.0, 0, { 0, 0, "" }, "", "", 1, "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", "", 0, "code128_latin1_1_bold.png", "" },
+        /*  3*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, -1, 10.0, 0, { 0, 0, "" }, "", "", 1, "¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ", "", 0, "code128_latin1_2_bold.png", "" },
+        /*  4*/ { BARCODE_CODE128, UNICODE_MODE, -1, SMALL_TEXT, -1, -1, -1, -1, -1, 10.0, 0, { 0, 0, "" }, "", "", 1, "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", "", 0, "code128_latin1_1_small.png", "" },
+        /*  5*/ { BARCODE_CODE128, UNICODE_MODE, -1, SMALL_TEXT, -1, -1, -1, -1, -1, 10.0, 0, { 0, 0, "" }, "", "", 1, "¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ", "", 0, "code128_latin1_2_small.png", "" },
+        /*  6*/ { BARCODE_CODE128, UNICODE_MODE, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave.png", "" },
+        /*  7*/ { BARCODE_CODE128, UNICODE_MODE, -1, BOLD_TEXT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave_bold.png", "" },
+        /*  8*/ { BARCODE_CODE128, UNICODE_MODE, 3, BOLD_TEXT | BARCODE_BOX, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave_bold_box3.png", "" },
+        /*  9*/ { BARCODE_CODE128, UNICODE_MODE, 2, BOLD_TEXT | BARCODE_BOX, 2, 2, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "Égjpqy", "", 0, "code128_egrave_bold_hvwsp2_box2.png", "" },
+        /* 10*/ { BARCODE_GS1_128_CC, -1, -1, -1, -1, -1, -1, 3, -1, 0, 0, { 0, 0, "" }, "", "", 1, "[00]030123456789012340", "[02]13012345678909[37]24[10]1234567ABCDEFG", 0, "gs1_128_cc_fig12.png", "" },
+        /* 11*/ { BARCODE_CODABLOCKF, -1, 3, -1, -1, -1, -1, 3, -1, 0, 0, { 0, 0, "" }, "", "", 1, "AAAAAAAAA", "", 0, "codablockf_3rows.png", "" },
+        /* 12*/ { BARCODE_CODABLOCKF, -1, -1, -1, 2, 2, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "AAAAAAAAA", "", 0, "codablockf_hvwsp2.png", "" },
+        /* 13*/ { BARCODE_CODABLOCKF, -1, 2, BARCODE_BOX, 2, 2, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "AAAAAAAAA", "", 0, "codablockf_hvwsp2_box2.png", "" },
+        /* 14*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017", "", 0, "ean13_ggs_5.2.2.1-1.png", "" },
+        /* 15*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017", "", 0, "ean13_ggs_5.2.2.1-1_gws.png", "" },
+        /* 16*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017+12", "", 0, "ean13_2addon_ggs_5.2.2.5.1-2.png", "" },
+        /* 17*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9771384524017+12", "", 0, "ean13_2addon_ggs_5.2.2.5.1-2_gws.png", "" },
+        /* 18*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9780877799306+54321", "", 0, "ean13_5addon_ggs_5.2.2.5.2-2.png", "" },
+        /* 19*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9780877799306+54321", "", 0, "ean13_5addon_ggs_5.2.2.5.2-2_gws.png", "" },
+        /* 20*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012", "[91]12345678901234567890123456789", 0, "ean13_cc_cca_5x4.png", "" },
+        /* 21*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012", "[91]12345678901234567890123456789", 0, "ean13_cc_cca_5x4_gws.png", "" },
+        /* 22*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+12", "[91]123456789012345678901", 0, "ean13_cc_2addon_cca_4x4.png", "" },
+        /* 23*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+12", "[91]123456789012345678901", 0, "ean13_cc_2addon_cca_4x4_gws.png", "" },
+        /* 24*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+54321", "[91]1234567890", 0, "ean13_cc_5addon_ccb_3x4.png", "" },
+        /* 25*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+54321", "[91]1234567890", 0, "ean13_cc_5addon_ccb_3x4_gws.png", "" },
+        /* 26*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, 0, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123456789012+54321", "[91]1234567890", 0, "ean13_cc_5addon_ccb_3x4_notext.png", "" },
+        /* 27*/ { BARCODE_UPCA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "012345678905+24", "", 0, "upca_2addon_ggs_5.2.6.6-5.png", "" },
+        /* 28*/ { BARCODE_UPCA, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "012345678905+24", "", 0, "upca_2addon_ggs_5.2.6.6-5_gws.png", "" },
+        /* 29*/ { BARCODE_UPCA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon.png", "" },
+        /* 30*/ { BARCODE_UPCA, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon_gws.png", "" },
+        /* 31*/ { BARCODE_UPCA, -1, -1, -1, -1, -1, 0, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon_notext.png", "" },
+        /* 32*/ { BARCODE_UPCA, -1, 3, BARCODE_BIND, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "614141234417+12345", "", 0, "upca_5addon_bind3.png", "" },
+        /* 33*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12", "[91]123456789", 0, "upca_cc_2addon_cca_3x4.png", "" },
+        /* 34*/ { BARCODE_UPCA_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12", "[91]123456789", 0, "upca_cc_2addon_cca_3x4_gws.png", "" },
+        /* 35*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12121", "[91]1234567890123", 0, "upca_cc_5addon_ccb_4x4.png", "" },
+        /* 36*/ { BARCODE_UPCA_CC, -1, -1, -1, -1, -1, 0, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12121", "[91]1234567890123", 0, "upca_cc_5addon_ccb_4x4_notext.png", "" },
+        /* 37*/ { BARCODE_UPCA_CC, -1, 3, BARCODE_BIND, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678901+12121", "[91]1234567890123", 0, "upca_cc_5addon_ccb_4x4_bind3.png", "" },
+        /* 38*/ { BARCODE_UPCE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "upce_2addon.png", "" },
+        /* 39*/ { BARCODE_UPCE, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "upce_2addon_gws.png", "" },
+        /* 40*/ { BARCODE_UPCE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "upce_5addon.png", "" },
+        /* 41*/ { BARCODE_UPCE, -1, -1, SMALL_TEXT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "upce_5addon_small.png", "" },
+        /* 42*/ { BARCODE_UPCE, -1, -1, SMALL_TEXT | EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "upce_5addon_small_gws.png", "" },
+        /* 43*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "0654321+89", "[91]1", 0, "upce_cc_2addon_cca_5x2.png", "" },
+        /* 44*/ { BARCODE_UPCE_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "0654321+89", "[91]1", 0, "upce_cc_2addon_cca_5x2_gws.png", "" },
+        /* 45*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1876543+56789", "[91]12345", 0, "upce_cc_5addon_ccb_8x2.png", "" },
+        /* 46*/ { BARCODE_UPCE_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1876543+56789", "[91]12345", 0, "upce_cc_5addon_ccb_8x2_gws.png", "" },
+        /* 47*/ { BARCODE_UPCE_CC, -1, -1, -1, -1, -1, 0, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1876543+56789", "[91]12345", 0, "upce_cc_5addon_ccb_8x2_notext.png", "" },
+        /* 48*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567", "", 0, "ean8_gss_5.2.2.2-1.png", "" },
+        /* 49*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567", "", 0, "ean8_gss_5.2.2.2-1_gws.png", "" },
+        /* 50*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "ean8_2addon.png", "" },
+        /* 51*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12", "", 0, "ean8_2addon_gws.png", "" },
+        /* 52*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "ean8_5addon.png", "" },
+        /* 53*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "1234567+12345", "", 0, "ean8_5addon_gws.png", "" },
+        /* 54*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+65", "[91]1234567", 0, "ean8_cc_2addon_cca_4x3.png", "" },
+        /* 55*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+65", "[91]1234567", 0, "ean8_cc_2addon_cca_4x3_gws.png", "" },
+        /* 56*/ { BARCODE_EANX_CC, -1, -1, -1, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+74083", "[91]123456789012345678", 0, "ean8_cc_5addon_ccb_8x3.png", "" },
+        /* 57*/ { BARCODE_EANX_CC, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, 2, -1, 0, 0, { 0, 0, "" }, "", "", 1, "9876543+74083", "[91]123456789012345678", 0, "ean8_cc_5addon_ccb_8x3_gws.png", "" },
+        /* 58*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ean5.png", "" },
+        /* 59*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ean5_gws.png", "" },
+        /* 60*/ { BARCODE_EANX, -1, 2, BARCODE_BIND, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ean5_bind2.png", "" },
+        /* 61*/ { BARCODE_EANX, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12", "", 0, "ean2.png", "" },
+        /* 62*/ { BARCODE_EANX, -1, -1, EANUPC_GUARD_WHITESPACE, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12", "", 0, "ean2_gws.png", "" },
+        /* 63*/ { BARCODE_EANX, -1, 1, BARCODE_BOX, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12", "", 0, "ean2_box1.png", "" },
+        /* 64*/ { BARCODE_CODE39, -1, -1, SMALL_TEXT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "123", "", 0, "code39_small.png", "" },
+        /* 65*/ { BARCODE_POSTNET, -1, -1, -1, -1, -1, -1, -1, -1, 0, 3.5, { 0, 0, "" }, "", "", 1, "12345", "", 0, "postnet_zip.png", "300 dpi, using 1/43in X, 300 / 43 / 2 = ~3.5 scale" },
+        /* 66*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "CFCECDCC", 1, "12345", "", 0, "pdf417_bgalpha.png", "" },
+        /* 67*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "30313233", "", 1, "12345", "", 0, "pdf417_fgalpha.png", "" },
+        /* 68*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "20212244", "CFCECDCC", 1, "12345", "", 0, "pdf417_bgfgalpha.png", "" },
+        /* 69*/ { BARCODE_ULTRA, -1, -1, -1, 2, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "0000007F", "FF000033", 1, "12345", "", 0, "ultra_bgfgalpha.png", "" },
+        /* 70*/ { BARCODE_ULTRA, -1, -1, -1, 2, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "FF000033", 1, "12345", "", 0, "ultra_bgalpha.png", "" },
+        /* 71*/ { BARCODE_ULTRA, -1, -1, -1, 2, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "0000007F", "FF0000", 1, "12345", "", 0, "ultra_fgalpha.png", "" },
+        /* 72*/ { BARCODE_ULTRA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "0000007F", "", 1, "12345", "", 0, "ultra_fgalpha_nobg.png", "" },
+        /* 73*/ { BARCODE_ULTRA, -1, 1, BARCODE_BOX, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345", "", 0, "ultra_hvwsp1_box1.png", "" },
+        /* 74*/ { BARCODE_ULTRA, -1, 1, BARCODE_BOX, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "00FF007F", "BABDB6", 1, "12345", "", 0, "ultra_fgalpha_hvwsp1_box1.png", "" },
+        /* 75*/ { BARCODE_ULTRA, -1, 1, BARCODE_BIND_TOP, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "00FF007F", "BABDB6", 1, "12345", "", 0, "ultra_fgalpha_hvwsp1_bindtop1.png", "" },
+        /* 76*/ { BARCODE_ULTRA, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0.5, { 0, 0, "" }, "", "", 1, "1", "", 0, "ultra_odd.png", "" },
+        /* 77*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0.5, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_0.5.png", "6 dpmm, 150 dpi" },
+        /* 78*/ { BARCODE_MAXICODE, -1, 1, BARCODE_BOX, 3, -1, -1, -1, -1, 0, 0.7, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_0.7_wsp3_box1.png", "8 dpmm, 200 dpi" },
+        /* 79*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1.4, { 0, 0, "" }, "1111117F", "EEEEEEEE", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_1.4_bgfgalpha.png", "16 dpmm, 400 dpi" },
+        /* 80*/ { BARCODE_MAXICODE, -1, -1, -1, -1, -1, -1, -1, -1, 0, 2.1, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_2.1.png", "24 dpmm, 600 dpi" },
+        /* 81*/ { BARCODE_MAXICODE, -1, 2, BARCODE_BOX, 1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_hvwsp1_box2.png", "" },
+        /* 82*/ { BARCODE_MAXICODE, -1, 1, BARCODE_BIND, -1, 1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "", 0, "maxicode_vwsp1_bind1.png", "" },
+        /* 83*/ { BARCODE_DATAMATRIX, -1, 1, BARCODE_BIND | BARCODE_DOTTY_MODE, -1, -1, -1, -1, -1, 0, 2.0, { 0, 0, "" }, "", "", 1, "1234", "", 0, "datamatrix_2.0_bind1_dotty.png", "" },
+        /* 84*/ { BARCODE_DATAMATRIX, -1, 1, BARCODE_BIND | BARCODE_DOTTY_MODE, 1, 1, -1, -1, -1, 0, 2.0, { 0, 0, "" }, "", "", 1, "1234", "", 0, "datamatrix_2.0_hvwsp1_bind1_dotty.png", "" },
+        /* 85*/ { BARCODE_DBAR_LTD, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "12345678909", "", 0, "dbar_ltd.png", "" },
+        /* 86*/ { BARCODE_PDF417, -1, -1, -1, -1, -1, -1, -1, -1, 5.0, 0, { 0, 0, "" }, "", "", 1, "Your Data Here!", "", ZINT_WARN_NONCOMPLIANT, "pdf417_height5.png", "" },
+        /* 87*/ { BARCODE_USPS_IMAIL, -1, -1, -1, -1, -1, -1, -1, -1, 7.75, 0, { 0, 0, "" }, "", "", 1, "12345678901234567890", "", 0, "imail_height7.75.png", "" },
+        /* 88*/ { BARCODE_AZTEC, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, { 4, 7, "Z1.txt" }, "", "", 1, "3456", "", 0, "aztec_z1_seq4of7.png", "" },
+        /* 89*/ { BARCODE_PDF417, -1, -1, BARCODE_NO_QUIET_ZONES, -1, -1, -1, 5, 8, 16, 1.5, { 0, 0, "" }, "", "", 1, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "", ZINT_WARN_NONCOMPLIANT, "pdf417_#204.png", "Ticket #204 Blank line in PDF417" },
+        /* 90*/ { BARCODE_DPD, -1, -1, BARCODE_QUIET_ZONES | COMPLIANT_HEIGHT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "", "", 1, "008182709980000020028101276", "", 0, "dpd_compliant.png", "Now with bind top 3X default" },
+        /* 91*/ { BARCODE_CHANNEL, -1, -1, CMYK_COLOUR | COMPLIANT_HEIGHT, -1, -1, -1, -1, -1, 0, 0, { 0, 0, "" }, "100,85,0,20", "FFFFFF00", 1, "123", "", 0, "channel_cmyk_nobg.png", "" },
     };
-    int data_size = ARRAY_SIZE(data);
+    const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
     struct zint_symbol *symbol = NULL;
 
@@ -239,7 +247,9 @@ static void test_print(const testCtx *const p_ctx) {
     char expected_file[1024];
     char escaped[1024];
     int escaped_size = 1024;
-    char *text;
+    unsigned char filebuf[32768];
+    int filebuf_size;
+    const char *text;
 
     const char *const have_identify = testUtilHaveIdentify();
 
@@ -300,7 +310,7 @@ static void test_print(const testCtx *const p_ctx) {
         }
         text_length = (int) strlen(text);
 
-        ret = ZBarcode_Encode(symbol, (unsigned char *) text, text_length);
+        ret = ZBarcode_Encode(symbol, TCU(text), text_length);
         assert_equal(ret, data[i].ret, "i:%d %s ZBarcode_Encode ret %d != %d (%s)\n", i, testUtilBarcodeName(data[i].symbology), ret, data[i].ret, symbol->errtxt);
 
         strcpy(symbol->outfile, png);
@@ -328,9 +338,27 @@ static void test_print(const testCtx *const p_ctx) {
 
             ret = testUtilCmpPngs(symbol->outfile, expected_file);
             assert_zero(ret, "i:%d %s testUtilCmpPngs(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
+            #ifndef ZLIBNG_VERSION /* zlib-ng (used by e.g. Fedora 40) may produce non-binary compat output */
             ret = testUtilCmpBins(symbol->outfile, expected_file);
             assert_zero(ret, "i:%d %s testUtilCmpBins(%s, %s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
-            assert_zero(testUtilRemove(symbol->outfile), "i:%d testUtilRemove(%s) != 0\n", i, symbol->outfile);
+            #endif
+
+            ret = testUtilReadFile(symbol->outfile, filebuf, sizeof(filebuf), &filebuf_size); /* For BARCODE_MEMORY_FILE */
+            assert_zero(ret, "i:%d %s testUtilReadFile(%s) %d != 0\n", i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret);
+
+            if (!(debug & ZINT_DEBUG_TEST_KEEP_OUTFILE)) {
+                assert_zero(testUtilRemove(symbol->outfile), "i:%d testUtilRemove(%s) != 0\n", i, symbol->outfile);
+            }
+
+            symbol->output_options |= BARCODE_MEMORY_FILE;
+            ret = ZBarcode_Print(symbol, 0);
+            assert_zero(ret, "i:%d %s ZBarcode_Print %s ret %d != 0 (%s)\n",
+                            i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret, symbol->errtxt);
+            assert_nonnull(symbol->memfile, "i:%d %s memfile NULL\n", i, testUtilBarcodeName(data[i].symbology));
+            assert_equal(symbol->memfile_size, filebuf_size, "i:%d %s memfile_size %d != %d\n",
+                            i, testUtilBarcodeName(data[i].symbology), symbol->memfile_size, filebuf_size);
+            assert_zero(memcmp(symbol->memfile, filebuf, symbol->memfile_size), "i:%d %s memcmp(memfile, filebuf) != 0\n",
+                            i, testUtilBarcodeName(data[i].symbology));
         }
 
         ZBarcode_Delete(symbol);
@@ -358,12 +386,15 @@ static void test_outfile(const testCtx *const p_ctx) {
     skip_readonly_test = getuid() == 0; /* Skip if running as root on Unix as can't create read-only file */
 #endif
     if (!skip_readonly_test) {
+        static char expected_errtxt[] = "632: Could not open PNG output file ("; /* Excluding OS-dependent `errno` stuff */
+
         (void) testUtilRmROFile(symbol.outfile); /* In case lying around from previous fail */
         assert_nonzero(testUtilCreateROFile(symbol.outfile), "png_pixel_plot testUtilCreateROFile(%s) fail (%d: %s)\n", symbol.outfile, errno, strerror(errno));
 
         ret = png_pixel_plot(&symbol, data);
         assert_equal(ret, ZINT_ERROR_FILE_ACCESS, "png_pixel_plot ret %d != ZINT_ERROR_FILE_ACCESS (%d) (%s)\n", ret, ZINT_ERROR_FILE_ACCESS, symbol.errtxt);
         assert_zero(testUtilRmROFile(symbol.outfile), "png_pixel_plot testUtilRmROFile(%s) != 0 (%d: %s)\n", symbol.outfile, errno, strerror(errno));
+        assert_zero(strncmp(symbol.errtxt, expected_errtxt, sizeof(expected_errtxt) - 1), "strncmp(%s, %s) != 0\n", symbol.errtxt, expected_errtxt);
     }
 
     symbol.output_options |= BARCODE_STDOUT;

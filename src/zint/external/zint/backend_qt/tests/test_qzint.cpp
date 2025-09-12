@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2021-2023 by Robin Stuart <rstuart114@gmail.com>        *
+ *   Copyright (C) 2021-2025 by Robin Stuart <rstuart114@gmail.com>        *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -14,28 +14,48 @@
  ***************************************************************************/
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-#include <QtTest/QtTest>
+#include <QtTest/QSignalSpy>
+#include <QtTest/QTest>
 #include "../qzint.h" /* Don't use <qzint.h> in case it's been changed */
 
-#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((int) (sizeof(x) / sizeof((x)[0])))
+
+// Whether using ZINT_SANITIZE
+#if !defined(__has_feature)
+#  define __has_feature(x) 0
+#endif
+#if defined(__SANITIZE_ADDRESS__) || __has_feature(address_sanitizer)
+#  define TESTQZINT_HAVE_ASAN
 #endif
 
 class TestQZint : public QObject
 {
     Q_OBJECT
 
+// This avoids WaylandClient memory leaks for Qt5 > 5.15.2 (taken from "frontend_qt/main.cpp")
+#if defined(__linux__) && QT_VERSION > 0x50F02
+public:
+    static void initMain()
+    {
+        /* Not compatible with Wayland for some reason(s) so use X11 unless overridden */
+        if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) {
+            qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("xcb"));
+        }
+    }
+#endif
+
 public:
     TestQZint() : m_skipIfFontUsed(false)
     {
-    // Qt5 will trigger "detected memory leaks" if font used (libfontconfig) so skip if ASAN enabled
-#if QT_VERSION < 0x60000
-#  if !defined(__has_feature)
-#    define __has_feature(x) 0
-#  endif
-#  if defined(__SANITIZE_ADDRESS__) || __has_feature(address_sanitizer)
+    // Qt will trigger "detected memory leaks" if font used (libfontconfig) so skip if ASAN enabled
+#ifdef TESTQZINT_HAVE_ASAN
         m_skipIfFontUsed = true;
-#  endif
+#endif
+    // Unfortunately Qt5 > 5.15.13 & Qt6 > 6.4.2 have further libfontconfig leaks which this doesn't address...
+    // ...only option found so far is to use `QTEST_GUILESS_MAIN()` and skip `renderTest()` completely
+#if defined(__linux__) && ((QT_VERSION > 0x50F0D && QT_VERSION < 0x60000) || QT_VERSION > 0x60402) \
+        && defined(TESTQZINT_HAVE_ASAN)
+#define TESTQZINT_GUILESS
 #endif
     }
 
@@ -337,12 +357,12 @@ private slots:
         int width = 12;
         bc.setWidth(width);
         QCOMPARE(bc.width(), width);
-        QCOMPARE(bc.option1(), width);
+        QCOMPARE(bc.option2(), width);
 
         int securityLevel = 2;
         bc.setSecurityLevel(securityLevel);
         QCOMPARE(bc.securityLevel(), securityLevel);
-        QCOMPARE(bc.option2(), securityLevel);
+        QCOMPARE(bc.option1(), securityLevel);
 
         int pdf417CodeWords = 123;
         bc.setPdf417CodeWords(pdf417CodeWords);
@@ -413,18 +433,21 @@ private slots:
         QTest::addColumn<float>("vectorHeight");
 
         QTest::newRow("BARCODE_CODE128") << BARCODE_CODE128 << "1234" << 0.0f << 0 << "" << 57 << 1 << 50.0f << 114.0f << 100.0f;
-        QTest::newRow("BARCODE_CODE128") << BARCODE_CODE128 << "1234" << 2.0f << 0 << "" << 57 << 1 << 50.0f << 228.0f << 200.0f;
+        QTest::newRow("BARCODE_CODE128 Scale 2") << BARCODE_CODE128 << "1234" << 2.0f << 0 << "" << 57 << 1 << 50.0f << 228.0f << 200.0f;
         QTest::newRow("BARCODE_QRCODE") << BARCODE_QRCODE << "1234" << 0.0f << 0 << "" << 21 << 21 << 21.0f << 42.0f << 42.0f;
-        QTest::newRow("BARCODE_QRCODE") << BARCODE_QRCODE << "1234" << 1.5f << 0 << "" << 21 << 21 << 21.0f << 63.0f << 63.0f;
+        QTest::newRow("BARCODE_QRCODE Scale 1.5") << BARCODE_QRCODE << "1234" << 1.5f << 0 << "" << 21 << 21 << 21.0f << 63.0f << 63.0f;
         if (!m_skipIfFontUsed) {
-            QTest::newRow("BARCODE_QRCODE no text") << BARCODE_QRCODE << "" << 0.0f << ZINT_ERROR_INVALID_DATA << "Error 778: No input data (segment 0 empty)" << 0 << 0 << 0.0f << 0.0f << 0.0f;
+            QTest::newRow("BARCODE_QRCODE no text") << BARCODE_QRCODE << "" << 0.0f << ZINT_ERROR_INVALID_DATA << "Error 228: No input data (segment 0 empty)" << 0 << 0 << 0.0f << 0.0f << 0.0f;
         }
         QTest::newRow("BARCODE_MAXICODE") << BARCODE_MAXICODE << "1234" << 0.0f << 0 << "" << 30 << 33 << 28.578f << 60.0f << 57.7334f;
-        QTest::newRow("BARCODE_MAXICODE") << BARCODE_MAXICODE << "1234" << 2.0f << 0 << "" << 30 << 33 << 28.578f << 120.0f << 115.467f;
+        QTest::newRow("BARCODE_MAXICODE Scale 2") << BARCODE_MAXICODE << "1234" << 2.0f << 0 << "" << 30 << 33 << 28.578f << 120.0f << 115.467f;
     }
 
     void renderTest()
     {
+#ifdef TESTQZINT_GUILESS
+        QSKIP("disabled on Linux for Qt5 > 5.15.13 & Qt6 > 6.4.2 due to memory leaks (ZINT_SANITIZE)", "" /*Dummy arg to suppress -Wc++20-extensions*/);
+#endif
         Zint::QZint bc;
 
         bool bRet;
@@ -1368,7 +1391,11 @@ private slots:
     }
 };
 
+#ifdef TESTQZINT_GUILESS
+QTEST_GUILESS_MAIN(TestQZint)
+#else
 QTEST_MAIN(TestQZint)
+#endif
 #include "test_qzint.moc"
 
 /* vim: set ts=4 sw=4 et : */

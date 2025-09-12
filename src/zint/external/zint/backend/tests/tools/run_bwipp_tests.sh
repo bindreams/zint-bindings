@@ -1,5 +1,6 @@
 #!/bin/bash
-# Copyright (C) 2020 - 2021 Robin Stuart <rstuart114@gmail.com>
+# Copyright (C) 2021-2025 Robin Stuart <rstuart114@gmail.com>
+# SPDX-License-Identifier: BSD-3-Clause
 # vim: set ts=4 sw=4 et :
 set -e
 
@@ -27,13 +28,15 @@ run_bwipp_test "test_code" "encode"
 run_bwipp_test "test_code1" "encode"
 run_bwipp_test "test_code1" "encode_segs"
 run_bwipp_test "test_code1" "fuzz"
-run_bwipp_test "test_code128" "input"
-run_bwipp_test "test_code128" "encode"
+run_bwipp_test "test_code128"
 run_bwipp_test "test_code16k" "input"
 run_bwipp_test "test_code16k" "encode"
 run_bwipp_test "test_code49" "input"
 run_bwipp_test "test_code49" "encode"
 run_bwipp_test "test_composite"
+run_bwipp_test "test_dmatrix" "buffer"
+run_bwipp_test "test_dmatrix" "options"
+run_bwipp_test "test_dmatrix" "reader_init"
 run_bwipp_test "test_dmatrix" "input"
 run_bwipp_test "test_dmatrix" "encode"
 run_bwipp_test "test_dmatrix" "encode_segs"
@@ -44,6 +47,7 @@ run_bwipp_test "test_gs1" "gs1_reduce"
 run_bwipp_test "test_imail" "input"
 run_bwipp_test "test_imail" "encode"
 run_bwipp_test "test_mailmark" "2d_encode"
+run_bwipp_test "test_maxicode" "large"
 run_bwipp_test "test_maxicode" "input"
 run_bwipp_test "test_maxicode" "encode"
 run_bwipp_test "test_maxicode" "encode_segs"

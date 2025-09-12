@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2023 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -29,10 +29,12 @@
  */
 /* SPDX-License-Identifier: BSD-3-Clause */
 
+#include <limits.h>
+
 #include "testcommon.h"
 #include "../large.h"
 
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) && !defined(__MINGW64__)
 #  if __WORDSIZE == 32
 #    define LX_FMT "I32"
 #  else
@@ -40,10 +42,13 @@
 #  endif
 #  if defined(__clang__)
 #    pragma GCC diagnostic ignored "-Wformat-non-iso"
-#  elif defined(__GNUC__)
-#    pragma GCC diagnostic ignored "-Wformat" /* Unfortunately doesn't seem to be way to only avoid non-ISO warnings */
+#  elif defined(__GNUC__) && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
+#    pragma GCC diagnostic ignored "-Wno-pedantic-ms-format"
+#  elif defined(__GNUC__) && __GNUC__ >= 2
+#    pragma GCC diagnostic ignored "-Wformat"
 #  endif
-#elif defined(_MSC_VER) || defined(__APPLE__) || defined(__OpenBSD__) || __WORDSIZE == 32
+#elif (defined(__WORDSIZE) && __WORDSIZE == 32) || (defined(ULONG_MAX) && ULONG_MAX <= 0xFFFFFFFF) \
+        || defined(__APPLE__) || defined(__OpenBSD__)
 #  define LX_FMT "ll"
 #else
 #  define LX_FMT "l"
@@ -811,7 +816,7 @@ static void test_dump(const testCtx *const p_ctx) {
 
     struct item {
         large_uint t;
-        char *expected;
+        const char *expected;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     struct item data[] = {

@@ -549,7 +549,7 @@ PYBIND11_MODULE(PACKAGE_NAME, m) {
 		.def_property_readonly("bitmap", &Symbol::get_bitmap, py::doc{"Stored bitmap image (raster output only)"})
 		.def_property_readonly("alphamap", &Symbol::get_alphamap, py::doc{"Array of alpha values used (raster output only)"})
 		.def_property_readonly("vector", &Symbol::get_vector, py::doc{"Vector header (vector output only)"})
-		.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"});
+		.def_property_readonly("memfile", &Symbol::get_memfile, py::doc{"In-memory file buffer if BARCODE_MEMORY_FILE (output only)"})
 		.doc() = "Main symbol structure.";
 
 	m.attr("__all__") = std::array{

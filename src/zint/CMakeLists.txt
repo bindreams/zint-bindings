@@ -65,32 +65,33 @@ add_custom_target(_generate_enums_hpp
 	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-enums.py"
 	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.inc"
-	COMMENT "Generating generated/enums.inc"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMENT "Generating generated/enums.inc"
 	VERBATIM
 )
 add_dependencies(${TARGET_NAME} _generate_enums_hpp)
 
 
-execute_process(
-	COMMAND pip --disable-pip-version-check install
-		-r "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
-	COMMAND_ERROR_IS_FATAL ANY
-)
+find_program(UV_EXECUTABLE "uv" DOC "uv python package manager" REQUIRED)
 add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
+	COMMAND "${UV_EXECUTABLE}" run
+		--isolated --no-project
+		--with-requirements "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
+		--script "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
 	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/zint-stubs"
+	WORKING_DIRECTORY "${CMAKE_CURRENT_BUILD_DIR}"
 	COMMENT "Generating stub file"
 	VERBATIM
 )
 
 if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is released
-	# Copy stubs into the source directory so they are visible in source control and PRs
-	add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+		# Copy stubs into the source directory so they are visible in source control and PRs
+		add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 		COMMAND "${CMAKE_COMMAND}" -E copy_directory
 			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
 			"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
 		BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 		COMMENT "Updating reference stub file"
 		VERBATIM
 	)

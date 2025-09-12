@@ -67,7 +67,7 @@ dist = [
 requires = [
     "scikit-build-core >= 0.11.6",
     "pybind11 == 3.0.1",
-    "pip >= 24",
+    "uv >= 0.8",  # For running scripts
 ]
 build-backend = "scikit_build_core.build"
 

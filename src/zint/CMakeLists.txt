@@ -85,8 +85,8 @@ add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 )
 
 if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is released
-		# Copy stubs into the source directory so they are visible in source control and PRs
-		add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+	# Copy stubs into the source directory so they are visible in source control and PRs
+	add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 		COMMAND "${CMAKE_COMMAND}" -E copy_directory
 			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
 			"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"

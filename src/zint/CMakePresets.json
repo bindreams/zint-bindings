@@ -2,13 +2,14 @@
 	"version": 3,
 	"configurePresets": [
 		{
-			"name": "default",
+			"name": "default-windows",
 			"binaryDir": "build",
 			"generator": "Ninja",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release",
 				"CMAKE_C_COMPILER": "cl.exe",
-				"CMAKE_CXX_COMPILER": "cl.exe"
+				"CMAKE_CXX_COMPILER": "cl.exe",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": true
 			},
 			"architecture": {
 				"value": "x64",
@@ -16,6 +17,20 @@
 			},
 			"condition": {
 				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "default-posix",
+			"binaryDir": "build",
+			"generator": "Ninja",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": true
+			},
+			"condition": {
+				"type": "notEquals",
 				"lhs": "${hostSystemName}",
 				"rhs": "Windows"
 			}

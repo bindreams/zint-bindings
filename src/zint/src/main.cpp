@@ -366,8 +366,8 @@ struct Symbol {
 		return reinterpret_cast<Vector*>(m_handle->vector);
 	}
 
-	py::object get_memfile() {
-		if (m_handle->memfile == nullptr) return py::none{};
+	std::optional<py::memoryview> get_memfile() {
+		if (m_handle->memfile == nullptr) return std::nullopt;
 
 		return to_memoryview<1>(m_handle->memfile, {m_handle->memfile_size}, true);
 	}

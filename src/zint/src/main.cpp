@@ -1,4 +1,3 @@
-#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -346,7 +345,7 @@ struct Symbol {
 
 	py::memoryview get_encoded_data() { return to_memoryview(m_handle->encoded_data, false); }
 
-	py::array_t<float> get_row_height() { return to_ndarray(m_handle->row_height); }
+	py::list get_row_height() { return m_handle->row_height; }
 
 	std::string_view get_errtxt() { return m_handle->errtxt; }
 

@@ -22,7 +22,6 @@ def main():
             "scripts/generate-stub.py",
             "--output-dir",
             "zint-stubs",
-            "--numpy-array-use-type-var",
             "--exit-code",
             "zint",
         ]

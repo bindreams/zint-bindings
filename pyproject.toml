@@ -92,7 +92,17 @@ sdist.exclude = [
 ]
 
 [tool.cibuildwheel]
-skip = "*linux_i686* *linux_ppc64le* *linux_s390x* *-win32"
+enable = [
+    "cpython-prerelease",
+    "cpython-freethreading",
+    "pypy",
+]
+skip = [
+    "*linux_i686*",
+    "*linux_ppc64le*",
+    "*linux_s390x*",
+    "*-win32",
+]
 environment = {CMAKE_GENERATOR="Ninja"}  # Force Ninja even on Windows
 
 # Hardcode manylinux2014 as the target because tool.cibuildwheel.linux uses yum to install packages.

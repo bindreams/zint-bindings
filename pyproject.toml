@@ -57,7 +57,7 @@ docs = [
 [dependency-groups]
 dist = [
     "build",
-    "cibuildwheel == 2.21.3",
+    "cibuildwheel == 3.1.4",
 ]
 
 [build-system]
@@ -92,7 +92,16 @@ sdist.exclude = [
 ]
 
 [tool.cibuildwheel]
-skip = "*linux_i686* *linux_ppc64le* *linux_s390x* *-win32"
+enable = [
+    "cpython-prerelease",
+    "pypy",
+]
+skip = [
+    "*linux_i686*",
+    "*linux_ppc64le*",
+    "*linux_s390x*",
+    "*-win32",
+]
 environment = {CMAKE_GENERATOR="Ninja"}  # Force Ninja even on Windows
 
 # Hardcode manylinux2014 as the target because tool.cibuildwheel.linux uses yum to install packages.

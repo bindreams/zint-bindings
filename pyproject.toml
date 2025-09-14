@@ -57,7 +57,7 @@ docs = [
 [dependency-groups]
 dist = [
     "build",
-    "cibuildwheel == 2.21.3",
+    "cibuildwheel == 2.23.3",
 ]
 
 [build-system]

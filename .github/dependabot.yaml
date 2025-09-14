@@ -2,6 +2,16 @@
 version: 2
 updates:
   - package-ecosystem: vcpkg
-    directory: "src/zint"
+    directory: src/zint
     schedule:
-      interval: "weekly"
+      interval: weekly
+  - package-ecosystem: pip
+    directories:
+      - /
+      - src/zint/scripts
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

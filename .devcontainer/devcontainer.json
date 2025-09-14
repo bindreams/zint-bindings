@@ -1,0 +1,31 @@
+{
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"privileged": true,
+	"postCreateCommand": "uv venv .venv --clear --managed-python --seed",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.terminal.activateEnvInCurrentTerminal": true,
+				"python.terminal.activateEnvironment": true,
+				"C_Cpp.default.compileCommands": [
+					"src/zint/build/compile_commands.json"
+				]
+			},
+			"extensions": [
+				"ms-vscode.cpptools",
+				"josetr.cmake-language-support-vscode",
+				"EditorConfig.EditorConfig",
+				"eamodio.gitlens",
+				"tamasfe.even-better-toml",
+				"ms-python.python",
+				"ms-python.debugpy",
+				"ms-python.vscode-pylance",
+				"ms-python.vscode-python-envs",
+				"eeyore.yapf",
+				"ExecutableBookProject.myst-highlight",
+			]
+		}
+	}
+}

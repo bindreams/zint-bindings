@@ -1,5 +1,4 @@
 #pragma once
-#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
 #include <array>
@@ -59,7 +58,7 @@ inline constexpr std::array<int, std::rank_v<T>> array_shape = array_shape_impl<
 
 template<typename SourceT, typename TargetT>
 concept SafelyReinterpretable =
-	(std::is_base_of_v<SourceT, TargetT> || std::is_base_of_v<TargetT, SourceT>)&&sizeof(SourceT) == sizeof(TargetT);
+	(std::is_base_of_v<SourceT, TargetT> || std::is_base_of_v<TargetT, SourceT>) && sizeof(SourceT) == sizeof(TargetT);
 
 // Converter functions =================================================================================================
 
@@ -87,12 +86,12 @@ inline py::memoryview to_memoryview(T& data, bool readonly = false) {
 }
 
 /// Convert a C-style N-dimensional array into a numpy.ndarray with the same shape.
-template<BoundedNDArray T>
-inline auto to_ndarray(T& data) {
-	using value_type = std::remove_all_extents_t<T>;
-
-	return py::array_t<value_type>{array_shape<T>, reinterpret_cast<value_type*>(data)};
-}
+// Disabled because of a dependency on NumPy.
+// template<BoundedNDArray T>
+// inline auto to_ndarray(T& data) {
+// 	using value_type = std::remove_all_extents_t<T>;
+// 	return py::array_t<value_type>{array_shape<T>, reinterpret_cast<value_type*>(data)};
+// }
 
 /// Given a python bytes object, return a span over its contents.
 inline std::span<unsigned char const> view_bytes(py::bytes const& bytes) {

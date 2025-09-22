@@ -132,5 +132,9 @@ doctest_optionflags = "ELLIPSIS"
 disable = "missing-function-docstring, too-many-arguments, too-many-locals"
 max-line-length = 120
 
-[tool.black]
-line-length = 120
+[tool.yapf]
+based_on_style = "pep8"
+column_limit = 120
+each_dict_entry_on_separate_line = false
+dedent_closing_brackets = true
+coalesce_brackets = true

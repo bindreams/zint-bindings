@@ -1,37 +1,22 @@
 """
 A barcode encoding library supporting over 50 symbologies.
 """
-
 from __future__ import annotations
+import collections.abc
 import enum
-import numpy
 import typing
-import typing_extensions
 
 __all__: list = [
-    "Symbol",
-    "Symbology",
-    "Seg",
-    "StructApp",
-    "Vector",
-    "VectorCircle",
-    "VectorHexagon",
-    "VectorRect",
-    "VectorString",
-    "CapabilityFlags",
-    "DataMatrixOptions",
-    "InputMode",
-    "OutputOptions",
-    "QrFamilyOptions",
-    "UltracodeOptions",
-    "WarningLevel",
+    'Symbol', 'Symbology', 'Seg', 'StructApp', 'Vector', 'VectorCircle', 'VectorHexagon', 'VectorRect', 'VectorString',
+    'CapabilityFlags', 'DataMatrixOptions', 'InputMode', 'OutputOptions', 'QrFamilyOptions', 'UltracodeOptions',
+    'WarningLevel'
 ]
+
 
 class CapabilityFlags(enum.Flag):
     """
     Capability flags (ZBarcode_Cap() `cap_flag`)
     """
-
     COMPLIANT_HEIGHT: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.COMPLIANT_HEIGHT: 8192>
     COMPOSITE: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.COMPOSITE: 8>
     DOTTY: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.DOTTY: 64>
@@ -47,26 +32,29 @@ class CapabilityFlags(enum.Flag):
     STACKABLE: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.STACKABLE: 2>
     STRUCTAPP: typing.ClassVar[CapabilityFlags]  # value = <CapabilityFlags.STRUCTAPP: 4096>
 
+
 class DataMatrixOptions(enum.IntEnum):
     """
     Data Matrix specific options (`symbol->option_3`)
     """
-
     DMRE: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.DMRE: 101>
     ISO_144: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.ISO_144: 128>
     SQUARE: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.SQUARE: 100>
+
     @classmethod
-    def __new__(cls, value): ...
+    def __new__(cls, value):
+        ...
+
     def __format__(self, format_spec):
         """
         Convert to a string according to format_spec.
         """
 
+
 class InputMode(enum.Flag):
     """
     Values for `Symbol.input_mode`
     """
-
     ESCAPE: typing.ClassVar[InputMode]  # value = <InputMode.ESCAPE: 8>
     EXTRA_ESCAPE: typing.ClassVar[InputMode]  # value = <InputMode.EXTRA_ESCAPE: 256>
     FAST: typing.ClassVar[InputMode]  # value = <InputMode.FAST: 128>
@@ -76,15 +64,16 @@ class InputMode(enum.Flag):
     HEIGHTPERROW: typing.ClassVar[InputMode]  # value = <InputMode.HEIGHTPERROW: 64>
     UNICODE: typing.ClassVar[InputMode]  # value = <InputMode.UNICODE: 1>
 
+
 class OutputOptions(enum.Flag):
     """
     Values for `Symbol.output_options`
     """
-
     BARCODE_BIND: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_BIND: 2>
     BARCODE_BIND_TOP: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_BIND_TOP: 1>
     BARCODE_BOX: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_BOX: 4>
     BARCODE_DOTTY_MODE: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_DOTTY_MODE: 256>
+    BARCODE_MEMORY_FILE: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_MEMORY_FILE: 65536>
     BARCODE_NO_QUIET_ZONES: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_NO_QUIET_ZONES: 4096>
     BARCODE_QUIET_ZONES: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_QUIET_ZONES: 2048>
     BARCODE_STDOUT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.BARCODE_STDOUT: 8>
@@ -98,30 +87,36 @@ class OutputOptions(enum.Flag):
     READER_INIT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.READER_INIT: 16>
     SMALL_TEXT: typing.ClassVar[OutputOptions]  # value = <OutputOptions.SMALL_TEXT: 32>
 
+
 class QrFamilyOptions(enum.IntEnum):
     """
     QR, Han Xin, Grid Matrix specific options (`symbol->option_3`)
     """
-
     FULL_MULTIBYTE: typing.ClassVar[QrFamilyOptions]  # value = <QrFamilyOptions.FULL_MULTIBYTE: 200>
+
     @classmethod
-    def __new__(cls, value): ...
+    def __new__(cls, value):
+        ...
+
     def __format__(self, format_spec):
         """
         Convert to a string according to format_spec.
         """
+
 
 class Seg:
     """
     Segment for use with `Symbol.encode_segs`.
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @typing.overload
-    def __init__(self) -> None: ...
+    def __init__(self) -> None:
+        ...
+
     @typing.overload
-    def __init__(self, arg0: typing_extensions.Buffer, arg1: int) -> None: ...
+    def __init__(self, arg0: collections.abc.Buffer, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def eci(self) -> int:
         """
@@ -129,7 +124,9 @@ class Seg:
         """
 
     @eci.setter
-    def eci(self, arg0: int) -> None: ...
+    def eci(self, arg0: typing.SupportsInt) -> None:
+        ...
+
     @property
     def source(self) -> memoryview:
         """
@@ -137,21 +134,25 @@ class Seg:
         """
 
     @source.setter
-    def source(self, arg1: typing_extensions.Buffer) -> None: ...
+    def source(self, arg1: collections.abc.Buffer) -> None:
+        ...
+
 
 class StructApp:
     """
     Structural append information (see `Symbol.structapp`).
-
+    
     Ignored unless `StructApp.count` is non-zero
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @typing.overload
-    def __init__(self) -> None: ...
+    def __init__(self) -> None:
+        ...
+
     @typing.overload
-    def __init__(self, index: int, count: int, id: bytes = b"") -> None: ...
+    def __init__(self, index: typing.SupportsInt, count: typing.SupportsInt, id: bytes = b'') -> None:
+        ...
+
     @property
     def count(self) -> int:
         """
@@ -159,7 +160,9 @@ class StructApp:
         """
 
     @count.setter
-    def count(self, arg0: int) -> None: ...
+    def count(self, arg0: typing.SupportsInt) -> None:
+        ...
+
     @property
     def id(self) -> bytes:
         """
@@ -167,7 +170,9 @@ class StructApp:
         """
 
     @id.setter
-    def id(self, arg1: bytes) -> None: ...
+    def id(self, arg1: bytes) -> None:
+        ...
+
     @property
     def index(self) -> int:
         """
@@ -175,15 +180,15 @@ class StructApp:
         """
 
     @index.setter
-    def index(self, arg0: int) -> None: ...
+    def index(self, arg0: typing.SupportsInt) -> None:
+        ...
+
 
 class Symbol:
     """
     Main symbol structure.
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @staticmethod
     def capabilities(symbology: Symbology) -> CapabilityFlags:
         """
@@ -198,7 +203,12 @@ class Symbol:
 
     @staticmethod
     def scale_from_xdim_dp(
-        symbology: Symbology, /, x_dim_mm: float, *, dpmm: float, filetype: str | None = None
+        symbology: Symbology,
+        /,
+        x_dim_mm: typing.SupportsFloat,
+        *,
+        dpmm: typing.SupportsFloat,
+        filetype: str | None = None
     ) -> float:
         """
         Return the scale to use for `symbology` for non-zero X-dimension `x_dim_mm` at `dpmm` dots per mm for `filetype`. If `dpmm` zero defaults to 12. If `filetype` is None, defaults to "GIF". Returns 0 on error
@@ -206,19 +216,26 @@ class Symbol:
 
     @staticmethod
     def xdim_dp_from_scale(
-        symbology: Symbology, /, scale: float, *, x_dim_mm_or_dpmm: float, filetype: str | None = None
+        symbology: Symbology,
+        /,
+        scale: typing.SupportsFloat,
+        *,
+        x_dim_mm_or_dpmm: typing.SupportsFloat,
+        filetype: str | None = None
     ) -> float:
         """
         Reverse of `Symbol.scale_from_xdim_dp`. Estimate the X-dimension or dpmm given non-zero `scale` and non-zero `x_dim_mm_or_dpmm`. Return value bound to dpmm max not X-dimension max. Returns 0 on error
         """
 
-    def __init__(self) -> None: ...
-    def buffer(self, rotate_deg: int = 0) -> None:
+    def __init__(self) -> None:
+        ...
+
+    def buffer(self, rotate_deg: typing.SupportsInt = 0) -> None:
         """
         Output a previously encoded symbol to memory as raster (`Symbol.bitmap`)
         """
 
-    def buffer_vector(self, rotate_deg: int = 0) -> None:
+    def buffer_vector(self, rotate_deg: typing.SupportsInt = 0) -> None:
         """
         Output a previously encoded symbol to memory as vector (`Symbol.vector`)
         """
@@ -246,18 +263,18 @@ class Symbol:
         """
 
     @typing.overload
-    def encode_segs(self, segs: list[Seg]) -> None:
+    def encode_segs(self, segs: collections.abc.Sequence[Seg]) -> None:
         """
         Encode a barcode with multiple ECI segments
         """
 
     @typing.overload
-    def encode_segs(self, segs: typing.Iterable) -> None:
+    def encode_segs(self, segs: collections.abc.Iterable) -> None:
         """
         Encode a barcode with multiple ECI segments
         """
 
-    def print(self, rotate_deg: int = 0) -> None:
+    def print(self, rotate_deg: typing.SupportsInt = 0) -> None:
         """
         Output a previously encoded symbol to file `Symbol.outfile`
         """
@@ -280,7 +297,9 @@ class Symbol:
         """
 
     @bgcolor.setter
-    def bgcolor(self, arg1: str) -> None: ...
+    def bgcolor(self, arg1: str) -> None:
+        ...
+
     @property
     def bgcolour(self) -> str:
         """
@@ -288,7 +307,9 @@ class Symbol:
         """
 
     @bgcolour.setter
-    def bgcolour(self, arg1: str) -> None: ...
+    def bgcolour(self, arg1: str) -> None:
+        ...
+
     @property
     def bitmap(self) -> memoryview | None:
         """
@@ -302,7 +323,9 @@ class Symbol:
         """
 
     @border_width.setter
-    def border_width(self, arg1: int) -> None: ...
+    def border_width(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def debug(self) -> int:
         """
@@ -310,7 +333,9 @@ class Symbol:
         """
 
     @debug.setter
-    def debug(self, arg1: int) -> None: ...
+    def debug(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def dot_size(self) -> float:
         """
@@ -318,7 +343,9 @@ class Symbol:
         """
 
     @dot_size.setter
-    def dot_size(self, arg1: float) -> None: ...
+    def dot_size(self, arg1: typing.SupportsFloat) -> None:
+        ...
+
     @property
     def dpmm(self) -> float:
         """
@@ -326,7 +353,9 @@ class Symbol:
         """
 
     @dpmm.setter
-    def dpmm(self, arg1: float) -> None: ...
+    def dpmm(self, arg1: typing.SupportsFloat) -> None:
+        ...
+
     @property
     def eci(self) -> int:
         """
@@ -334,7 +363,9 @@ class Symbol:
         """
 
     @eci.setter
-    def eci(self, arg1: int) -> None: ...
+    def eci(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def encoded_data(self) -> memoryview:
         """
@@ -354,7 +385,9 @@ class Symbol:
         """
 
     @fgcolor.setter
-    def fgcolor(self, arg1: str) -> None: ...
+    def fgcolor(self, arg1: str) -> None:
+        ...
+
     @property
     def fgcolour(self) -> str:
         """
@@ -362,7 +395,9 @@ class Symbol:
         """
 
     @fgcolour.setter
-    def fgcolour(self, arg1: str) -> None: ...
+    def fgcolour(self, arg1: str) -> None:
+        ...
+
     @property
     def guard_descent(self) -> float:
         """
@@ -370,7 +405,9 @@ class Symbol:
         """
 
     @guard_descent.setter
-    def guard_descent(self, arg1: float) -> None: ...
+    def guard_descent(self, arg1: typing.SupportsFloat) -> None:
+        ...
+
     @property
     def height(self) -> float:
         """
@@ -378,7 +415,9 @@ class Symbol:
         """
 
     @height.setter
-    def height(self, arg1: float) -> None: ...
+    def height(self, arg1: typing.SupportsFloat) -> None:
+        ...
+
     @property
     def input_mode(self) -> InputMode:
         """
@@ -386,7 +425,15 @@ class Symbol:
         """
 
     @input_mode.setter
-    def input_mode(self, arg1: InputMode) -> None: ...
+    def input_mode(self, arg1: InputMode) -> None:
+        ...
+
+    @property
+    def memfile(self) -> memoryview | None:
+        """
+        In-memory file buffer if BARCODE_MEMORY_FILE (output only)
+        """
+
     @property
     def option_1(self) -> int:
         """
@@ -394,7 +441,9 @@ class Symbol:
         """
 
     @option_1.setter
-    def option_1(self, arg1: int) -> None: ...
+    def option_1(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def option_2(self) -> int:
         """
@@ -402,7 +451,9 @@ class Symbol:
         """
 
     @option_2.setter
-    def option_2(self, arg1: int) -> None: ...
+    def option_2(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def option_3(self) -> int:
         """
@@ -410,7 +461,9 @@ class Symbol:
         """
 
     @option_3.setter
-    def option_3(self, arg1: int) -> None: ...
+    def option_3(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def outfile(self) -> str:
         """
@@ -418,7 +471,9 @@ class Symbol:
         """
 
     @outfile.setter
-    def outfile(self, arg1: str) -> None: ...
+    def outfile(self, arg1: str) -> None:
+        ...
+
     @property
     def output_options(self) -> OutputOptions:
         """
@@ -426,7 +481,9 @@ class Symbol:
         """
 
     @output_options.setter
-    def output_options(self, arg1: OutputOptions) -> None: ...
+    def output_options(self, arg1: OutputOptions) -> None:
+        ...
+
     @property
     def primary(self) -> str:
         """
@@ -434,9 +491,11 @@ class Symbol:
         """
 
     @primary.setter
-    def primary(self, arg1: str) -> None: ...
+    def primary(self, arg1: str) -> None:
+        ...
+
     @property
-    def row_height(self) -> numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]]:
+    def row_height(self) -> list:
         """
         Heights of rows (output only). Allows for 200 row DotCode
         """
@@ -454,7 +513,9 @@ class Symbol:
         """
 
     @scale.setter
-    def scale(self, arg1: float) -> None: ...
+    def scale(self, arg1: typing.SupportsFloat) -> None:
+        ...
+
     @property
     def show_hrt(self) -> bool:
         """
@@ -462,7 +523,9 @@ class Symbol:
         """
 
     @show_hrt.setter
-    def show_hrt(self, arg1: bool) -> None: ...
+    def show_hrt(self, arg1: bool) -> None:
+        ...
+
     @property
     def show_text(self) -> bool:
         """
@@ -470,7 +533,9 @@ class Symbol:
         """
 
     @show_text.setter
-    def show_text(self, arg1: bool) -> None: ...
+    def show_text(self, arg1: bool) -> None:
+        ...
+
     @property
     def structapp(self) -> StructApp:
         """
@@ -478,7 +543,9 @@ class Symbol:
         """
 
     @structapp.setter
-    def structapp(self, arg1: StructApp) -> None: ...
+    def structapp(self, arg1: StructApp) -> None:
+        ...
+
     @property
     def symbology(self) -> Symbology:
         """
@@ -486,7 +553,9 @@ class Symbol:
         """
 
     @symbology.setter
-    def symbology(self, arg1: Symbology) -> None: ...
+    def symbology(self, arg1: Symbology) -> None:
+        ...
+
     @property
     def text(self) -> str:
         """
@@ -500,7 +569,9 @@ class Symbol:
         """
 
     @text_gap.setter
-    def text_gap(self, arg1: float) -> None: ...
+    def text_gap(self, arg1: typing.SupportsFloat) -> None:
+        ...
+
     @property
     def vector(self) -> Vector:
         """
@@ -514,7 +585,9 @@ class Symbol:
         """
 
     @warn_level.setter
-    def warn_level(self, arg1: WarningLevel) -> None: ...
+    def warn_level(self, arg1: WarningLevel) -> None:
+        ...
+
     @property
     def whitespace_height(self) -> int:
         """
@@ -522,7 +595,9 @@ class Symbol:
         """
 
     @whitespace_height.setter
-    def whitespace_height(self, arg1: int) -> None: ...
+    def whitespace_height(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def whitespace_width(self) -> int:
         """
@@ -530,18 +605,20 @@ class Symbol:
         """
 
     @whitespace_width.setter
-    def whitespace_width(self, arg1: int) -> None: ...
+    def whitespace_width(self, arg1: typing.SupportsInt) -> None:
+        ...
+
     @property
     def width(self) -> int:
         """
         Width of the generated symbol (output only)
         """
 
+
 class Symbology(enum.Enum):
     """
     Values for `Symbol.symbology`
     """
-
     AUSPOST: typing.ClassVar[Symbology]  # value = <Symbology.AUSPOST: 63>
     AUSREDIRECT: typing.ClassVar[Symbology]  # value = <Symbology.AUSREDIRECT: 68>
     AUSREPLY: typing.ClassVar[Symbology]  # value = <Symbology.AUSREPLY: 66>
@@ -585,6 +662,7 @@ class Symbology(enum.Enum):
     DPD: typing.ClassVar[Symbology]  # value = <Symbology.DPD: 96>
     DPIDENT: typing.ClassVar[Symbology]  # value = <Symbology.DPIDENT: 22>
     DPLEIT: typing.ClassVar[Symbology]  # value = <Symbology.DPLEIT: 21>
+    DXFILMEDGE: typing.ClassVar[Symbology]  # value = <Symbology.DXFILMEDGE: 147>
     EAN14: typing.ClassVar[Symbology]  # value = <Symbology.EAN14: 72>
     EANX: typing.ClassVar[Symbology]  # value = <Symbology.EANX: 13>
     EANX_CC: typing.ClassVar[Symbology]  # value = <Symbology.EANX_CC: 130>
@@ -642,26 +720,28 @@ class Symbology(enum.Enum):
     USPS_IMAIL: typing.ClassVar[Symbology]  # value = <Symbology.USPS_IMAIL: 85>
     VIN: typing.ClassVar[Symbology]  # value = <Symbology.VIN: 73>
 
+
 class UltracodeOptions(enum.IntEnum):
     """
     Ultracode specific option (`symbol->option_3`)
     """
-
     ULTRA_COMPRESSION: typing.ClassVar[UltracodeOptions]  # value = <UltracodeOptions.ULTRA_COMPRESSION: 128>
+
     @classmethod
-    def __new__(cls, value): ...
+    def __new__(cls, value):
+        ...
+
     def __format__(self, format_spec):
         """
         Convert to a string according to format_spec.
         """
+
 
 class Vector:
     """
     Vector image information, returned from `Symbol.vector` after calling `Symbol.buffer_vector`
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def circles(self) -> VectorCircles:
         """
@@ -698,13 +778,12 @@ class Vector:
         Width of barcode image (including text, whitespace)
         """
 
+
 class VectorCircle:
     """
     Circle vector elements returned from `Vector.circles`
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def color(self) -> int:
         """
@@ -741,19 +820,21 @@ class VectorCircle:
         Centre
         """
 
+
 class VectorCircles:
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
-    def __iter__(self) -> typing.Iterator[VectorCircle]: ...
-    def __len__(self) -> int: ...
+
+    def __iter__(self) -> collections.abc.Iterator[VectorCircle]:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
 
 class VectorHexagon:
     """
     Hexagon vector elements returned from `Vector.hexagons`
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def diameter(self) -> float:
         """
@@ -778,19 +859,21 @@ class VectorHexagon:
         Centre
         """
 
+
 class VectorHexagons:
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
-    def __iter__(self) -> typing.Iterator[VectorHexagon]: ...
-    def __len__(self) -> int: ...
+
+    def __iter__(self) -> collections.abc.Iterator[VectorHexagon]:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
 
 class VectorRect:
     """
     Rectangle vector elements returned from `Vector.rectangles`
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def color(self) -> int:
         """
@@ -804,9 +887,13 @@ class VectorRect:
         """
 
     @property
-    def height(self) -> float: ...
+    def height(self) -> float:
+        ...
+
     @property
-    def width(self) -> float: ...
+    def width(self) -> float:
+        ...
+
     @property
     def x(self) -> float:
         """
@@ -819,19 +906,21 @@ class VectorRect:
         Top
         """
 
+
 class VectorRects:
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
-    def __iter__(self) -> typing.Iterator[VectorRect]: ...
-    def __len__(self) -> int: ...
+
+    def __iter__(self) -> collections.abc.Iterator[VectorRect]:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
 
 class VectorString:
     """
     String vector elements returned from `Vector.strings`
     """
 
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
     @property
     def fsize(self) -> float:
         """
@@ -857,7 +946,9 @@ class VectorString:
         """
 
     @property
-    def text(self) -> str: ...
+    def text(self) -> str:
+        ...
+
     @property
     def width(self) -> float:
         """
@@ -876,19 +967,23 @@ class VectorString:
         Relative to baseline
         """
 
+
 class VectorStrings:
-    @staticmethod
-    def _pybind11_conduit_v1_(*args, **kwargs): ...
-    def __iter__(self) -> typing.Iterator[VectorString]: ...
-    def __len__(self) -> int: ...
+
+    def __iter__(self) -> collections.abc.Iterator[VectorString]:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
 
 class WarningLevel(enum.Enum):
     """
     Warning level (`symbol->warn_level`)
     """
-
     DEFAULT: typing.ClassVar[WarningLevel]  # value = <WarningLevel.DEFAULT: 0>
     FAIL_ALL: typing.ClassVar[WarningLevel]  # value = <WarningLevel.FAIL_ALL: 2>
 
-__upstream_version__: str = "2.13.0"
-__version__: str = "1.2.0"
+
+__upstream_version__: str = '2.15.0'
+__version__: str = '1.2.0'

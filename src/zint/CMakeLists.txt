@@ -59,7 +59,7 @@ target_compile_warnings(${extension} PRIVATE
 
 install(TARGETS ${extension} LIBRARY DESTINATION . COMPONENT ${extension})
 
-# generate-enums.py script =============================================================================================
+# generate-enums.py ----------------------------------------------------------------------------------------------------
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_custom_target(_generate_enums
 	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py
@@ -72,16 +72,19 @@ add_custom_target(_generate_enums
 add_dependencies(${extension} _generate_enums)
 
 
-find_program(UV_EXECUTABLE "uv" DOC "uv python package manager" REQUIRED)
+# scripts/generate-stub.py ---------------------------------------------------------------------------------------------
+execute_process(
+	# Install dependencies at configure time
+	COMMAND "${Python3_EXECUTABLE}" -m pip install -r "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
+	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMAND_ERROR_IS_FATAL ANY
+)
 add_custom_command(TARGET ${extension} POST_BUILD
 	COMMAND "${CMAKE_COMMAND}" -E make_directory "zint-stubs"
-	COMMAND "${UV_EXECUTABLE}" run
-		--isolated --no-project
-		--with-requirements "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
-		--script "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
-			$<TARGET_FILE:${extension}>
-			--format-config "${CMAKE_CURRENT_SOURCE_DIR}"
-			--output "zint-stubs/__init__.pyi"
+	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
+		$<TARGET_FILE:${extension}>
+		--format-config "${CMAKE_CURRENT_SOURCE_DIR}"
+		--output "zint-stubs/__init__.pyi"
 	BYPRODUCTS "${CMAKE_CURRENT_BUILD_DIR}/zint-stubs"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BUILD_DIR}"
 	COMMENT "Generating stub file"
@@ -102,3 +105,4 @@ if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is release
 endif()
 
 install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/zint-stubs" DESTINATION . COMPONENT ${extension})
+# ----------------------------------------------------------------------------------------------------------------------

@@ -94,7 +94,6 @@ sdist.exclude = [
 [tool.cibuildwheel]
 enable = [
     "cpython-prerelease",
-    "cpython-freethreading",
     "pypy",
 ]
 skip = [

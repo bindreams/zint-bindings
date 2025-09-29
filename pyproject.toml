@@ -65,6 +65,10 @@ requires = [
     "scikit-build-core >= 0.11.6",
     "pybind11 == 3.0.1",
     "pip >= 24",  # For installing script dependencies
+    # Requirements from src/zint/scripts/generate-stub.requirements.txt
+    "pybind11-stubgen == 2.5.5",
+    "typing-extensions >= 4.6",
+    "yapf",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -78,6 +82,7 @@ cmake.version = ">=3.28"
 ninja.version = ">=1.11"
 ninja.make-fallback = false
 
+sdist.cmake = true  # CMake required for generated files
 sdist.exclude = [
     # Included in repo for visibility, but generated at compile time
     "src/zint-stubs",

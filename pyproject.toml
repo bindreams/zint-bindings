@@ -57,19 +57,24 @@ docs = [
 [dependency-groups]
 dist = [
     "build",
-    "cibuildwheel == 2.21.3",
+    "cibuildwheel == 3.1.4",
 ]
 
 [build-system]
 requires = [
     "scikit-build-core >= 0.11.6",
     "pybind11 == 3.0.1",
-    "uv >= 0.8",  # For running scripts
+    "pip >= 24",  # For installing script dependencies
+    # Requirements from src/zint/scripts/generate-stub.requirements.txt
+    "pybind11-stubgen == 2.5.5",
+    "typing-extensions >= 4.6",
+    "yapf",
 ]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 cmake.source-dir = "src/zint"
+cmake.args = ["-GNinja"]
 build.targets = ["zint_bindings"]
 install.components = ["zint_bindings"]
 
@@ -77,6 +82,7 @@ cmake.version = ">=3.28"
 ninja.version = ">=1.11"
 ninja.make-fallback = false
 
+sdist.cmake = true  # CMake required for generated files
 sdist.exclude = [
     # Included in repo for visibility, but generated at compile time
     "src/zint-stubs",
@@ -92,7 +98,16 @@ sdist.exclude = [
 ]
 
 [tool.cibuildwheel]
-skip = "*linux_i686* *linux_ppc64le* *linux_s390x* *-win32"
+enable = [
+    "cpython-prerelease",
+    "pypy",
+]
+skip = [
+    "*linux_i686*",
+    "*linux_ppc64le*",
+    "*linux_s390x*",
+    "*-win32",
+]
 environment = {CMAKE_GENERATOR="Ninja"}  # Force Ninja even on Windows
 
 # Hardcode manylinux2014 as the target because tool.cibuildwheel.linux uses yum to install packages.
@@ -123,5 +138,9 @@ doctest_optionflags = "ELLIPSIS"
 disable = "missing-function-docstring, too-many-arguments, too-many-locals"
 max-line-length = 120
 
-[tool.black]
-line-length = 120
+[tool.yapf]
+based_on_style = "pep8"
+column_limit = 120
+each_dict_entry_on_separate_line = false
+dedent_closing_brackets = true
+coalesce_brackets = true

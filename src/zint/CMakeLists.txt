@@ -38,47 +38,54 @@ set_target_properties(zint-static PROPERTIES
 	MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 
-set(TARGET_NAME "zint_bindings")
-pybind11_add_module(${TARGET_NAME} MODULE src/main.cpp)
-file(GLOB_RECURSE ${TARGET_NAME}_HEADERS CONFIGURE_DEPENDS "src/*.hpp" "src/*.inc")
-target_sources(${TARGET_NAME} PRIVATE FILE_SET HEADERS BASE_DIRS src FILES ${${TARGET_NAME}_HEADERS})
-set_target_properties(${TARGET_NAME} PROPERTIES
+set(extension "zint_bindings")
+pybind11_add_module(${extension} MODULE src/main.cpp)
+file(GLOB_RECURSE ${extension}_HEADERS CONFIGURE_DEPENDS "src/*.hpp" "src/*.inc")
+target_sources(${extension} PRIVATE FILE_SET HEADERS BASE_DIRS src FILES ${${extension}_HEADERS})
+set_target_properties(${extension} PROPERTIES
 	OUTPUT_NAME zint
 	MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE zint-static fmt::fmt)
-target_compile_features(${TARGET_NAME} PRIVATE cxx_std_20)
-target_compile_definitions(${TARGET_NAME} PRIVATE BINDINGS_VERSION=${PROJECT_VERSION})
+target_link_libraries(${extension} PRIVATE zint-static fmt::fmt)
+target_compile_features(${extension} PRIVATE cxx_std_20)
+target_compile_definitions(${extension} PRIVATE BINDINGS_VERSION=${PROJECT_VERSION})
 
 include(scripts/cmake/warnings.cmake)
-target_compile_warnings(${TARGET_NAME} PRIVATE
+target_compile_warnings(${extension} PRIVATE
 	GNU all extra pedantic error
 	MSVC 4 X
 )
 
-install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION . COMPONENT ${TARGET_NAME})
+install(TARGETS ${extension} LIBRARY DESTINATION . COMPONENT ${extension})
 
-# generate-enums.py script =============================================================================================
+# generate-enums.py ----------------------------------------------------------------------------------------------------
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
-add_custom_target(_generate_enums_hpp
+add_custom_target(_generate_enums
 	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py
-	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-enums.py"
+	DEPENDS "scripts/generate-enums.py"
 	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.inc"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 	COMMENT "Generating generated/enums.inc"
 	VERBATIM
 )
-add_dependencies(${TARGET_NAME} _generate_enums_hpp)
+add_dependencies(${extension} _generate_enums)
 
 
-find_program(UV_EXECUTABLE "uv" DOC "uv python package manager" REQUIRED)
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-	COMMAND "${UV_EXECUTABLE}" run
-		--isolated --no-project
-		--with-requirements "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
-		--script "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
-	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/zint-stubs"
+# scripts/generate-stub.py ---------------------------------------------------------------------------------------------
+execute_process(
+	# Install dependencies at configure time
+	COMMAND "${Python3_EXECUTABLE}" -m pip install -r "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.requirements.txt"
+	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMAND_ERROR_IS_FATAL ANY
+)
+add_custom_command(TARGET ${extension} POST_BUILD
+	COMMAND "${CMAKE_COMMAND}" -E make_directory "zint-stubs"
+	COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate-stub.py"
+		$<TARGET_FILE:${extension}>
+		--format-config "${CMAKE_CURRENT_SOURCE_DIR}"
+		--output "zint-stubs/__init__.pyi"
+	BYPRODUCTS "${CMAKE_CURRENT_BUILD_DIR}/zint-stubs"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BUILD_DIR}"
 	COMMENT "Generating stub file"
 	VERBATIM
@@ -86,7 +93,7 @@ add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 
 if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is released
 	# Copy stubs into the source directory so they are visible in source control and PRs
-	add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+	add_custom_command(TARGET ${extension} POST_BUILD
 		COMMAND "${CMAKE_COMMAND}" -E copy_directory
 			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
 			"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
@@ -97,4 +104,5 @@ if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is release
 	)
 endif()
 
-install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/zint-stubs" DESTINATION . COMPONENT ${TARGET_NAME})
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/zint-stubs" DESTINATION . COMPONENT ${extension})
+# ----------------------------------------------------------------------------------------------------------------------

@@ -98,6 +98,7 @@ ENUM_VALUE(Symbology, UPNQR, 143, "UPNQR (Univerzalnega Plačilnega Naloga QR)")
 ENUM_VALUE(Symbology, ULTRA, 144, "Ultracode")
 ENUM_VALUE(Symbology, RMQR, 145, "Rectangular Micro QR Code (rMQR)")
 ENUM_VALUE(Symbology, BC412, 146, "IBM BC412 (SEMI T1-95)")
+ENUM_VALUE(Symbology, DXFILMEDGE, 147, "DX Film Edge Barcode on 35mm and APS films")
 ENUM_END(Symbology)
 
 ENUM_BEGIN(OutputOptions, int, "enum.Flag", "Values for `Symbol.output_options`")
@@ -117,6 +118,7 @@ ENUM_VALUE(OutputOptions, BARCODE_NO_QUIET_ZONES, 4096, "Disable quiet zones, no
 ENUM_VALUE(OutputOptions, COMPLIANT_HEIGHT, 8192, "Warn if height not compliant, or use standard height (if any) as default")
 ENUM_VALUE(OutputOptions, EANUPC_GUARD_WHITESPACE, 16384, "Add quiet zone indicators (\"<\"/\">\") to HRT whitespace (EAN/UPC)")
 ENUM_VALUE(OutputOptions, EMBED_VECTOR_FONT, 32768, "Embed font in vector output - currently only for SVG output")
+ENUM_VALUE(OutputOptions, BARCODE_MEMORY_FILE, 65536, "Write output to in-memory buffer `memfile` instead of to `outfile`")
 ENUM_END(OutputOptions)
 
 ENUM_BEGIN(InputMode, int, "enum.Flag", "Values for `Symbol.input_mode`")
@@ -128,7 +130,7 @@ ENUM_VALUE(InputMode, GS1PARENS, 16, "Process parentheses as GS1 AI delimiters (
 ENUM_VALUE(InputMode, GS1NOCHECK, 32, "Do not check validity of GS1 data (except that printable ASCII only)")
 ENUM_VALUE(InputMode, HEIGHTPERROW, 64, "Interpret `height` as per-row rather than as overall height")
 ENUM_VALUE(InputMode, FAST, 128, "Use faster if less optimal encodation or other shortcuts if available. Note: affects DATAMATRIX, MICROPDF417, PDF417, QRCODE & UPNQR only")
-ENUM_VALUE(InputMode, EXTRA_ESCAPE, 256, "Process special symbology-specific escape sequences. Note: currently Code 128 only")
+ENUM_VALUE(InputMode, EXTRA_ESCAPE, 256, "Process special symbology-specific escape sequences as well as others. Note: currently Code 128 only")
 ENUM_END(InputMode)
 
 ENUM_BEGIN(DataMatrixOptions, int, "enum.IntEnum", "Data Matrix specific options (`symbol->option_3`)")

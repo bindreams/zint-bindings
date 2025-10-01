@@ -94,10 +94,10 @@ add_custom_command(TARGET ${extension} POST_BUILD
 if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is released
 	# Copy stubs into the source directory so they are visible in source control and PRs
 	add_custom_command(TARGET ${extension} POST_BUILD
-		COMMAND "${CMAKE_COMMAND}" -E copy_directory
-			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs"
-			"${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
-		BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/../zint-stubs"
+		COMMAND "${CMAKE_COMMAND}" -E copy
+			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/__init__.pyi"
+			"src/generated/stubs.pyi"
+		BYPRODUCTS "src/generated/stubs.pyi"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 		COMMENT "Updating reference stub file"
 		VERBATIM

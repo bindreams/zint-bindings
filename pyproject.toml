@@ -86,16 +86,21 @@ ninja.make-fallback = false
 sdist.cmake = true  # CMake required for generated files
 sdist.exclude = [
     # Included in repo for visibility, but generated at compile time
-    "src/zint-stubs",
-    "src/zint/src/generated",
+    "src/generated",
     # Development and CI
-    "tests",
     ".github",
     ".editorconfig",
-    "src/zint/CMakePresets.json",
+    ".clang-format",
+    ".devcontainer",
+    "CMakePresets.json",
+    "scripts/build.sh",
+    "scripts/install.sh",
+    # Tests and docs
+    "tests",
+    "docs",
     # Git files
     ".gitattributes",
-    ".gitignore"
+    ".gitignore",
 ]
 
 [tool.cibuildwheel]

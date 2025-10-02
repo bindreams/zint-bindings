@@ -38,8 +38,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13 is x86, latest is arm64 (https://cibuildwheel.pypa.io/en/stable/setup/#github-actions)
-        os: [windows-latest, ubuntu-latest, macos-13, macos-latest]
+        os:
+          - windows-11-arm  # Windows arm64 wheels
+          - windows-latest  # Windows x86-64 wheels
+          - ubuntu-latest   # All linux wheels (via emulation)
+          - macos-15-intel  # macOS x86-64 wheels
+          - macos-15        # macOS arm64 wheels
 
     steps:
       - uses: actions/checkout@v5
@@ -52,7 +56,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
         with:
-          arch: x64
+          arch: ${{ runner.arch }}
 
       - name: Enable Xcode SDK
         if: runner.os == 'macOS'

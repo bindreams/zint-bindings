@@ -3,6 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import re
 from datetime import date
 
 import zint  # You will need it installed anyway for autodoc
@@ -13,6 +14,11 @@ import zint  # You will need it installed anyway for autodoc
 project = "Zint Bindings"
 author = "Anna Zhukova"
 release = zint.__version__
+
+# See https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-version
+version_match = re.match(r"\d+\.\d+", release)  # e.g. "1.10"
+assert version_match is not None
+version = version_match[0]
 
 year = date.today().year
 if year == 2024:
@@ -39,7 +45,6 @@ autodoc_member_order = "groupwise"
 
 templates_path = ["_templates"]
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

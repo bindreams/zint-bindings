@@ -52,6 +52,7 @@ docs = [
     "furo",
     "sphinx-design",
     "sphinx-copybutton",
+    "sphinx_substitution_extensions",
 ]
 
 [dependency-groups]

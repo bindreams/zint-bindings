@@ -39,9 +39,11 @@ You can either clone the project and run the install command from the root direc
 pip install .
 ```
 or install the project directly from GitHub:
-```sh
+```{code-block} sh
+:substitutions:
+
 # A particular tag:
-pip install https://github.com/bindreams/zint-bindings/archive/refs/tags/v|release|.zip
+pip install https://github.com/bindreams/zint-bindings/archive/refs/tags/v{{release}}.zip
 
 # From the top of the main branch:
 pip install https://github.com/bindreams/zint-bindings/archive/refs/heads/main.zip

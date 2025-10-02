@@ -35,11 +35,19 @@ extensions = [
     "myst_parser",
     "sphinx_design",
     "sphinx_copybutton",
+    "sphinx_substitution_extensions",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
 ]
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = [
+    "colon_fence",
+    "substitution",
+]
+
+myst_substitutions = {
+    "release": release,
+}
 
 autodoc_member_order = "groupwise"
 

@@ -41,12 +41,8 @@ MANIFEST
 # PNG files generated during tests
 *.png
 
-# src/zint/.gitignore
-# Because of issue 726 in scikit-build-core, this project can't have nested gitignore files.
-# See https://github.com/scikit-build/scikit-build-core/issues/726
+# "bundled" vcpkg which is downloaded by cmake
+.vcpkg
+vcpkg_installed
 
-# "bundled" vcpkg which is downloaded by git
-src/zint/.vcpkg
-src/zint/vcpkg_installed
-
-src/zint/CMakeUserPresets.json
+CMakeUserPresets.json

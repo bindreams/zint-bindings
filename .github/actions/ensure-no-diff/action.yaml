@@ -1,0 +1,42 @@
+name: Ensure no changes to tracked files
+description: Detect any changes to tracked files and fail the forkflow.
+inputs:
+  pr-comment-tag:
+    description: |
+      If specified, post a comment with changes (only on pull requests).
+      Comments matching this tag will be edited or deleted on subsequent runs.
+    required: false
+    default: ""
+  comment-header:
+    description: Header for the PR comment
+    required: false
+    default: "Tracked files have changed:"
+  comment-footer:
+    description: Footer for the PR comment
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: git diff
+      id: git-diff
+      uses: mathiasvr/command-output@v2.0.0
+      with:
+        shell: bash
+        run: git diff --diff-algorithm=histogram --exit-code
+
+    - name: Update PR comment
+      if: >-
+        failure() &&
+        steps.git-diff.conclusion == 'failure' &&
+        github.event_name == 'pull_request' &&
+        inputs.pr-comment-tag != ''
+      uses: thollander/actions-comment-pull-request@v3
+      with:
+        comment-tag: ${{ inputs.comment-tag }}
+        mode: recreate
+        message: |
+          ${{ inputs.comment-header }}
+          ```diff
+          ${{ steps.git-diff.outputs.stdout }}```
+          ${{ inputs.comment-footer }}

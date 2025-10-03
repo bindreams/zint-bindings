@@ -7,12 +7,20 @@ on:
   push:
     branches: [main]
 
+permissions:
+  pull-requests: write
+
 jobs:
   sdist:
     name: Source distribution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Required for dynamic version
+          fetch-depth: 0
+          fetch-tags: true
+
       - uses: actions/setup-python@v6
         with:
           python-version-file: pyproject.toml
@@ -33,6 +41,11 @@ jobs:
           name: package-sdist
           path: dist/*.tar.gz
 
+      - name: Ensure no changes to tracked files
+        uses: ./.github/actions/ensure-no-diff
+        with:
+          pr-comment-tag: ${{ github.job }}
+
   wheels:
     name: Binary wheels
     runs-on: ${{ matrix.os }}
@@ -47,6 +60,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Required for dynamic version
+          fetch-depth: 0
+          fetch-tags: true
+
       - uses: actions/setup-python@v6
         with:
           python-version-file: pyproject.toml
@@ -73,3 +91,8 @@ jobs:
         with:
           name: package-wheels-${{matrix.os}}
           path: ./wheelhouse/*.whl
+
+      - name: Ensure no changes to tracked files
+        uses: ./.github/actions/ensure-no-diff
+        with:
+          pr-comment-tag: ${{ github.job }}/${{matrix.os}}

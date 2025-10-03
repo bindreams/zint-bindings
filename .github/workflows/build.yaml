@@ -7,6 +7,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  pull-requests: write
+
 jobs:
   sdist:
     name: Source distribution
@@ -32,6 +35,9 @@ jobs:
         with:
           name: package-sdist
           path: dist/*.tar.gz
+
+      - name: Ensure no changes to tracked files
+        uses: ./.github/actions/ensure-no-diff
 
   wheels:
     name: Binary wheels
@@ -73,3 +79,6 @@ jobs:
         with:
           name: package-wheels-${{matrix.os}}
           path: ./wheelhouse/*.whl
+
+      - name: Ensure no changes to tracked files
+        uses: ./.github/actions/ensure-no-diff

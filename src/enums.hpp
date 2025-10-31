@@ -8,7 +8,7 @@
 	}                                                                                                                  \
 	;
 
-#include "generated/enums.inc"
+#include "enums.g.inc"
 
 #undef ENUM_BEGIN
 #undef ENUM_VALUE
@@ -20,7 +20,7 @@
 #define ENUM_VALUE(enum_name, name, value, docstring) .add(#name, enum_name::name, docstring)
 #define ENUM_END(enum_name) ;
 
-#include "generated/enums.inc"
+#include "enums.g.inc"
 
 #undef ENUM_BEGIN
 #undef ENUM_VALUE

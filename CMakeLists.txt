@@ -62,11 +62,11 @@ install(TARGETS ${extension} LIBRARY DESTINATION . COMPONENT ${extension})
 # generate-enums.py ----------------------------------------------------------------------------------------------------
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_custom_target(_generate_enums
-	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py
+	COMMAND "${Python3_EXECUTABLE}" scripts/generate-enums.py --output "src/enums.g.inc"
 	DEPENDS "scripts/generate-enums.py"
-	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/enums.inc"
+	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/enums.g.inc"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-	COMMENT "Generating generated/enums.inc"
+	COMMENT "Generating src/enums.g.inc"
 	VERBATIM
 )
 add_dependencies(${extension} _generate_enums)
@@ -91,18 +91,16 @@ add_custom_command(TARGET ${extension} POST_BUILD
 	VERBATIM
 )
 
-if(Python3_VERSION_MINOR STREQUAL 13)  # Update this when Python 3.14 is released
-	# Copy stubs into the source directory so they are visible in source control and PRs
-	add_custom_command(TARGET ${extension} POST_BUILD
-		COMMAND "${CMAKE_COMMAND}" -E copy
-			"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/__init__.pyi"
-			"src/generated/stubs.pyi"
-		BYPRODUCTS "src/generated/stubs.pyi"
-		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-		COMMENT "Updating reference stub file"
-		VERBATIM
-	)
-endif()
+# Copy stubs into the source directory so they are visible in source control and PRs
+add_custom_command(TARGET ${extension} POST_BUILD
+	COMMAND "${CMAKE_COMMAND}" -E copy
+		"${CMAKE_CURRENT_BINARY_DIR}/zint-stubs/__init__.pyi"
+		"src/stubs/stub-py3${Python3_VERSION_MINOR}.g.pyi"
+	BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/src/stubs/stub-py3${Python3_VERSION_MINOR}.g.pyi"
+	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMENT "Updating reference stub file"
+	VERBATIM
+)
 
 install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/zint-stubs" DESTINATION . COMPONENT ${extension})
 # ----------------------------------------------------------------------------------------------------------------------

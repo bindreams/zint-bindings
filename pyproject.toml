@@ -79,7 +79,7 @@ cmake.args = ["-GNinja"]
 build.targets = ["zint_bindings"]
 install.components = ["zint_bindings"]
 
-cmake.version = ">=3.28"
+cmake.version = ">=3.28,<4"
 ninja.version = ">=1.11"
 ninja.make-fallback = false
 

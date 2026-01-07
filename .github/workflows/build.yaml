@@ -37,13 +37,15 @@ jobs:
     name: Binary wheels
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
-          - windows-11-arm  # Windows arm64 wheels
-          - windows-latest  # Windows x86-64 wheels
-          - ubuntu-latest   # All linux wheels (via emulation)
-          - macos-15-intel  # macOS x86-64 wheels
-          - macos-15        # macOS arm64 wheels
+          - windows-11-arm    # Windows arm64 wheels
+          - windows-latest    # Windows x86-64 wheels
+          - ubuntu-24.04      # Linux x86-64 wheels
+          - ubuntu-24.04-arm  # Linux arm64 wheels
+          - macos-15-intel    # macOS x86-64 wheels
+          - macos-15          # macOS arm64 wheels
 
     steps:
       - uses: actions/checkout@v5

@@ -13,14 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v6
         with:
           python-version-file: pyproject.toml
+
       - name: Install build-time dependencies
         run: pip install --group dist
 
       - name: Build sdist
         run: python -m build --sdist
+
+      - name: Check metadata
+        run: pipx run twine check dist/*
 
       - name: Test sdist
         run: |
@@ -32,24 +39,43 @@ jobs:
         with:
           name: package-sdist
           path: dist/*.tar.gz
+          retention-days: 7
 
   wheels:
-    name: Binary wheels
-    runs-on: ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
     strategy:
+      fail-fast: false
       matrix:
-        os:
-          - windows-11-arm  # Windows arm64 wheels
-          - windows-latest  # Windows x86-64 wheels
-          - ubuntu-latest   # All linux wheels (via emulation)
-          - macos-15-intel  # macOS x86-64 wheels
-          - macos-15        # macOS arm64 wheels
+        include:
+          # Windows
+          - os: windows-x64
+            runs-on: windows-latest
+          - os: windows-arm64
+            runs-on: windows-11-arm
+
+          # Linux
+          - os: linux-x64
+            runs-on: ubuntu-latest
+
+          - os: linux-arm64
+            runs-on: ubuntu-24.04-arm
+
+          # macOS
+          - os: macos-x64
+            runs-on: macos-15-intel
+          - os: macos-arm64
+            runs-on: macos-15
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v6
         with:
           python-version-file: pyproject.toml
+
       - name: Install build-time dependencies
         run: pip install --group dist
 
@@ -71,5 +97,6 @@ jobs:
 
       - uses: actions/upload-artifact@v5
         with:
-          name: package-wheels-${{matrix.os}}
+          name: package-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
+          retention-days: 7

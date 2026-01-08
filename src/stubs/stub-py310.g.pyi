@@ -5,6 +5,7 @@ from __future__ import annotations
 import collections.abc
 import enum
 import typing
+import typing_extensions
 
 __all__: list = [
     'Symbol', 'Symbology', 'Seg', 'StructApp', 'Vector', 'VectorCircle', 'VectorHexagon', 'VectorRect', 'VectorString',
@@ -41,20 +42,12 @@ class DataMatrixOptions(enum.IntEnum):
     ISO_144: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.ISO_144: 128>
     SQUARE: typing.ClassVar[DataMatrixOptions]  # value = <DataMatrixOptions.SQUARE: 100>
 
-    @classmethod
-    def __new__(cls, value):
-        ...
-
-    def __format__(self, format_spec):
-        """
-        Convert to a string according to format_spec.
-        """
-
 
 class InputMode(enum.Flag):
     """
     Values for `Symbol.input_mode`
     """
+    DATA: typing.ClassVar[InputMode]  # value = <InputMode.DATA: 0>
     ESCAPE: typing.ClassVar[InputMode]  # value = <InputMode.ESCAPE: 8>
     EXTRA_ESCAPE: typing.ClassVar[InputMode]  # value = <InputMode.EXTRA_ESCAPE: 256>
     FAST: typing.ClassVar[InputMode]  # value = <InputMode.FAST: 128>
@@ -94,15 +87,6 @@ class QrFamilyOptions(enum.IntEnum):
     """
     FULL_MULTIBYTE: typing.ClassVar[QrFamilyOptions]  # value = <QrFamilyOptions.FULL_MULTIBYTE: 200>
 
-    @classmethod
-    def __new__(cls, value):
-        ...
-
-    def __format__(self, format_spec):
-        """
-        Convert to a string according to format_spec.
-        """
-
 
 class Seg:
     """
@@ -114,7 +98,7 @@ class Seg:
         ...
 
     @typing.overload
-    def __init__(self, arg0: collections.abc.Buffer, arg1: typing.SupportsInt) -> None:
+    def __init__(self, arg0: typing_extensions.Buffer, arg1: typing.SupportsInt) -> None:
         ...
 
     @property
@@ -134,7 +118,7 @@ class Seg:
         """
 
     @source.setter
-    def source(self, arg1: collections.abc.Buffer) -> None:
+    def source(self, arg1: typing_extensions.Buffer) -> None:
         ...
 
 
@@ -727,15 +711,6 @@ class UltracodeOptions(enum.IntEnum):
     """
     ULTRA_COMPRESSION: typing.ClassVar[UltracodeOptions]  # value = <UltracodeOptions.ULTRA_COMPRESSION: 128>
 
-    @classmethod
-    def __new__(cls, value):
-        ...
-
-    def __format__(self, format_spec):
-        """
-        Convert to a string according to format_spec.
-        """
-
 
 class Vector:
     """
@@ -986,4 +961,4 @@ class WarningLevel(enum.Enum):
 
 
 __upstream_version__: str = '2.15.0'
-__version__: str = '1.2.0'
+__version__: str = '1.2.2'

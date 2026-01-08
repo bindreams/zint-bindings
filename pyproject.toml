@@ -32,7 +32,9 @@ classifiers = [
 ]
 
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "typing-extensions >= 4.6; python_version < '3.12'",  # For the stub file
+]
 
 [project.urls]
 Documentation = "https://zint-bindings.readthedocs.io/"
@@ -68,7 +70,7 @@ requires = [
     "pip >= 24",  # For installing script dependencies
     # Requirements from src/zint/scripts/generate-stub.requirements.txt
     "pybind11-stubgen == 2.5.5",
-    "typing-extensions >= 4.6",
+    "typing-extensions >= 4.6; python_version < '3.12'",
     "yapf",
 ]
 build-backend = "scikit_build_core.build"
